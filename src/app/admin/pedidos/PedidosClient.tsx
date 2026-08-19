@@ -119,6 +119,13 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
   const [reassigningId, setReassigningId] = useState<string | null>(null);
   const [reassignSearch, setReassignSearch] = useState("");
   const [reassignSaving, setReassignSaving] = useState(false);
+  const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
+  const [newCustomerOpen, setNewCustomerOpen] = useState(false);
+  const [ncName, setNcName] = useState("");
+  const [ncPhone, setNcPhone] = useState("");
+  const [ncEmail, setNcEmail] = useState("");
+  const [ncError, setNcError] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [copyingLinkId, setCopyingLinkId] = useState<string | null>(null);
   const [trocaOrderId, setTrocaOrderId] = useState<string | null>(null);
@@ -129,6 +136,8 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
   const filtered = useMemo(() => {
     return localOrders.filter(o => {
       if (statusFilter && o.status !== statusFilter) return false;
+      // Rascunhos gerados por link de preview ficam fora da listagem por padrao
+      if (o.status === "preview" && !showPreview && statusFilter !== "preview" && o.id !== expanded) return false;
       if (payFilter && o.paymentStatus !== payFilter) return false;
       if (methodFilter && o.paymentMethod !== methodFilter) return false;
       if (filterPending && o.status !== "pending") return false;
@@ -142,7 +151,7 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
       }
       return true;
     });
-  }, [localOrders, statusFilter, payFilter, methodFilter, filterPending, dateFrom, dateTo, search]);
+  }, [localOrders, statusFilter, payFilter, methodFilter, filterPending, dateFrom, dateTo, search, showPreview, expanded]);
 
   const selectedOrders = localOrders.filter(o => selectedIds.includes(o.id));
   const selectedSameCustomer = selectedOrders.length > 0 && selectedOrders.every(o => o.user.id === selectedOrders[0].user.id);
@@ -354,6 +363,30 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
     setEditingInstallmentId(null);
   };
 
+  const createAndAssignCustomer = async (orderId: string) => {
+    const name = ncName.trim();
+    if (!name) { setNcError("Informe o nome do cliente."); return; }
+    setNcError("");
+    setReassignSaving(true);
+    // Sem e-mail informado, o servidor gera um interno automaticamente
+    const res = await fetch("/api/admin/clientes", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email: ncEmail.trim() || null, phone: ncPhone.trim() || null }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setNcError(data.error || "Não foi possível cadastrar o cliente.");
+      setReassignSaving(false);
+      return;
+    }
+    const created = await res.json();
+    setLocalCustomers(prev => [...prev, { id: created.id, name: created.name, email: created.email }]);
+    setReassignSaving(false);
+    setNewCustomerOpen(false);
+    setNcName(""); setNcPhone(""); setNcEmail("");
+    await reassignCustomer(orderId, created);
+  };
+
   const reassignCustomer = async (orderId: string, newUser: { id: string; name: string | null; email: string }) => {
     setReassignSaving(true);
     const res = await fetch(`/api/admin/pedidos/${orderId}`, {
@@ -366,6 +399,7 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
     setReassignSaving(false);
     setReassigningId(null);
     setReassignSearch("");
+    setNewCustomerOpen(false);
   };
 
   const inp = { padding: "0.55rem 0.875rem", border: "1px solid rgba(140,100,20,0.25)", borderRadius: "0.625rem", fontSize: "0.8rem", backgroundColor: "#FAF6EE", outline: "none" };
@@ -447,6 +481,15 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
           <span style={{ fontSize: "0.75rem", color: "#9a8060" }}>até:</span>
           <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} style={{ ...inp, width: 135 }} />
         </div>
+        {/* Rascunhos de link de preview */}
+        {localOrders.some(o => o.status === "preview") && (
+          <button onClick={() => setShowPreview(!showPreview)}
+            title="Rascunhos criados automaticamente quando alguém gera um link de preview do carrinho"
+            style={{ fontSize: "0.72rem", fontWeight: 700, padding: "0.35rem 0.7rem", borderRadius: "999px", border: "none", cursor: "pointer", whiteSpace: "nowrap", backgroundColor: showPreview ? "#8a1ab8" : "#FAF6EE", color: showPreview ? "#fff" : "#9a8060" }}>
+            {showPreview ? "Ocultar" : "Ver"} rascunhos ({localOrders.filter(o => o.status === "preview").length})
+          </button>
+        )}
+
         {/* Atalhos de período */}
         <div style={{ display: "flex", gap: "0.375rem", flexWrap: "wrap" }}>
           {[
@@ -979,7 +1022,7 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                                     />
                                     {reassignSearch.length >= 2 && (
                                       <div style={{ border: "1px solid rgba(140,100,20,0.2)", borderRadius: "0.5rem", overflow: "hidden" }}>
-                                        {customers
+                                        {localCustomers
                                           .filter(c => c.id !== order.user.id && (
                                             (c.name || "").toLowerCase().includes(reassignSearch.toLowerCase()) ||
                                             c.email.toLowerCase().includes(reassignSearch.toLowerCase())
@@ -995,12 +1038,44 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                                               <span style={{ color: "#9a8060", marginLeft: "0.5rem", fontSize: "0.72rem" }}>{c.email}</span>
                                             </button>
                                           ))}
-                                        {customers.filter(c => c.id !== order.user.id && (
+                                        {localCustomers.filter(c => c.id !== order.user.id && (
                                           (c.name || "").toLowerCase().includes(reassignSearch.toLowerCase()) ||
                                           c.email.toLowerCase().includes(reassignSearch.toLowerCase())
                                         )).length === 0 && (
                                           <p style={{ padding: "0.5rem 0.75rem", color: "#9a8060", fontSize: "0.8rem" }}>Nenhum cliente encontrado.</p>
                                         )}
+                                      </div>
+                                    )}
+
+                                    {/* Cadastro de cliente novo sem sair do pedido */}
+                                    {!newCustomerOpen ? (
+                                      <button onClick={() => { setNewCustomerOpen(true); setNcName(reassignSearch); setNcError(""); }}
+                                        style={{ marginTop: "0.6rem", fontSize: "0.75rem", fontWeight: 700, color: "#b8891a", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                                        + Cadastrar novo cliente
+                                      </button>
+                                    ) : (
+                                      <div style={{ marginTop: "0.6rem", padding: "0.75rem", backgroundColor: "#FAF6EE", borderRadius: "0.625rem", border: "1px solid rgba(140,100,20,0.15)" }}>
+                                        <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "#1a1510", marginBottom: "0.5rem" }}>Novo cliente</p>
+                                        <input style={{ ...inp, width: "100%", boxSizing: "border-box" as const, backgroundColor: "#fff", marginBottom: "0.4rem" }}
+                                          placeholder="Nome *" value={ncName} onChange={e => setNcName(e.target.value)} autoFocus />
+                                        <input style={{ ...inp, width: "100%", boxSizing: "border-box" as const, backgroundColor: "#fff", marginBottom: "0.4rem" }}
+                                          placeholder="Telefone (opcional)" value={ncPhone} onChange={e => setNcPhone(e.target.value)} />
+                                        <input style={{ ...inp, width: "100%", boxSizing: "border-box" as const, backgroundColor: "#fff", marginBottom: "0.4rem" }}
+                                          placeholder="E-mail (opcional)" value={ncEmail} onChange={e => setNcEmail(e.target.value)} />
+                                        {ncError && <p style={{ fontSize: "0.72rem", color: "#c04040", marginBottom: "0.4rem" }}>{ncError}</p>}
+                                        <div style={{ display: "flex", gap: "0.4rem" }}>
+                                          <button disabled={reassignSaving} onClick={() => createAndAssignCustomer(order.id)}
+                                            style={{ flex: 1, padding: "0.45rem", backgroundColor: "#b8891a", color: "#fff", border: "none", borderRadius: "0.5rem", fontWeight: 800, fontSize: "0.75rem", cursor: reassignSaving ? "wait" : "pointer" }}>
+                                            {reassignSaving ? "Salvando..." : "Cadastrar e vincular"}
+                                          </button>
+                                          <button onClick={() => { setNewCustomerOpen(false); setNcError(""); }}
+                                            style={{ padding: "0.45rem 0.75rem", backgroundColor: "#fff", color: "#9a8060", border: "1px solid rgba(140,100,20,0.2)", borderRadius: "0.5rem", fontWeight: 700, fontSize: "0.75rem", cursor: "pointer" }}>
+                                            Cancelar
+                                          </button>
+                                        </div>
+                                        <p style={{ fontSize: "0.68rem", color: "#9a8060", marginTop: "0.4rem" }}>
+                                          Sem e-mail, geramos um interno automaticamente.
+                                        </p>
                                       </div>
                                     )}
                                   </div>
