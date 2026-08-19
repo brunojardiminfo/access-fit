@@ -370,8 +370,17 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
 
   const inp = { padding: "0.55rem 0.875rem", border: "1px solid rgba(140,100,20,0.25)", borderRadius: "0.625rem", fontSize: "0.8rem", backgroundColor: "#FAF6EE", outline: "none" };
 
+  // Mantem a coluna de acoes visivel quando a tabela precisa rolar na horizontal
+  const stickyRight = (bg: string) => ({
+    position: "sticky" as const,
+    right: 0,
+    zIndex: 2,
+    backgroundColor: bg,
+    boxShadow: "-6px 0 8px -6px rgba(0,0,0,0.12)",
+  });
+
   return (
-    <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "1rem" : "2rem 1.5rem", backgroundColor: "#FAF6EE", minHeight: "100vh" }}>
+    <div style={{ maxWidth: 1440, margin: "0 auto", padding: isMobile ? "1rem" : "2rem 1.5rem", backgroundColor: "#FAF6EE", minHeight: "100vh" }}>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
@@ -499,14 +508,14 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
             <thead>
               <tr style={{ backgroundColor: "#FAF6EE" }}>
-                <th style={{ padding: isMobile ? "0.625rem 0.5rem" : "0.875rem 0.75rem", borderBottom: "1px solid rgba(140,100,20,0.1)" }}>
+                <th style={{ padding: isMobile ? "0.625rem 0.5rem" : "0.875rem 0.75rem", borderBottom: "1px solid rgba(140,100,20,0.1)", position: "sticky", left: 0, zIndex: 2, backgroundColor: "#FAF6EE" }}>
                   <input type="checkbox"
                     checked={filtered.length > 0 && filtered.every(o => selectedIds.includes(o.id))}
                     onChange={e => setSelectedIds(e.target.checked ? filtered.map(o => o.id) : [])}
                     style={{ cursor: "pointer" }} />
                 </th>
                 {["Pedido", "Cliente", ...(isMobile ? [] : ["Produtos"]), "Total", ...(isMobile ? [] : ["Entrega", "Pagamento", "Forma", "Data", "Ações"])].map(h => (
-                  <th key={h} style={{ textAlign: "left", padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 1rem", color: "#9a8060", fontWeight: 700, fontSize: isMobile ? "0.7rem" : "0.75rem", borderBottom: "1px solid rgba(140,100,20,0.1)", whiteSpace: "nowrap" }}>{h}</th>
+                  <th key={h} style={{ textAlign: "left", padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 0.75rem", color: "#9a8060", fontWeight: 700, fontSize: isMobile ? "0.7rem" : "0.75rem", borderBottom: "1px solid rgba(140,100,20,0.1)", whiteSpace: "nowrap", ...(h === "Ações" ? stickyRight("#FAF6EE") : {}) }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -529,29 +538,29 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                   <Fragment key={order.id}>
                     <tr id={`order-${order.id}`} style={{ borderBottom: isExpanded ? "none" : "1px solid rgba(140,100,20,0.06)", cursor: "pointer", backgroundColor: isExpanded ? "#FDFAF4" : "transparent" }}
                       onClick={() => { setExpanded(isExpanded ? null : order.id); setActiveTab("itens"); }}>
-                      <td style={{ padding: isMobile ? "0.625rem 0.5rem" : "0.875rem 0.75rem" }} onClick={e => e.stopPropagation()}>
+                      <td style={{ padding: isMobile ? "0.625rem 0.5rem" : "0.875rem 0.75rem", position: "sticky", left: 0, zIndex: 1, backgroundColor: isExpanded ? "#FDFAF4" : "#fff" }} onClick={e => e.stopPropagation()}>
                         <input type="checkbox"
                           checked={selectedIds.includes(order.id)}
                           onChange={e => setSelectedIds(prev => e.target.checked ? [...prev, order.id] : prev.filter(id => id !== order.id))}
                           style={{ cursor: "pointer" }} />
                       </td>
-                      <td style={{ padding: "0.875rem 1rem", fontFamily: "monospace", fontSize: "0.72rem", color: "#9a8060" }}>
+                      <td style={{ padding: "0.875rem 0.75rem", fontFamily: "monospace", fontSize: "0.72rem", color: "#9a8060" }}>
                         {isExpanded ? "▼" : "▶"} #{order.id.slice(-8).toUpperCase()}
                       </td>
-                      <td style={{ padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 1rem" }}>
+                      <td style={{ padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 0.75rem" }}>
                         <div style={{ color: "#1a1510", fontWeight: 600, fontSize: isMobile ? "0.8rem" : "0.875rem" }}>{order.user.name}</div>
-                        {!isMobile && <div style={{ color: "#9a8060", fontSize: "0.7rem" }}>{order.user.email}</div>}
+                        {!isMobile && <div title={order.user.email} style={{ color: "#9a8060", fontSize: "0.7rem", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{order.user.email}</div>}
                       </td>
-                      {!isMobile && <td style={{ padding: "0.875rem 1rem", color: "#5a4a2a", fontSize: "0.8rem" }}>
+                      {!isMobile && <td style={{ padding: "0.875rem 0.75rem", color: "#5a4a2a", fontSize: "0.8rem" }}>
                         {produtoNome}{maisItens && <span style={{ color: "#b8891a", fontWeight: 700 }}>{maisItens}</span>}
                       </td>}
-                      <td style={{ padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 1rem", color: "#1a1510", fontWeight: 700, whiteSpace: "nowrap" }}>{fmt(order.total)}</td>
-                      <td style={{ padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 1rem" }}>
+                      <td style={{ padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 0.75rem", color: "#1a1510", fontWeight: 700, whiteSpace: "nowrap" }}>{fmt(order.total)}</td>
+                      <td style={{ padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 0.75rem" }}>
                         <span style={{ backgroundColor: sc.bg, color: sc.color, fontSize: "0.7rem", fontWeight: 700, padding: "0.25rem 0.625rem", borderRadius: "999px", whiteSpace: "nowrap" }}>
                           {STATUS_LABEL[order.status] || order.status}
                         </span>
                       </td>
-                      {!isMobile && <td style={{ padding: "0.875rem 1rem" }}>
+                      {!isMobile && <td style={{ padding: "0.875rem 0.75rem" }}>
                         <span style={{ backgroundColor: pc.bg, color: pc.color, fontSize: "0.7rem", fontWeight: 700, padding: "0.25rem 0.625rem", borderRadius: "999px", whiteSpace: "nowrap" }}>
                           {PAY_LABEL[order.paymentStatus] || order.paymentStatus}
                         </span>
@@ -559,20 +568,20 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                           <div style={{ color: "#9a8060", fontSize: "0.65rem", marginTop: "0.2rem" }}>Pago: {fmt(order.amountPaid)}</div>
                         )}
                       </td>}
-                      {!isMobile && <td style={{ padding: "0.875rem 1rem" }}>
+                      {!isMobile && <td style={{ padding: "0.875rem 0.75rem" }}>
                         <span style={{ backgroundColor: mc.bg, color: mc.color, fontSize: "0.7rem", fontWeight: 700, padding: "0.25rem 0.625rem", borderRadius: "999px", whiteSpace: "nowrap" }}>
                           {METHOD_LABEL[order.paymentMethod] || order.paymentMethod}
                         </span>
                       </td>}
-                      {!isMobile && <td style={{ padding: "0.875rem 1rem", color: "#9a8060", fontSize: "0.8rem", whiteSpace: "nowrap" }}>
+                      {!isMobile && <td style={{ padding: "0.875rem 0.75rem", color: "#9a8060", fontSize: "0.8rem", whiteSpace: "nowrap" }}>
                         {new Date(order.createdAt).toLocaleDateString("pt-BR")}
                       </td>}
-                      {!isMobile && <td style={{ padding: "0.875rem 1rem" }} onClick={e => e.stopPropagation()}>
+                      {!isMobile && <td style={{ padding: "0.875rem 0.75rem", ...stickyRight(isExpanded ? "#FDFAF4" : "#fff") }} onClick={e => e.stopPropagation()}>
                         <select
                           value={order.status}
                           disabled={updatingId === order.id}
                           onChange={e => updateStatus(order.id, e.target.value)}
-                          style={{ ...inp, fontSize: "0.72rem", padding: "0.3rem 0.5rem", cursor: "pointer" }}>
+                          style={{ ...inp, fontSize: "0.72rem", padding: "0.3rem 0.5rem", cursor: "pointer", maxWidth: 130 }}>
                           {Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                         </select>
                       </td>}
