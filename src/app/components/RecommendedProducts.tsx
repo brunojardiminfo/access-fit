@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCurrency, parseJson } from "@/lib/utils";
+import { getSaleInfo } from "@/lib/saleHelper";
 
 type Recomendacao = {
   id: string;
@@ -10,6 +11,9 @@ type Recomendacao = {
   slug: string;
   price: number;
   images: string;
+  createdAt: string | Date;
+  onSale?: boolean;
+  saleDiscount?: number | null;
   category: { name: string };
 };
 
@@ -60,6 +64,14 @@ export default function RecommendedProducts({ productSlug }: Props) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "1.5rem" }}>
         {recomendacoes.map((produto) => {
           const images = parseJson<string[]>(produto.images, []);
+          const createdDate = typeof produto.createdAt === "string" ? new Date(produto.createdAt) : produto.createdAt;
+          const saleInfo = getSaleInfo({
+            price: produto.price,
+            createdAt: createdDate,
+            onSale: produto.onSale,
+            saleDiscount: produto.saleDiscount,
+          });
+          const finalPrice = saleInfo ? saleInfo.salePrice : produto.price;
           return (
             <Link
               key={produto.id}
@@ -142,11 +154,16 @@ export default function RecommendedProducts({ productSlug }: Props) {
                   style={{
                     fontSize: "0.9rem",
                     fontWeight: 900,
-                    color: "#b8891a",
+                    color: saleInfo ? "#e74c3c" : "#b8891a",
                     margin: "0.5rem 0 0 0",
                   }}
                 >
-                  {formatCurrency(produto.price)}
+                  {formatCurrency(finalPrice)}
+                  {saleInfo && (
+                    <span style={{ fontSize: "0.7rem", color: "#b8a080", textDecoration: "line-through", marginLeft: "0.35rem", fontWeight: 700 }}>
+                      {formatCurrency(produto.price)}
+                    </span>
+                  )}
                 </p>
               </div>
             </Link>
