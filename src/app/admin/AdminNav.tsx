@@ -4,6 +4,9 @@ import { useAdmin } from "@/store/admin";
 import { useMobileView } from "@/hooks/useMediaQuery";
 import { getNavLinks } from "@/lib/permissions";
 
+// Analytics (/admin/analytics), Metricas (/admin/metricas) e o painel financeiro
+// completo (/admin/financeiro/completo) continuam funcionando pela URL, mas ficam
+// fora do menu para manter o dia a dia enxuto.
 const ALL_LINKS = [
   { href: "/admin",             label: "Início",      emoji: "🏠" },
   { href: "/admin/pedidos",     label: "Pedidos",     emoji: "📦" },
@@ -12,8 +15,6 @@ const ALL_LINKS = [
   { href: "/admin/clientes",    label: "Clientes",    emoji: "👥" },
   { href: "/admin/followup",    label: "Follow-up",   emoji: "📩" },
   { href: "/admin/financeiro",  label: "Financeiro",  emoji: "💳" },
-  { href: "/admin/analytics",   label: "Analytics",   emoji: "📊" },
-  { href: "/admin/metricas",    label: "Métricas",    emoji: "📈" },
   { href: "/admin/devolucoes",  label: "Devoluções",  emoji: "🔄" },
   { href: "/admin/marketing",   label: "Marketing",   emoji: "📣" },
   { href: "/admin/gestao",      label: "Gestão",      emoji: "⚙️" },
