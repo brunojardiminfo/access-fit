@@ -46,7 +46,10 @@ export default async function SaleManagerPage() {
         <div style={{ marginBottom: "2rem" }}>
           <a href="/admin" style={{ color: "#b8891a", fontSize: "0.875rem", textDecoration: "none" }}>← Admin</a>
           <h1 style={{ color: "#1a1510", fontSize: "2rem", fontWeight: 900, marginTop: "0.3rem" }}>🔥 Gerenciador de SALE</h1>
-          <p style={{ color: "#9a8060", fontSize: "0.875rem", marginTop: "0.5rem" }}>Autorize descontos para peças antigas no estoque</p>
+          <p style={{ color: "#9a8060", fontSize: "0.875rem", marginTop: "0.5rem" }}>
+            Toda peça com 60 dias ou mais de cadastro entra em SALE de 20% na loja automaticamente.
+            Use &quot;Autorizar&quot; para aplicar um desconto diferente de 20% em uma peça.
+          </p>
         </div>
 
         <SaleManagerClient
