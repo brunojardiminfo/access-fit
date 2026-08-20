@@ -14,6 +14,7 @@ interface Product {
   sizes?: string;
   sizeStock?: string;
   stock?: number;
+  active?: boolean;
 }
 
 interface OrderItem {
@@ -432,6 +433,9 @@ export default function DevolucoesPage() {
                         style={{ display: "block", width: "100%", textAlign: "left", padding: "0.5rem 0.75rem", border: "none", borderBottom: "1px solid rgba(140,100,20,0.08)", backgroundColor: "#fff", cursor: "pointer", fontSize: "0.85rem" }}
                       >
                         {p.name} <span style={{ color: "#9a8060", fontSize: "0.72rem" }}>({p.stock ?? 0} un.)</span>
+                        {p.active === false && (
+                          <span style={{ marginLeft: "0.4rem", fontSize: "0.6rem", fontWeight: 800, backgroundColor: "#f0f0f0", color: "#888", padding: "0.1rem 0.4rem", borderRadius: 999 }}>oculto no site</span>
+                        )}
                       </button>
                     ))}
                   </div>

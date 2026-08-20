@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 type Customer = { id: string; name: string; email: string; phone?: string };
-type Product = { id: string; name: string; price: number; stock: number; sizes: string; sizeStock?: string; colors: string; images: string; isConjunto?: boolean; sellComponentsSeparately?: boolean; conjuntoItems?: Array<{ id: string; name: string; price: number }> };
+type Product = { id: string; name: string; price: number; stock: number; active?: boolean; sizes: string; sizeStock?: string; colors: string; images: string; isConjunto?: boolean; sellComponentsSeparately?: boolean; conjuntoItems?: Array<{ id: string; name: string; price: number }> };
 type Item = { productId?: string; description: string; price: number; quantity: number; size?: string; componentName?: string; product?: Product };
 
 const inp = {
@@ -287,7 +287,12 @@ export default function NovoPedidoPage() {
                               </div>
                               {/* Info */}
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "#1a1510" }}>{p.name}</div>
+                                <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "#1a1510" }}>
+                                  {p.name}
+                                  {p.active === false && (
+                                    <span style={{ marginLeft: "0.4rem", fontSize: "0.6rem", fontWeight: 800, backgroundColor: "#f0f0f0", color: "#888", padding: "0.1rem 0.4rem", borderRadius: 999 }}>oculto no site</span>
+                                  )}
+                                </div>
                                 <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap", marginTop: "0.2rem" }}>
                                   {szs.length > 0
                                     ? szs.map(s => {
