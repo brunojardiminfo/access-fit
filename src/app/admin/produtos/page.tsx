@@ -11,7 +11,8 @@ export default async function AdminProdutosPage() {
 
   const [products, categories] = await Promise.all([
     prisma.product.findMany({
-      where: { active: true, NOT: { slug: "venda-manual" } },
+      // Inclui inativos: sem isso um produto oculto do site some tambem do admin
+      where: { NOT: { slug: "venda-manual" } },
       include: { category: true }, orderBy: { name: "asc" }
     }),
     prisma.category.findMany({ orderBy: { name: "asc" } }),

@@ -13,7 +13,7 @@ type Product = {
 export default function AdminProdutosClient({ products, categories }: { products: Product[]; categories: Category[] }) {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ativo");
   const [sizeFilter, setSizeFilter] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showBulkEdit, setShowBulkEdit] = useState(false);
@@ -100,14 +100,21 @@ export default function AdminProdutosClient({ products, categories }: { products
           <option value="sem_estoque">Sem estoque</option>
           <option value="estoque_baixo">Estoque baixo</option>
         </select>
+        {products.some(p => !p.active) && (
+          <button onClick={() => setStatusFilter(statusFilter === "inativo" ? "ativo" : "inativo")}
+            title="Produtos inativos nao aparecem na loja, mas continuam aqui"
+            style={{ fontSize: "0.75rem", fontWeight: 700, padding: "0.55rem 0.875rem", borderRadius: "0.625rem", border: "1px solid rgba(140,100,20,0.2)", cursor: "pointer", whiteSpace: "nowrap", backgroundColor: statusFilter === "inativo" ? "#b8891a" : "#FAF6EE", color: statusFilter === "inativo" ? "#fff" : "#9a8060" }}>
+            🚫 Ocultos do site ({products.filter(p => !p.active).length})
+          </button>
+        )}
         {allSizes.length > 0 && (
           <select value={sizeFilter} onChange={e => setSizeFilter(e.target.value)} style={{ ...inp, minWidth: 120 }}>
             <option value="">Todos tamanhos</option>
             {allSizes.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         )}
-        {(search || catFilter || statusFilter || sizeFilter) && (
-          <button onClick={() => { setSearch(""); setCatFilter(""); setStatusFilter(""); setSizeFilter(""); }}
+        {(search || catFilter || statusFilter !== "ativo" || sizeFilter) && (
+          <button onClick={() => { setSearch(""); setCatFilter(""); setStatusFilter("ativo"); setSizeFilter(""); }}
             style={{ backgroundColor: "#FAF6EE", border: "1px solid rgba(140,100,20,0.2)", color: "#9a8060", fontWeight: 700, fontSize: "0.75rem", padding: "0.55rem 0.875rem", borderRadius: "0.625rem", cursor: "pointer", whiteSpace: "nowrap" }}>
             ✕ Limpar
           </button>
