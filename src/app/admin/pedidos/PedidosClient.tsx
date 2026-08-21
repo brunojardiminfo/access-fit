@@ -107,6 +107,7 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
   const [editPaymentMethod, setEditPaymentMethod] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
   const [editInstallments, setEditInstallments] = useState(1);
+  const [taxaAbsorvida, setTaxaAbsorvida] = useState(true);
   const [togglingInstallment, setTogglingInstallment] = useState<string | null>(null);
   const [editingItemCost, setEditingItemCost] = useState<string | null>(null);
   const [itemCostValue, setItemCostValue] = useState("");
@@ -219,6 +220,7 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
     setEditPaymentMethod(order.paymentMethod || "pix");
     setEditDueDate(order.dueDate ? new Date(order.dueDate).toISOString().slice(0, 10) : "");
     setEditInstallments(order.installmentCount || 1);
+    setTaxaAbsorvida(true);
   };
 
   const savePayment = async (orderId: string) => {
@@ -226,17 +228,23 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
     const order = localOrders.find(o => o.id === orderId);
     if (!order) return;
 
+    // Link de pagamento com taxa absorvida: a cliente pagou tudo, a diferenca
+    // ficou com a operadora — o pedido esta quitado, nao ha saldo a cobrar
+    const ehTaxaLink = editPaymentMethod === "link" && amountPaid > 0 && amountPaid < order.total;
+    const statusFinal = ehTaxaLink && taxaAbsorvida ? "paid" : editPaymentStatus;
+
     const res = await fetch(`/api/admin/pedidos/${orderId}`, {
       method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        paymentStatus: editPaymentStatus, paymentMethod: editPaymentMethod, amountPaid,
+        paymentStatus: statusFinal, paymentMethod: editPaymentMethod, amountPaid,
         dueDate: editDueDate || null, installmentCount: editInstallments,
         generateInstallments: !!editDueDate && editInstallments > 0,
       }),
     });
 
-    // Se é link de pagamento e houve desconto, registra como despesa
-    if (editPaymentMethod === "link" && amountPaid > 0 && amountPaid < order.total) {
+    // Registra a taxa como despesa uma vez so: salvar de novo o mesmo valor
+    // nao pode gerar outro lancamento
+    if (ehTaxaLink && Math.abs(order.amountPaid - amountPaid) > 0.001) {
       const taxAmount = order.total - amountPaid;
       await fetch("/api/admin/despesas", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -914,14 +922,29 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                                         {Object.entries(METHOD_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                                       </select>
                                     </div>
-                                    {editPaymentMethod === "link" && (
-                                      <div>
-                                        <label style={{ fontSize: "0.72rem", color: "#9a8060", display: "block", marginBottom: "0.2rem" }}>💰 Valor Recebido (com desconto da operadora)</label>
-                                        <input type="number" step="0.01" value={editAmountPaid} onChange={e => setEditAmountPaid(e.target.value)}
-                                          placeholder={`Ex: ${order.total}`}
-                                          style={{ ...inp, width: "100%", boxSizing: "border-box" as const }} />
-                                      </div>
-                                    )}
+                                    {editPaymentMethod === "link" && (() => {
+                                      const recebido = parseFloat(editAmountPaid) || 0;
+                                      const taxa = order.total - recebido;
+                                      const temTaxa = recebido > 0 && taxa > 0.001;
+                                      return (
+                                        <div>
+                                          <label style={{ fontSize: "0.72rem", color: "#9a8060", display: "block", marginBottom: "0.2rem" }}>💰 Valor recebido (líquido, já com a taxa descontada)</label>
+                                          <input type="number" step="0.01" value={editAmountPaid} onChange={e => setEditAmountPaid(e.target.value)}
+                                            placeholder={`Ex: ${order.total}`}
+                                            style={{ ...inp, width: "100%", boxSizing: "border-box" as const }} />
+                                          {temTaxa && (
+                                            <label style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start", marginTop: "0.5rem", padding: "0.5rem 0.625rem", backgroundColor: "#fff8e1", borderRadius: "0.5rem", cursor: "pointer" }}>
+                                              <input type="checkbox" checked={taxaAbsorvida} onChange={e => setTaxaAbsorvida(e.target.checked)}
+                                                style={{ marginTop: 2, accentColor: "#b8891a", cursor: "pointer" }} />
+                                              <span style={{ fontSize: "0.7rem", color: "#7a6030", lineHeight: 1.4 }}>
+                                                Os {fmt(taxa)} que faltam são taxa da operadora, não dívida da cliente.
+                                                Marcando, o pedido fica <strong>quitado</strong> e a taxa vira despesa.
+                                              </span>
+                                            </label>
+                                          )}
+                                        </div>
+                                      );
+                                    })()}
                                     <div>
                                       <label style={{ fontSize: "0.72rem", color: "#9a8060", display: "block", marginBottom: "0.2rem" }}>Status de Pagamento</label>
                                       <select value={editPaymentStatus} onChange={e => setEditPaymentStatus(e.target.value)}

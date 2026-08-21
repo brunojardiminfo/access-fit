@@ -11,7 +11,11 @@ const CATEGORIES = [
   { value: "cartao", label: "💳 Cartão / Taxa" },
   { value: "outros", label: "📋 Outros" },
 ];
-const CATEGORY_LABEL: Record<string, string> = Object.fromEntries(CATEGORIES.map(c => [c.value, c.label]));
+const CATEGORY_LABEL: Record<string, string> = {
+  ...Object.fromEntries(CATEGORIES.map(c => [c.value, c.label])),
+  // Gerada automaticamente ao registrar um recebimento por link de pagamento
+  taxa_operadora: "💳 Taxa da operadora",
+};
 
 function fmt(n: number) { return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
 function today() { return new Date().toISOString().split("T")[0]; }

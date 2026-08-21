@@ -27,7 +27,11 @@ function itemDisplayName(item: any): string {
 
 export default function NotaPublicaClient({ order }: { order: any }) {
   const createdAt = new Date(order.createdAt);
-  const saldoPendente = order.total - order.amountPaid;
+  const quitado = order.paymentStatus === "paid";
+  // Pedido quitado nao tem saldo. Quando a diferenca e taxa da operadora, ela e
+  // custo nosso: para a cliente o pedido foi pago integralmente
+  const saldoPendente = quitado ? 0 : order.total - order.amountPaid;
+  const valorPago = quitado ? order.total : order.amountPaid;
 
   useEffect(() => {
     document.title = `Nota do Pedido #${order.id.slice(-6).toUpperCase()} — Access Fit`;
@@ -142,10 +146,10 @@ export default function NotaPublicaClient({ order }: { order: any }) {
                   {PAY_LABEL[order.paymentStatus]}
                 </p>
               </div>
-              {order.amountPaid > 0 && (
+              {valorPago > 0 && (
                 <div>
                   <span style={{ fontSize: "0.68rem", color: "#9a8060" }}>Pago</span>
-                  <p style={{ fontWeight: 700, color: "#1a8a2a", fontSize: "0.875rem", margin: "0.1rem 0 0" }}>{fmt(order.amountPaid)}</p>
+                  <p style={{ fontWeight: 700, color: "#1a8a2a", fontSize: "0.875rem", margin: "0.1rem 0 0" }}>{fmt(valorPago)}</p>
                 </div>
               )}
             </div>
