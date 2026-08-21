@@ -46,7 +46,7 @@ async function resolvePrices(items: IncomingItem[]) {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { items, paymentMethod, notes, couponCode, status } = body;
+  const { items, paymentMethod, notes, couponCode, status, previewId } = body;
 
   if (!items?.length) return NextResponse.json({ error: "Nenhum item" }, { status: 400 });
 
@@ -97,29 +97,44 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Item sem produto valido" }, { status: 400 });
   }
 
-  const order = await prisma.order.create({
-    data: {
-      userId,
-      status: status || "pending",
-      paymentStatus: "pending",
-      paymentMethod: paymentMethod || "pix",
-      amountPaid: 0,
-      total: totalFinal,
-      subtotal: Math.round(subtotal * 100) / 100,
-      discount: Math.round(discount * 100) / 100,
-      shipping: 0,
-      notes: notes || null,
-      couponCode: validCouponCode,
-      items: {
-        create: orderItems.map(i => ({
-          productId: i.productId as string,
-          quantity: i.quantity,
-          price: i.price,
-          size: i.size || null,
-        })),
-      },
-    },
-  });
+  const orderData = {
+    userId,
+    status: status || "pending",
+    paymentStatus: "pending",
+    paymentMethod: paymentMethod || "pix",
+    amountPaid: 0,
+    total: totalFinal,
+    subtotal: Math.round(subtotal * 100) / 100,
+    discount: Math.round(discount * 100) / 100,
+    shipping: 0,
+    notes: notes || null,
+    couponCode: validCouponCode,
+  };
+  const itemsData = orderItems.map(i => ({
+    productId: i.productId as string,
+    quantity: i.quantity,
+    price: i.price,
+    size: i.size || null,
+  }));
+
+  // Veio de um link de compartilhamento: aproveita o rascunho em vez de criar
+  // outro pedido, senao o mesmo carrinho vira duas linhas no admin
+  const rascunho = previewId
+    ? await prisma.order.findUnique({ where: { id: String(previewId) }, select: { id: true, status: true } })
+    : null;
+
+  let order;
+  if (rascunho && rascunho.status === "preview") {
+    await prisma.orderItem.deleteMany({ where: { orderId: rascunho.id } });
+    order = await prisma.order.update({
+      where: { id: rascunho.id },
+      data: { ...orderData, items: { create: itemsData } },
+    });
+  } else {
+    order = await prisma.order.create({
+      data: { ...orderData, items: { create: itemsData } },
+    });
+  }
 
   await prisma.orderStatusHistory.create({ data: { orderId: order.id, status: order.status } });
 

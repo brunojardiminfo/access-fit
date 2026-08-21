@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useCart } from "@/store/cart";
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
@@ -10,6 +11,10 @@ const PAY_LABELS: Record<string, string> = {
   pix: "Pix", cartao: "Cartão de crédito/débito",
   dinheiro: "Dinheiro", link: "Link de Pagamento",
 };
+
+function parseJson<T>(json: string, fallback: T): T {
+  try { return JSON.parse(json); } catch { return fallback; }
+}
 
 const inp = {
   padding: "0.75rem 1rem",
@@ -22,8 +27,10 @@ const inp = {
   boxSizing: "border-box" as const,
 };
 
-export default function CheckoutPage() {
-  const { items, total, clearCart, couponCode, couponDiscount } = useCart();
+function CheckoutContent() {
+  const { items, total, clearCart, addItem, couponCode, couponDiscount } = useCart();
+  const searchParams = useSearchParams();
+  const previewId = searchParams.get("previewId");
   const [skus, setSkus] = useState<Record<string, string>>({});
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -51,6 +58,42 @@ export default function CheckoutPage() {
       .then(data => setSkus(data))
       .catch(() => {});
   }, [items]);
+
+  // Quem abre um link compartilhado (ou volta nele de outro aparelho) chega sem
+  // carrinho: recompoe a partir do rascunho para nao cair num checkout vazio
+  useEffect(() => {
+    if (!previewId || items.length > 0) return;
+    fetch(`/api/pedido-preview?id=${previewId}`)
+      .then(r => r.json())
+      .then(order => {
+        if (!order?.items?.length) return;
+        order.items.forEach((i: any) => addItem({
+          productId: i.productId,
+          name: i.product?.name || "Peça",
+          price: i.price,
+          image: parseJson<string[]>(i.product?.images || "[]", [])[0] || "",
+          size: i.size || "Único",
+          color: "Padrão",
+          quantity: i.quantity,
+        }));
+      })
+      .catch(() => {});
+  }, [previewId, items.length, addItem]);
+
+  // O botao so fica cinza com a razao escrita embaixo, nunca sem explicacao
+  const faltando = [
+    !name.trim() && "seu nome",
+    !phone.trim() && "telefone",
+    ...(type === "tryon" ? [
+      !cpf.trim() && "CPF",
+      !street.trim() && "rua",
+      !number.trim() && "número",
+      !neighborhood.trim() && "bairro",
+      !city.trim() && "cidade",
+      !cep.trim() && "CEP",
+      !termsAccepted && "aceite dos termos",
+    ] : []),
+  ].filter(Boolean) as string[];
 
   const desconto = couponDiscount ? (total() * couponDiscount) / 100 : 0;
   const totalFinal = total() - desconto;
@@ -110,6 +153,11 @@ export default function CheckoutPage() {
       type === "compra" ? `Pagamento: ${PAY_LABELS[payMethod] || payMethod}` : "",
     ].filter(Boolean).join("\n");
 
+    // Abre o WhatsApp ainda dentro do clique: depois do await o navegador
+    // trata como popup e o celular bloqueia
+    const url = `https://wa.me/5551986596705?text=${encodeURIComponent(msg)}`;
+    const janela = window.open(url, "_blank");
+
     // Criar pedido no banco
     try {
       await fetch("/api/pedidos", {
@@ -124,14 +172,15 @@ export default function CheckoutPage() {
           notes: `${name} | ${phone}${city ? ` | ${city}` : ""}${couponCode ? ` | Cupom: ${couponCode}` : ""}`,
           couponCode: couponCode || null,
           status: type === "tryon" ? "try-on" : "pending",
+          previewId: previewId || null,
         }),
       });
-    } catch (e) {
+    } catch {
       // não bloqueia o fluxo se falhar
     }
 
-    const url = `https://wa.me/5551986596705?text=${encodeURIComponent(msg)}`;
-    window.open(url, "_blank");
+    // Bloqueado pelo navegador: leva na propria aba, para nunca ficar sem saida
+    if (!janela) window.location.href = url;
     setSent(true);
     clearCart();
   };
@@ -349,24 +398,30 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* Botões */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.875rem" }}>
-              <button onClick={handleCreatePreview}
-                disabled={items.length === 0}
-                style={{ backgroundColor: items.length === 0 ? "#d4b870" : "#c9a227", color: "#fff", border: "none", borderRadius: "0.875rem", padding: "1rem", fontSize: "0.9rem", fontWeight: 900, cursor: items.length === 0 ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
-                📋 Compartilhar
-              </button>
-
+            {/* Finalização */}
+            <div>
               <button onClick={handleWhatsApp}
-                disabled={!name.trim() || !phone.trim() || (type === "tryon" && (!cpf.trim() || !street.trim() || !number.trim() || !neighborhood.trim() || !city.trim() || !cep.trim() || !termsAccepted))}
-                style={{ backgroundColor: (!name.trim() || !phone.trim() || (type === "tryon" && (!cpf.trim() || !street.trim() || !number.trim() || !neighborhood.trim() || !city.trim() || !cep.trim() || !termsAccepted))) ? "#d4b870" : "#25D366", color: "#fff", border: "none", borderRadius: "0.875rem", padding: "1rem", fontSize: "0.9rem", fontWeight: 900, cursor: (!name.trim() || !phone.trim()) ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+                disabled={faltando.length > 0}
+                style={{ width: "100%", backgroundColor: faltando.length > 0 ? "#d4b870" : "#25D366", color: "#fff", border: "none", borderRadius: "0.875rem", padding: "1.05rem", fontSize: "1rem", fontWeight: 900, cursor: faltando.length > 0 ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                WhatsApp
+                Finalizar pedido no WhatsApp
               </button>
             </div>
-            <p style={{ textAlign: "center", fontSize: "0.75rem", color: "#9a8060", marginTop: "0.75rem" }}>
-              📋 Compartilhe para revisar com outras pessoas | 💬 WhatsApp: formata e abre direto
-            </p>
+
+            {faltando.length > 0 ? (
+              <p style={{ textAlign: "center", fontSize: "0.8rem", color: "#c04040", fontWeight: 700, marginTop: "0.75rem" }}>
+                Para finalizar, preencha: {faltando.join(", ")}
+              </p>
+            ) : (
+              <p style={{ textAlign: "center", fontSize: "0.78rem", color: "#9a8060", marginTop: "0.75rem" }}>
+                Você será levada ao nosso WhatsApp com o pedido pronto para confirmar.
+              </p>
+            )}
+
+            <button onClick={handleCreatePreview} disabled={items.length === 0}
+              style={{ display: "block", margin: "0.5rem auto 0", background: "none", border: "none", color: "#9a8060", fontSize: "0.78rem", textDecoration: "underline", cursor: items.length === 0 ? "not-allowed" : "pointer" }}>
+              Só quero mostrar esta sacola para alguém
+            </button>
           </div>
         </div>
       </div>
@@ -379,5 +434,17 @@ export default function CheckoutPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#FAF6EE" }}>
+        <div style={{ width: 36, height: 36, border: "3px solid rgba(184,137,26,0.2)", borderTopColor: "#b8891a", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }
