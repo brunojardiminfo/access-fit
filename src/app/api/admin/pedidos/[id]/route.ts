@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/firebase-admin";
 import { restoreProductStock } from "@/lib/stock";
+import { recalcOrderTotals } from "@/lib/orderTotals";
 
 const STATUS_NOTIFICATION: Record<string, { title: string; body: string }> = {
   confirmed: { title: "Pedido confirmado ✅", body: "Já estamos preparando tudo para você." },
@@ -29,6 +30,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (body.dueDate !== undefined) data.dueDate = body.dueDate ? new Date(body.dueDate) : null;
   if (body.installmentCount !== undefined) data.installmentCount = body.installmentCount;
   if (body.userId !== undefined) data.userId = body.userId;
+  if (body.discount !== undefined) data.discount = Math.max(0, Number(body.discount) || 0);
 
   // Restaurar estoque ao cancelar um pedido try-on ou qualquer pedido
   if (body.status === "cancelled") {
@@ -119,6 +121,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       });
     }
   }
+
+  // Desconto mudou: total volta a ser subtotal menos desconto
+  if (body.discount !== undefined) await recalcOrderTotals(id);
 
   const updated = await prisma.order.findUnique({
     where: { id },

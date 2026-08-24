@@ -108,6 +108,10 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
   const [editDueDate, setEditDueDate] = useState("");
   const [editInstallments, setEditInstallments] = useState(1);
   const [taxaAbsorvida, setTaxaAbsorvida] = useState(true);
+  const [editandoDesconto, setEditandoDesconto] = useState<string | null>(null);
+  const [descontoValor, setDescontoValor] = useState("");
+  const [descontoTipo, setDescontoTipo] = useState<"reais" | "percent">("reais");
+  const [salvandoDesconto, setSalvandoDesconto] = useState(false);
   const [togglingInstallment, setTogglingInstallment] = useState<string | null>(null);
   const [editingItemCost, setEditingItemCost] = useState<string | null>(null);
   const [itemCostValue, setItemCostValue] = useState("");
@@ -263,6 +267,28 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
       setLocalOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...updated } : o));
     }
     setEditingPayment(null);
+  };
+
+  const salvarDesconto = async (orderId: string) => {
+    const order = localOrders.find(o => o.id === orderId);
+    if (!order) return;
+    const bruto = parseFloat(descontoValor.replace(",", ".")) || 0;
+    const subtotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
+    // Percentual e convertido em reais na hora: o pedido guarda sempre o valor
+    const desconto = Math.min(descontoTipo === "percent" ? (subtotal * bruto) / 100 : bruto, subtotal);
+
+    setSalvandoDesconto(true);
+    const res = await fetch(`/api/admin/pedidos/${orderId}`, {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ discount: Math.round(desconto * 100) / 100 }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setLocalOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...updated, items: o.items, user: o.user } : o));
+    }
+    setSalvandoDesconto(false);
+    setEditandoDesconto(null);
+    setDescontoValor("");
   };
 
   const generateShareLink = (orderId: string) => {
@@ -808,10 +834,59 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                                   </div>
                                 );
                               })}
+                              {/* Desconto do pedido */}
+                              {(() => {
+                                const subtotalItens = order.items.reduce((sm, i) => sm + i.price * i.quantity, 0);
+                                const editando = editandoDesconto === order.id;
+                                return (
+                                  <>
+                                    {(order.discount > 0 || editando) && (
+                                      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.5rem", fontSize: "0.8rem" }}>
+                                        <span style={{ color: "#5a4a2a" }}>Subtotal</span>
+                                        <span style={{ color: "#1a1510", fontWeight: 700 }}>{fmt(subtotalItens)}</span>
+                                      </div>
+                                    )}
+                                    {order.discount > 0 && !editando && (
+                                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginTop: "0.2rem" }}>
+                                        <span style={{ color: "#1a8a2a" }}>Desconto</span>
+                                        <span style={{ color: "#1a8a2a", fontWeight: 700 }}>− {fmt(order.discount)}</span>
+                                      </div>
+                                    )}
+                                    {editando && (
+                                      <div style={{ marginTop: "0.4rem", padding: "0.5rem 0.625rem", backgroundColor: "#FAF6EE", borderRadius: "0.5rem", display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap" }}>
+                                        <input autoFocus value={descontoValor} onChange={e => setDescontoValor(e.target.value)}
+                                          placeholder="0,00" inputMode="decimal"
+                                          style={{ ...inp, fontSize: "0.75rem", padding: "0.25rem 0.5rem", width: 80 }} />
+                                        <div style={{ display: "flex", gap: "2px" }}>
+                                          {(["reais", "percent"] as const).map(t => (
+                                            <button key={t} onClick={() => setDescontoTipo(t)}
+                                              style={{ fontSize: "0.7rem", fontWeight: 800, padding: "0.25rem 0.5rem", border: "none", borderRadius: "0.35rem", cursor: "pointer", backgroundColor: descontoTipo === t ? "#b8891a" : "#fff", color: descontoTipo === t ? "#fff" : "#9a8060" }}>
+                                              {t === "reais" ? "R$" : "%"}
+                                            </button>
+                                          ))}
+                                        </div>
+                                        <button onClick={() => salvarDesconto(order.id)} disabled={salvandoDesconto}
+                                          style={{ fontSize: "0.7rem", fontWeight: 700, padding: "0.25rem 0.6rem", backgroundColor: "#b8891a", color: "#fff", border: "none", borderRadius: "0.4rem", cursor: "pointer" }}>
+                                          {salvandoDesconto ? "..." : "Aplicar"}
+                                        </button>
+                                        <button onClick={() => setEditandoDesconto(null)}
+                                          style={{ fontSize: "0.7rem", color: "#9a8060", background: "none", border: "none", cursor: "pointer" }}>✕</button>
+                                      </div>
+                                    )}
+                                  </>
+                                );
+                              })()}
+
                               <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.5rem", fontWeight: 900, fontSize: "0.875rem" }}>
                                 <span style={{ color: "#1a1510" }}>Total</span>
                                 <span style={{ color: "#b8891a" }}>{fmt(order.total)}</span>
                               </div>
+                              {order.paymentStatus !== "paid" && editandoDesconto !== order.id && (
+                                <button onClick={() => { setEditandoDesconto(order.id); setDescontoValor(order.discount ? String(order.discount) : ""); setDescontoTipo("reais"); }}
+                                  style={{ marginTop: "0.35rem", fontSize: "0.7rem", color: "#b8891a", background: "none", border: "none", cursor: "pointer", fontWeight: 700, padding: 0 }}>
+                                  {order.discount > 0 ? "✎ Alterar desconto" : "+ Dar desconto"}
+                                </button>
+                              )}
                               {!hideProfit && order.paymentStatus !== "paid" && order.installments.length === 0 && (
                                 <div style={{ marginTop: "0.5rem", padding: "0.5rem 0.75rem", backgroundColor: PAY_COLOR[order.paymentStatus]?.bg || "#fee8e8", borderRadius: "0.5rem" }}>
                                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>

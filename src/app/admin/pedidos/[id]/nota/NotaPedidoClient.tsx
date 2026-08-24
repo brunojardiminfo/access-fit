@@ -147,6 +147,18 @@ export default function NotaPedidoClient({ order }: { order: any }) {
                 <span style={{ color: "#1a1510" }}>{fmt(order.shipping)}</span>
               </div>
             )}
+            {order.discount > 0 && (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "0.3rem 0", fontSize: "0.85rem" }}>
+                  <span style={{ color: "#9a8060" }}>Subtotal</span>
+                  <span style={{ color: "#1a1510" }}>{fmt(order.subtotal)}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "0.3rem 0", fontSize: "0.85rem" }}>
+                  <span style={{ color: "#1a8a2a", fontWeight: 700 }}>Desconto</span>
+                  <span style={{ color: "#1a8a2a", fontWeight: 700 }}>− {fmt(order.discount)}</span>
+                </div>
+              </>
+            )}
             <div style={{ display: "flex", justifyContent: "space-between", padding: "0.6rem 0.75rem", marginTop: "0.3rem", backgroundColor: "#b8891a", borderRadius: "0.625rem" }}>
               <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.95rem" }}>TOTAL</span>
               <span style={{ color: "#fff", fontWeight: 900, fontSize: "1.1rem" }}>{fmt(order.total)}</span>

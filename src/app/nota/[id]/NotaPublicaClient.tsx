@@ -124,6 +124,18 @@ export default function NotaPublicaClient({ order }: { order: any }) {
                 <span style={{ color: "#1a1510" }}>{fmt(order.shipping)}</span>
               </div>
             )}
+            {order.discount > 0 && (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "0.3rem 0", fontSize: "0.85rem" }}>
+                  <span style={{ color: "#9a8060" }}>Subtotal</span>
+                  <span style={{ color: "#1a1510" }}>{fmt(order.subtotal)}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "0.3rem 0", fontSize: "0.85rem" }}>
+                  <span style={{ color: "#1a8a2a", fontWeight: 700 }}>Desconto</span>
+                  <span style={{ color: "#1a8a2a", fontWeight: 700 }}>− {fmt(order.discount)}</span>
+                </div>
+              </>
+            )}
             <div style={{ display: "flex", justifyContent: "space-between", padding: "0.6rem 0.875rem", marginTop: "0.4rem", backgroundColor: "#b8891a", borderRadius: "0.625rem" }}>
               <span style={{ color: "#fff", fontWeight: 700 }}>TOTAL</span>
               <span style={{ color: "#fff", fontWeight: 900, fontSize: "1.05rem" }}>{fmt(order.total)}</span>

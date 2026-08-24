@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = await req.json();
-  const { userId, newCustomer, items, paymentMethod, paymentStatus, amountPaid, notes, createdAt, dueDate, installments } = body;
+  const { userId, newCustomer, items, paymentMethod, paymentStatus, amountPaid, notes, createdAt, dueDate, installments, discount } = body;
 
   let customerId = userId;
 
@@ -70,6 +70,8 @@ export async function POST(req: Request) {
   }
 
   const subtotal = items.reduce((s: number, i: any) => s + i.price * i.quantity, 0);
+  const desconto = Math.min(Math.max(0, Number(discount) || 0), subtotal);
+  const totalComDesconto = Math.round((subtotal - desconto) * 100) / 100;
   const paid = parseFloat(amountPaid) || 0;
 
   try {
@@ -87,10 +89,10 @@ export async function POST(req: Request) {
         paymentMethod: paymentMethod || "pix",
         paymentStatus: paymentStatus || "paid",
         amountPaid: paid,
-        total: subtotal,
+        total: totalComDesconto,
         subtotal,
         shipping: 0,
-        discount: 0,
+        discount: desconto,
         notes: notes || null,
         dueDate: dueDate ? new Date(dueDate) : null,
         installmentCount: installments || 1,

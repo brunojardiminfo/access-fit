@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { recalcOrderTotals } from "@/lib/orderTotals";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -28,12 +29,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   // Preço de venda mudou: recalcula o total do pedido
   if (data.price !== undefined) {
-    const remaining = await prisma.orderItem.findMany({ where: { orderId: item.orderId } });
-    const newTotal = remaining.reduce((s, i) => s + i.price * i.quantity, 0);
-    await prisma.order.update({
-      where: { id: item.orderId },
-      data: { total: newTotal, subtotal: newTotal },
-    });
+    await recalcOrderTotals(item.orderId);
   }
 
   return NextResponse.json(item);
@@ -52,12 +48,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   await prisma.orderItem.delete({ where: { id } });
 
   // Recalcula o total do pedido
-  const remaining = await prisma.orderItem.findMany({ where: { orderId: item.orderId } });
-  const newTotal = remaining.reduce((s, i) => s + i.price * i.quantity, 0);
-  await prisma.order.update({
-    where: { id: item.orderId },
-    data: { total: newTotal, subtotal: newTotal },
-  });
+  const pedido = await recalcOrderTotals(item.orderId);
 
-  return NextResponse.json({ ok: true, newTotal });
+  return NextResponse.json({ ok: true, newTotal: pedido.total });
 }
