@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/store/cart";
+import { calcularSacola, CAMPANHA } from "@/lib/campanha";
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
@@ -95,7 +96,11 @@ function CheckoutContent() {
     ] : []),
   ].filter(Boolean) as string[];
 
-  const desconto = couponDiscount ? (total() * couponDiscount) / 100 : 0;
+  const sacola = calcularSacola(items);
+  const descontoCupom = couponDiscount ? (total() * couponDiscount) / 100 : 0;
+  // Campanha e cupom não somam: vale a melhor condição
+  const campanhaGanha = sacola.desconto > descontoCupom + 0.001;
+  const desconto = Math.max(sacola.desconto, descontoCupom);
   const totalFinal = total() - desconto;
 
   const handleCreatePreview = async () => {
@@ -134,9 +139,11 @@ function CheckoutContent() {
       ? `${street}, ${number}${complement ? ` - ${complement}` : ""}, ${neighborhood}, ${city} - ${state}, CEP: ${cep}`
       : "";
 
-    const cupomLinha = couponCode && couponDiscount
-      ? `\nCupom: ${couponCode} (-${couponDiscount}%) = -${formatCurrency(desconto)}`
-      : "";
+    const cupomLinha = campanhaGanha
+      ? `\n${CAMPANHA.nome}: ${sacola.pecas} peças (-${sacola.progressivo}%) = -${formatCurrency(desconto)}`
+      : couponCode && couponDiscount
+        ? `\nCupom: ${couponCode} (-${couponDiscount}%) = -${formatCurrency(desconto)}`
+        : "";
 
     const msg = [
       `Ola! Gostaria de fazer um pedido na Access Fit`,
@@ -242,14 +249,18 @@ function CheckoutContent() {
               ))}
             </div>
             <div style={{ borderTop: "1px solid rgba(140,100,20,0.1)", paddingTop: "1rem" }}>
-              {couponCode && couponDiscount && (
+              {desconto > 0 && (
                 <>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
                     <span style={{ color: "#5a4a2a", fontSize: "0.875rem" }}>Subtotal</span>
                     <span style={{ color: "#5a4a2a" }}>{formatCurrency(total())}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
-                    <span style={{ color: "#1a8a2a", fontSize: "0.875rem", fontWeight: 700 }}>Cupom {couponCode} (-{couponDiscount}%)</span>
+                    <span style={{ color: "#1a8a2a", fontSize: "0.875rem", fontWeight: 700 }}>
+                      {campanhaGanha
+                        ? `${CAMPANHA.nome} · ${sacola.pecas} peças (-${sacola.progressivo}%)`
+                        : `Cupom ${couponCode} (-${couponDiscount}%)`}
+                    </span>
                     <span style={{ color: "#1a8a2a", fontWeight: 700 }}>-{formatCurrency(desconto)}</span>
                   </div>
                 </>

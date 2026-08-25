@@ -3,12 +3,13 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getSaleInfo, calculateSalePrice } from "@/lib/saleHelper";
+import { descontoEfetivo, descontoProgressivo, faseCampanha, CAMPANHA } from "@/lib/campanha";
 
 type IncomingItem = { productId?: string; quantity?: number; price?: number; size?: string | null };
 
 // O preco cobrado nunca vem do cliente: e recalculado aqui a partir do banco,
 // aplicando o desconto de SALE quando a peca esta em promocao.
-async function resolvePrices(items: IncomingItem[]) {
+async function resolvePrices(items: IncomingItem[], ignorarCampanha = false) {
   const productIds = Array.from(
     new Set(items.map(i => i.productId).filter((id): id is string => !!id))
   );
@@ -21,6 +22,9 @@ async function resolvePrices(items: IncomingItem[]) {
     : [];
   const byId = new Map(products.map(p => [p.id, p]));
 
+  // Quantas pecas a sacola tem no total: e isso que define a faixa progressiva
+  const totalPecas = items.reduce((s, i) => s + Math.max(1, Number(i.quantity) || 1), 0);
+
   return items.map(item => {
     const clientPrice = Number(item.price) || 0;
     const quantity = Math.max(1, Number(item.quantity) || 1);
@@ -30,17 +34,23 @@ async function resolvePrices(items: IncomingItem[]) {
     if (!product) return { ...item, quantity, price: clientPrice };
 
     const saleInfo = getSaleInfo(product);
-    const withSale = (value: number) =>
-      saleInfo ? calculateSalePrice(value, saleInfo.discount) : value;
+    const descontoSale = saleInfo?.discount ?? 0;
+    // Vale a melhor condicao entre SALE e progressivo — os dois nunca somam
+    const efetivo = ignorarCampanha ? descontoSale : descontoEfetivo(descontoSale, totalPecas);
+
+    const withSale = (value: number) => calculateSalePrice(value, descontoSale);
+    const withEfetivo = (value: number) => calculateSalePrice(value, efetivo);
 
     // O carrinho nao diferencia conjunto completo de componente avulso, entao
-    // aceitamos qualquer preco valido da peca e devolvemos a versao com desconto.
+    // aceitamos qualquer preco valido da peca — de tabela, com SALE ou ja com
+    // a campanha — e devolvemos sempre a versao correta.
     const candidates = [product.price, ...product.conjuntoItems.map(c => c.price)];
+    const bate = (alvo: number) => Math.abs(clientPrice - alvo) < 0.01;
     const matched = candidates.find(
-      value => Math.abs(clientPrice - value) < 0.01 || Math.abs(clientPrice - withSale(value)) < 0.01
+      value => bate(value) || bate(withSale(value)) || bate(withEfetivo(value))
     );
 
-    return { ...item, quantity, price: withSale(matched ?? product.price) };
+    return { ...item, quantity, price: withEfetivo(matched ?? product.price) };
   });
 }
 
@@ -50,23 +60,41 @@ export async function POST(req: Request) {
 
   if (!items?.length) return NextResponse.json({ error: "Nenhum item" }, { status: 400 });
 
-  const pricedItems = await resolvePrices(items as IncomingItem[]);
-  const subtotal = pricedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  // Duas contas: uma so com o SALE (onde o cupom pode entrar) e outra com a
+  // campanha. Vale a melhor para a cliente — cupom e campanha nunca somam.
+  const itensSoSale = await resolvePrices(items as IncomingItem[], true);
+  const itensCampanha = await resolvePrices(items as IncomingItem[]);
+  const subtotalSoSale = itensSoSale.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const subtotalCampanha = itensCampanha.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+  const pecas = itensCampanha.reduce((s, i) => s + i.quantity, 0);
+  const progressivoAplicado = faseCampanha() === "ativa" ? descontoProgressivo(pecas) : 0;
 
   // Cupom revalidado no banco: o desconto tambem nao vem do cliente
-  let discount = 0;
-  let validCouponCode: string | null = null;
+  let descontoCupom = 0;
+  let cupomValido: string | null = null;
   if (couponCode) {
     const coupon = await prisma.coupon.findUnique({ where: { code: String(couponCode).toUpperCase() } });
     const expired = coupon?.expiresAt ? new Date() > coupon.expiresAt : false;
     const exhausted = coupon?.maxUses ? coupon.usedCount >= coupon.maxUses : false;
     if (coupon && coupon.active && !expired && !exhausted) {
-      validCouponCode = coupon.code;
-      discount = coupon.type === "fixed" || coupon.type === "valor"
-        ? Math.min(coupon.discount, subtotal)
-        : (subtotal * coupon.discount) / 100;
+      cupomValido = coupon.code;
+      descontoCupom = coupon.type === "fixed" || coupon.type === "valor"
+        ? Math.min(coupon.discount, subtotalSoSale)
+        : (subtotalSoSale * coupon.discount) / 100;
     }
   }
+
+  const totalComCupom = Math.max(0, subtotalSoSale - descontoCupom);
+  const cupomGanha = cupomValido !== null && totalComCupom < subtotalCampanha - 0.001;
+
+  const pricedItems = cupomGanha ? itensSoSale : itensCampanha;
+  const subtotal = cupomGanha ? subtotalSoSale : subtotalCampanha;
+  const discount = cupomGanha ? descontoCupom : 0;
+  const validCouponCode = cupomGanha ? cupomValido : null;
+  const notaCampanha = !cupomGanha && progressivoAplicado > 0
+    ? `${CAMPANHA.nome}: ${pecas} peças (-${progressivoAplicado}%)`
+    : null;
 
   const totalFinal = Math.round(Math.max(0, subtotal - discount) * 100) / 100;
 
@@ -107,7 +135,7 @@ export async function POST(req: Request) {
     subtotal: Math.round(subtotal * 100) / 100,
     discount: Math.round(discount * 100) / 100,
     shipping: 0,
-    notes: notes || null,
+    notes: [notes, notaCampanha].filter(Boolean).join(" | ") || null,
     couponCode: validCouponCode,
   };
   const itemsData = orderItems.map(i => ({

@@ -39,3 +39,65 @@ export function faseCampanha(agora: Date = new Date()): FaseCampanha {
 export function mesDaCampanha(): string {
   return CAMPANHA.inicio.toLocaleDateString("pt-BR", { month: "long" });
 }
+
+/** Teto da escada progressiva. Nunca passa disso, por mais peças que levem. */
+export const TETO_PROGRESSIVO = 30;
+
+/**
+ * Desconto progressivo pela quantidade de peças na sacola: 1 peça 10%,
+ * 2 peças 20%, 3 ou mais 30%. Função pura — a mesma conta roda no
+ * carrinho e no servidor, para o valor cobrado nunca divergir do exibido.
+ */
+export function descontoProgressivo(qtdPecas: number): number {
+  if (qtdPecas < 1) return 0;
+  const escada = CAMPANHA.regras
+    .filter(r => qtdPecas >= r.pecas)
+    .reduce((maior, r) => Math.max(maior, r.desconto), 0);
+  return Math.min(escada, TETO_PROGRESSIVO);
+}
+
+/**
+ * Desconto que vale para uma peça: o maior entre o SALE dela e o progressivo.
+ * Os dois nunca somam — a cliente leva a melhor condição, não as duas.
+ */
+export function descontoEfetivo(descontoSale: number, qtdPecas: number, agora: Date = new Date()): number {
+  const progressivo = faseCampanha(agora) === "ativa" ? descontoProgressivo(qtdPecas) : 0;
+  return Math.max(descontoSale || 0, progressivo);
+}
+
+export type ItemSacola = {
+  price: number;          // preço já com o SALE aplicado
+  quantity: number;
+  precoCheio?: number;    // preço de tabela, quando conhecido
+  descontoSale?: number;  // % de SALE embutido em price
+};
+
+/**
+ * Conta da sacola inteira. Mesma função no carrinho, no checkout e no servidor,
+ * para o que a cliente vê ser exatamente o que é cobrado.
+ */
+export function calcularSacola(itens: ItemSacola[], agora: Date = new Date()) {
+  const pecas = itens.reduce((s, i) => s + Math.max(1, i.quantity || 1), 0);
+  const progressivo = faseCampanha(agora) === "ativa" ? descontoProgressivo(pecas) : 0;
+
+  let subtotal = 0;   // o que a sacola custaria só com o SALE
+  let total = 0;      // o que sai com a melhor condição
+
+  for (const item of itens) {
+    const qtd = Math.max(1, item.quantity || 1);
+    const sale = item.descontoSale || 0;
+    // Sem preço cheio conhecido, o preço do item ja e o de partida
+    const cheio = item.precoCheio ?? item.price;
+    const efetivo = Math.max(sale, progressivo);
+    subtotal += item.price * qtd;
+    total += arredonda(cheio * (100 - efetivo) / 100) * qtd;
+  }
+
+  subtotal = arredonda(subtotal);
+  total = arredonda(total);
+  return { pecas, progressivo, subtotal, total, desconto: arredonda(subtotal - total) };
+}
+
+function arredonda(v: number) {
+  return Math.round(v * 100) / 100;
+}

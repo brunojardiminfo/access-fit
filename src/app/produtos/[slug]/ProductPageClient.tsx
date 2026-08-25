@@ -115,16 +115,22 @@ export default function ProductPageClient() {
 
     let itemName = product.name;
     let itemPrice = finalPrice;
+    let itemCheio = product.price;
 
     if (selectedComponent && selectedComponent !== "completo") {
       const component = product.conjuntoItems.find(c => c.id === selectedComponent);
       if (component) {
         itemName = `${product.name} - ${component.name}`;
         itemPrice = componentPrice(component.price);
+        itemCheio = component.price;
       }
     }
 
-    addItem({ productId: product.id, name: itemName, price: itemPrice, image: images[0] || "", size: selectedSize || "Único", color: "Padrão", quantity: 1 });
+    addItem({
+      productId: product.id, name: itemName, price: itemPrice,
+      precoCheio: itemCheio, descontoSale: saleInfo?.discount ?? 0,
+      image: images[0] || "", size: selectedSize || "Único", color: "Padrão", quantity: 1,
+    });
     setAdded(true);
     setTimeout(() => setAdded(false), 2500);
     openCart();

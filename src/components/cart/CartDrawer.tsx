@@ -5,6 +5,7 @@ import { useCart } from "@/store/cart";
 import { X, Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import { calcularSacola, CAMPANHA } from "@/lib/campanha";
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQuantity, total, couponCode, couponDiscount, setCoupon, clearCoupon } = useCart();
@@ -15,7 +16,11 @@ export default function CartDrawer() {
   if (!isOpen) return null;
 
   const subtotal = total();
-  const desconto = couponDiscount ? (subtotal * couponDiscount) / 100 : 0;
+  const sacola = calcularSacola(items);
+  const descontoCupom = couponDiscount ? (subtotal * couponDiscount) / 100 : 0;
+  // Campanha e cupom não somam: fica a melhor condição para a cliente
+  const campanhaGanha = sacola.desconto > descontoCupom + 0.001;
+  const desconto = Math.max(sacola.desconto, descontoCupom);
   const totalFinal = subtotal - desconto;
 
   const applyCoupon = async () => {
@@ -134,7 +139,9 @@ export default function CartDrawer() {
             </div>
             {desconto > 0 && (
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.3rem" }}>
-                <span style={{ color: "#1a8a2a", fontSize: "0.875rem" }}>Desconto ({couponDiscount}%)</span>
+                <span style={{ color: "#1a8a2a", fontSize: "0.875rem" }}>
+                  {campanhaGanha ? `${CAMPANHA.nome} (${sacola.progressivo}%)` : `Desconto (${couponDiscount}%)`}
+                </span>
                 <span style={{ color: "#1a8a2a", fontWeight: 700 }}>-{formatCurrency(desconto)}</span>
               </div>
             )}
