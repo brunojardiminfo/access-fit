@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { useMobileView } from "@/hooks/useMediaQuery";
 import ProductCard from "@/components/products/ProductCard";
+import { CAMPANHA, faseCampanha, mesDaCampanha } from "@/lib/campanha";
 
 interface HomeClientProps {
   newArrivals: any[];
@@ -23,6 +24,7 @@ export default function HomeClient({
   categoryIcons,
 }: HomeClientProps) {
   const isMobile = useMobileView();
+  const fase = faseCampanha();
 
   return (
     <div style={{ backgroundColor: "#FAF6EE" }}>
@@ -79,6 +81,67 @@ export default function HomeClient({
         </div>
       </section>
 
+      {/* Campanha — só avisa que vem, a mecânica fica guardada */}
+      {fase === "teaser" && (
+        <section style={{ background: "linear-gradient(120deg, #1a1510 0%, #3a2410 55%, #1a1510 100%)", padding: isMobile ? "2rem 1rem" : "3.25rem 1.5rem", borderTop: "1px solid rgba(184,137,26,0.25)", borderBottom: "1px solid rgba(184,137,26,0.25)" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
+            <span style={{ display: "inline-block", border: "1px solid rgba(184,137,26,0.45)", color: "#e0b64a", fontSize: isMobile ? "0.6rem" : "0.68rem", fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", padding: "0.4rem 1.1rem", borderRadius: "999px", marginBottom: "1.1rem", backgroundColor: "rgba(184,137,26,0.1)" }}>
+              ✦ Em {mesDaCampanha()}
+            </span>
+            <h2 style={{ fontSize: isMobile ? "1.6rem" : "2.6rem", fontWeight: 900, color: "#FAF6EE", margin: "0 0 0.875rem", lineHeight: 1.1 }}>
+              {CAMPANHA.nome} <span className="gold-shimmer">está chegando</span>
+            </h2>
+            <p style={{ color: "rgba(250,246,238,0.7)", fontSize: isMobile ? "0.88rem" : "1.05rem", lineHeight: 1.7, maxWidth: 520, margin: "0 auto 1.75rem" }}>
+              Estamos preparando uma condição especial para quem veste Access Fit.
+              Ainda não vamos contar qual — mas vale esperar.
+            </p>
+            <a href={`https://wa.me/5551986596705?text=${encodeURIComponent(`Olá! Quero ser avisada sobre o ${CAMPANHA.nome} da Access Fit`)}`}
+              target="_blank" rel="noopener noreferrer"
+              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", backgroundColor: "#b8891a", color: "#fff", fontWeight: 900, padding: isMobile ? "0.8rem 1.75rem" : "0.95rem 2.25rem", borderRadius: "0.875rem", textDecoration: "none", fontSize: isMobile ? "0.85rem" : "0.95rem", boxShadow: "0 4px 20px rgba(184,137,26,0.35)" }}>
+              📲 Quero ser avisada
+            </a>
+          </div>
+        </section>
+      )}
+
+      {/* SALE */}
+      <section style={{ padding: isMobile ? "2rem 1rem" : "4.5rem 1.5rem", background: "linear-gradient(180deg, #fff5f3 0%, #FAF6EE 100%)", borderTop: "3px solid #e74c3c" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "0.75rem" }}>
+            <span style={{ display: "inline-block", backgroundColor: "#e74c3c", color: "#fff", fontSize: isMobile ? "0.6rem" : "0.7rem", fontWeight: 900, letterSpacing: "0.18em", padding: "0.35rem 1rem", borderRadius: "999px", marginBottom: "0.75rem" }}>
+              PREÇOS REDUZIDOS
+            </span>
+            <h2 style={{ fontSize: isMobile ? "1.75rem" : "3rem", fontWeight: 900, color: "#e74c3c", margin: 0, lineHeight: 1 }}>
+              🔥 SALE
+            </h2>
+          </div>
+          <p style={{ textAlign: "center", color: "#9a8060", marginBottom: isMobile ? "1.5rem" : "2.5rem", fontSize: isMobile ? "0.8rem" : "1rem" }}>
+            {saleProducts.length > 0
+              ? `${saleProducts.length} peça${saleProducts.length === 1 ? "" : "s"} com desconto agora — enquanto durar o estoque`
+              : "Fique atento para nossas promoções exclusivas"}
+          </p>
+          {saleProducts.length > 0 ? (
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? "1rem" : "1.25rem" }}>
+              {saleProducts.map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : null}
+          {saleProducts.length > 0 ? (
+            <div style={{ textAlign: "center", marginTop: isMobile ? "1.25rem" : "2rem" }}>
+              <Link href="/produtos?sale=1" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", backgroundColor: "#e74c3c", color: "#fff", fontWeight: 900, padding: isMobile ? "0.75rem 1.5rem" : "0.9rem 2rem", borderRadius: "0.875rem", textDecoration: "none", fontSize: isMobile ? "0.85rem" : "0.95rem", boxShadow: "0 4px 18px rgba(231,76,60,0.35)" }}>
+                Ver tudo em SALE <ArrowRight size={16} />
+              </Link>
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", padding: "3rem 1rem", backgroundColor: "#fff", borderRadius: "1rem", border: "1px solid rgba(231,76,60,0.2)" }}>
+              <span style={{ fontSize: "3rem", display: "block", marginBottom: "1rem" }}>🎉</span>
+              <p style={{ color: "#9a8060", fontSize: "1rem", fontWeight: 600 }}>Volte em breve para aproveitar ofertas especiais!</p>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Home Try-On */}
       <section style={{ padding: isMobile ? "2rem 1rem" : "4.5rem 1.5rem", backgroundColor: "#fff", borderBottom: "1px solid rgba(140,100,20,0.08)" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
@@ -123,32 +186,6 @@ export default function HomeClient({
               </Link>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* SALE */}
-      <section style={{ padding: isMobile ? "1.5rem 1rem" : "5rem 1.5rem", backgroundColor: "#FAF6EE", borderTop: "2px solid rgba(231,76,60,0.2)" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <h2 style={{ fontSize: isMobile ? "1.25rem" : "2.2rem", fontWeight: 900, color: "#e74c3c", marginBottom: "0.75rem", textAlign: "center" }}>
-            🔥 SALE
-          </h2>
-          <p style={{ textAlign: "center", color: "#9a8060", marginBottom: isMobile ? "1.5rem" : "2.5rem", fontSize: isMobile ? "0.8rem" : "1rem" }}>
-            {saleProducts.length > 0
-              ? "Produtos com desconto especial - aproveita!"
-              : "Fique atento para nossas promoções exclusivas"}
-          </p>
-          {saleProducts.length > 0 ? (
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? "1rem" : "1.25rem" }}>
-              {saleProducts.map(product => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <div style={{ textAlign: "center", padding: "3rem 1rem", backgroundColor: "#fff", borderRadius: "1rem", border: "1px solid rgba(231,76,60,0.2)" }}>
-              <span style={{ fontSize: "3rem", display: "block", marginBottom: "1rem" }}>🎉</span>
-              <p style={{ color: "#9a8060", fontSize: "1rem", fontWeight: 600 }}>Volte em breve para aproveitar ofertas especiais!</p>
-            </div>
-          )}
         </div>
       </section>
 

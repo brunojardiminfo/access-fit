@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import HomeClient from "./HomeClient";
+import { saleWhere } from "@/lib/saleHelper";
 
 export const dynamic = "force-dynamic";
 
@@ -22,13 +23,7 @@ export default async function HomePage() {
       take: 20,
     }),
     prisma.product.findMany({
-      where: {
-        active: true,
-        OR: [
-          { createdAt: { lte: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000) } },
-          { onSale: true },
-        ],
-      },
+      where: { active: true, ...saleWhere() },
       include: { category: true },
       orderBy: { createdAt: "asc" },
       take: 8,
