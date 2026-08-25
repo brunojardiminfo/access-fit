@@ -149,9 +149,9 @@ export default async function ProdutosPage({
 
             {/* SALE */}
             <Link href={buildUrl({ sale: soSale ? undefined : "1" })}
-              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.875rem 1.25rem", borderBottom: "1px solid rgba(140,100,20,0.08)", textDecoration: "none", backgroundColor: soSale ? "#e74c3c" : "#fff5f3" }}>
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", padding: "0.875rem 1.25rem", borderBottom: "1px solid rgba(140,100,20,0.08)", textDecoration: "none", backgroundColor: soSale ? "#e74c3c" : "#fff5f3" }}>
               <span style={{ fontSize: "0.85rem", fontWeight: 900, color: soSale ? "#fff" : "#e74c3c" }}>🔥 SALE</span>
-              <span style={{ fontSize: "0.7rem", fontWeight: 700, color: soSale ? "rgba(255,255,255,0.8)" : "#c0705a" }}>
+              <span style={{ fontSize: "0.7rem", fontWeight: 700, whiteSpace: "nowrap", color: soSale ? "rgba(255,255,255,0.8)" : "#c0705a" }}>
                 {soSale ? "✕ limpar" : "ver ofertas"}
               </span>
             </Link>

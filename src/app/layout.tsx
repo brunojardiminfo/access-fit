@@ -5,6 +5,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CartDrawer from "@/components/cart/CartDrawer";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
+import CampanhaBar from "@/components/layout/CampanhaBar";
 import NotificationSubscriber from "@/components/NotificationSubscriber";
 import { SessionProvider } from "next-auth/react";
 import { headers } from "next/headers";
@@ -44,6 +45,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
   const isAdmin = pathname.startsWith("/admin");
+  // No checkout a barra sai de cena: o link do WhatsApp tiraria a cliente
+  // da finalização do pedido
+  const isCheckout = pathname.startsWith("/checkout");
 
   return (
     <html lang="pt-BR">
@@ -51,6 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <SessionProvider>
           <NotificationSubscriber />
           {!isAdmin && <Header />}
+          {!isAdmin && !isCheckout && <CampanhaBar />}
           <main style={{ flex: 1 }}>{children}</main>
           {!isAdmin && <Footer />}
           {!isAdmin && <CartDrawer />}
