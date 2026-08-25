@@ -14,9 +14,10 @@
 export const CAMPANHA = {
   ligada: true,
   nome: "Mês do Consumidor",
-  // Meses em JS começam no zero: 8 = setembro
-  inicio: new Date(2026, 8, 1),
-  fim: new Date(2026, 8, 30, 23, 59, 59),
+  // Fuso de Brasília explícito: o servidor roda em UTC, e sem o -03:00 a
+  // campanha começaria às 21h do dia anterior
+  inicio: new Date("2026-09-01T00:00:00-03:00"),
+  fim: new Date("2026-09-30T23:59:59-03:00"),
   revelarRegras: false,
   // Só entram em cena quando revelarRegras virar true
   regras: [
