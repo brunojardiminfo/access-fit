@@ -9,7 +9,7 @@ export default async function HomePage() {
     prisma.product.findMany({
       where: { featuredHero: true, active: true },
       include: { category: true },
-      take: 4,
+      take: 6,
     }),
     prisma.product.findMany({
       where: { featured: true, active: true },
@@ -31,7 +31,10 @@ export default async function HomePage() {
     prisma.category.findMany({ orderBy: { name: "asc" } }),
   ]);
 
-  const displayHeroProducts = heroProducts.length >= 4 ? heroProducts : newArrivals.slice(0, 4);
+  // O carrossel do topo quer ao menos 4 peças: completa com as novidades
+  const displayHeroProducts = heroProducts.length >= 4
+    ? heroProducts
+    : [...heroProducts, ...newArrivals.filter(n => !heroProducts.some(h => h.id === n.id))].slice(0, 6);
   const displayFeaturedProducts = featuredProducts.length >= 4 ? featuredProducts : newArrivals.slice(4, 8);
   const displaySaleProducts = saleProducts.slice(0, 8);
 

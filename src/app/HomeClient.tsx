@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useMobileView } from "@/hooks/useMediaQuery";
 import ProductCard from "@/components/products/ProductCard";
 import { CAMPANHA, faseCampanha, mesDaCampanha } from "@/lib/campanha";
+import HeroCarousel from "./components/HeroCarousel";
 
 interface HomeClientProps {
   newArrivals: any[];
@@ -28,6 +29,26 @@ export default function HomeClient({
 
   return (
     <div style={{ backgroundColor: "#FAF6EE" }}>
+      {/* Faixa da campanha — primeira coisa da página */}
+      {fase === "teaser" && (
+        <a
+          href={`https://wa.me/5551986596705?text=${encodeURIComponent(`Olá! Quero ser avisada sobre o ${CAMPANHA.nome} da Access Fit`)}`}
+          target="_blank" rel="noopener noreferrer"
+          style={{ display: "block", textDecoration: "none", background: "linear-gradient(90deg, #b8891a 0%, #e0b64a 50%, #b8891a 100%)", padding: isMobile ? "0.7rem 1rem" : "0.8rem 1.5rem" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", gap: isMobile ? "0.5rem" : "0.875rem", flexWrap: "wrap", textAlign: "center" }}>
+            <span style={{ color: "#1a1510", fontSize: isMobile ? "0.62rem" : "0.68rem", fontWeight: 900, letterSpacing: "0.16em", textTransform: "uppercase", backgroundColor: "rgba(26,21,16,0.12)", padding: "0.22rem 0.7rem", borderRadius: "999px", whiteSpace: "nowrap" }}>
+              ✦ Em {mesDaCampanha()}
+            </span>
+            <span style={{ color: "#1a1510", fontSize: isMobile ? "0.8rem" : "0.95rem", fontWeight: 800 }}>
+              {CAMPANHA.nome} está chegando
+            </span>
+            <span style={{ color: "rgba(26,21,16,0.75)", fontSize: isMobile ? "0.75rem" : "0.88rem", fontWeight: 700, textDecoration: "underline", whiteSpace: "nowrap" }}>
+              quero ser avisada →
+            </span>
+          </div>
+        </a>
+      )}
+
       {/* HERO */}
       <section style={{ background: "linear-gradient(160deg, #1a1510 0%, #2d2010 60%, #1a1510 100%)", padding: isMobile ? "1.5rem 1rem" : "4rem 1.5rem 4rem", position: "relative", overflow: "hidden", minHeight: isMobile ? "auto" : "85vh", display: "flex", alignItems: "center" }}>
         {/* Glow */}
@@ -58,51 +79,10 @@ export default function HomeClient({
             </div>
           </div>
 
-          {/* Grid de preview de produtos - esconde em mobile */}
-          {!isMobile && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.875rem" }}>
-              {heroProducts.map((p, i) => {
-                const imgs = JSON.parse(p.images || "[]");
-                return (
-                  <Link key={p.id} href={`/produtos/${p.slug}`} style={{ textDecoration: "none", display: "block", borderRadius: "1rem", overflow: "hidden", aspectRatio: i === 0 ? "1/1.4" : "1/1", backgroundColor: "#2a2010", border: "1px solid rgba(184,137,26,0.15)", position: "relative" }}>
-                    {imgs[0] ? (
-                      <img src={imgs[0]} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: 0.9 }} />
-                    ) : (
-                      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(184,137,26,0.3)", fontSize: "0.7rem" }}>Access Fit</div>
-                    )}
-                    <div style={{ position: "absolute", bottom: 8, left: 8, right: 8, backgroundColor: "rgba(26,21,16,0.85)", borderRadius: "0.5rem", padding: "0.4rem 0.6rem", backdropFilter: "blur(4px)" }}>
-                      <p style={{ color: "#FAF6EE", fontSize: "0.65rem", fontWeight: 700, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{p.name}</p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
+          {/* Carrossel de peças */}
+          <HeroCarousel produtos={heroProducts} isMobile={isMobile} />
         </div>
       </section>
-
-      {/* Campanha — só avisa que vem, a mecânica fica guardada */}
-      {fase === "teaser" && (
-        <section style={{ background: "linear-gradient(120deg, #1a1510 0%, #3a2410 55%, #1a1510 100%)", padding: isMobile ? "2rem 1rem" : "3.25rem 1.5rem", borderTop: "1px solid rgba(184,137,26,0.25)", borderBottom: "1px solid rgba(184,137,26,0.25)" }}>
-          <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
-            <span style={{ display: "inline-block", border: "1px solid rgba(184,137,26,0.45)", color: "#e0b64a", fontSize: isMobile ? "0.6rem" : "0.68rem", fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", padding: "0.4rem 1.1rem", borderRadius: "999px", marginBottom: "1.1rem", backgroundColor: "rgba(184,137,26,0.1)" }}>
-              ✦ Em {mesDaCampanha()}
-            </span>
-            <h2 style={{ fontSize: isMobile ? "1.6rem" : "2.6rem", fontWeight: 900, color: "#FAF6EE", margin: "0 0 0.875rem", lineHeight: 1.1 }}>
-              {CAMPANHA.nome} <span className="gold-shimmer">está chegando</span>
-            </h2>
-            <p style={{ color: "rgba(250,246,238,0.7)", fontSize: isMobile ? "0.88rem" : "1.05rem", lineHeight: 1.7, maxWidth: 520, margin: "0 auto 1.75rem" }}>
-              Estamos preparando uma condição especial para quem veste Access Fit.
-              Ainda não vamos contar qual — mas vale esperar.
-            </p>
-            <a href={`https://wa.me/5551986596705?text=${encodeURIComponent(`Olá! Quero ser avisada sobre o ${CAMPANHA.nome} da Access Fit`)}`}
-              target="_blank" rel="noopener noreferrer"
-              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", backgroundColor: "#b8891a", color: "#fff", fontWeight: 900, padding: isMobile ? "0.8rem 1.75rem" : "0.95rem 2.25rem", borderRadius: "0.875rem", textDecoration: "none", fontSize: isMobile ? "0.85rem" : "0.95rem", boxShadow: "0 4px 20px rgba(184,137,26,0.35)" }}>
-              📲 Quero ser avisada
-            </a>
-          </div>
-        </section>
-      )}
 
       {/* SALE */}
       <section style={{ padding: isMobile ? "2rem 1rem" : "4.5rem 1.5rem", background: "linear-gradient(180deg, #fff5f3 0%, #FAF6EE 100%)", borderTop: "3px solid #e74c3c" }}>
