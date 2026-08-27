@@ -5,7 +5,7 @@ import { useCart } from "@/store/cart";
 import { X, Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
-import { calcularSacola, CAMPANHA } from "@/lib/campanha";
+import { calcularSacola, descontoDoCupom, CAMPANHA } from "@/lib/campanha";
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQuantity, total, couponCode, couponDiscount, setCoupon, clearCoupon } = useCart();
@@ -17,7 +17,9 @@ export default function CartDrawer() {
 
   const subtotal = total();
   const sacola = calcularSacola(items);
-  const descontoCupom = couponDiscount ? (subtotal * couponDiscount) / 100 : 0;
+  // Cupom não vale em peça de SALE: incide só sobre o que está a preço cheio
+  const descontoCupom = descontoDoCupom(sacola.baseCupom, couponDiscount || 0);
+  const cupomSemEfeito = !!couponDiscount && descontoCupom <= 0;
   // Campanha e cupom não somam: fica a melhor condição para a cliente
   const campanhaGanha = sacola.desconto > descontoCupom + 0.001;
   const desconto = Math.max(sacola.desconto, descontoCupom);
@@ -109,9 +111,20 @@ export default function CartDrawer() {
 
             {/* Cupom */}
             {couponDiscount ? (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#e8f8e8", border: "1px solid rgba(26,138,42,0.2)", borderRadius: "0.625rem", padding: "0.5rem 0.75rem", marginBottom: "0.75rem" }}>
-                <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#1a8a2a" }}>🎟️ {couponCode.toUpperCase()} — -{couponDiscount}%</span>
-                <button onClick={removeCoupon} style={{ background: "none", border: "none", cursor: "pointer", color: "#9a8060", fontSize: "0.8rem" }}>✕</button>
+              <div style={{ backgroundColor: cupomSemEfeito ? "#fff8e1" : "#e8f8e8", border: `1px solid ${cupomSemEfeito ? "rgba(184,137,26,0.3)" : "rgba(26,138,42,0.2)"}`, borderRadius: "0.625rem", padding: "0.5rem 0.75rem", marginBottom: "0.75rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.8rem", fontWeight: 700, color: cupomSemEfeito ? "#b8891a" : "#1a8a2a" }}>🎟️ {couponCode.toUpperCase()} — -{couponDiscount}%</span>
+                  <button onClick={removeCoupon} style={{ background: "none", border: "none", cursor: "pointer", color: "#9a8060", fontSize: "0.8rem" }}>✕</button>
+                </div>
+                {cupomSemEfeito ? (
+                  <p style={{ fontSize: "0.72rem", color: "#7a6030", marginTop: "0.3rem", lineHeight: 1.4 }}>
+                    Cupom não vale para peças em SALE — elas já estão com desconto.
+                  </p>
+                ) : sacola.baseCupom < subtotal - 0.01 && (
+                  <p style={{ fontSize: "0.72rem", color: "#7a6030", marginTop: "0.3rem", lineHeight: 1.4 }}>
+                    Aplicado só nas peças fora do SALE.
+                  </p>
+                )}
               </div>
             ) : (
               <div style={{ marginBottom: "0.75rem" }}>

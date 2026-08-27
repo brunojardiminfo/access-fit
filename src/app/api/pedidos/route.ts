@@ -31,7 +31,7 @@ async function resolvePrices(items: IncomingItem[], ignorarCampanha = false) {
     const product = item.productId ? byId.get(item.productId) : undefined;
 
     // Venda manual / produto inexistente: sem preco no banco para conferir
-    if (!product) return { ...item, quantity, price: clientPrice };
+    if (!product) return { ...item, quantity, price: clientPrice, descontoSale: 0 };
 
     const saleInfo = getSaleInfo(product);
     const descontoSale = saleInfo?.discount ?? 0;
@@ -50,7 +50,7 @@ async function resolvePrices(items: IncomingItem[], ignorarCampanha = false) {
       value => bate(value) || bate(withSale(value)) || bate(withEfetivo(value))
     );
 
-    return { ...item, quantity, price: withEfetivo(matched ?? product.price) };
+    return { ...item, quantity, price: withEfetivo(matched ?? product.price), descontoSale };
   });
 }
 
@@ -71,22 +71,27 @@ export async function POST(req: Request) {
   const progressivoAplicado = faseCampanha() === "ativa" ? descontoProgressivo(pecas) : 0;
 
   // Cupom revalidado no banco: o desconto tambem nao vem do cliente
+  // Peça em SALE não acumula cupom: a base do cupom é só o que está a preço cheio
+  const baseCupom = itensSoSale
+    .filter(i => (i.descontoSale || 0) <= 0)
+    .reduce((sum, i) => sum + i.price * i.quantity, 0);
+
   let descontoCupom = 0;
   let cupomValido: string | null = null;
-  if (couponCode) {
+  if (couponCode && baseCupom > 0) {
     const coupon = await prisma.coupon.findUnique({ where: { code: String(couponCode).toUpperCase() } });
     const expired = coupon?.expiresAt ? new Date() > coupon.expiresAt : false;
     const exhausted = coupon?.maxUses ? coupon.usedCount >= coupon.maxUses : false;
     if (coupon && coupon.active && !expired && !exhausted) {
       cupomValido = coupon.code;
       descontoCupom = coupon.type === "fixed" || coupon.type === "valor"
-        ? Math.min(coupon.discount, subtotalSoSale)
-        : (subtotalSoSale * coupon.discount) / 100;
+        ? Math.min(coupon.discount, baseCupom)
+        : (baseCupom * coupon.discount) / 100;
     }
   }
 
   const totalComCupom = Math.max(0, subtotalSoSale - descontoCupom);
-  const cupomGanha = cupomValido !== null && totalComCupom < subtotalCampanha - 0.001;
+  const cupomGanha = cupomValido !== null && descontoCupom > 0.001 && totalComCupom < subtotalCampanha - 0.001;
 
   const pricedItems = cupomGanha ? itensSoSale : itensCampanha;
   const subtotal = cupomGanha ? subtotalSoSale : subtotalCampanha;

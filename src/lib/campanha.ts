@@ -81,8 +81,9 @@ export function calcularSacola(itens: ItemSacola[], agora: Date = new Date()) {
   const pecas = itens.reduce((s, i) => s + Math.max(1, i.quantity || 1), 0);
   const progressivo = faseCampanha(agora) === "ativa" ? descontoProgressivo(pecas) : 0;
 
-  let subtotal = 0;   // o que a sacola custaria só com o SALE
-  let total = 0;      // o que sai com a melhor condição
+  let subtotal = 0;     // o que a sacola custaria só com o SALE
+  let total = 0;        // o que sai com a melhor condição
+  let baseCupom = 0;    // só as peças fora do SALE — cupom não vale nelas
 
   for (const item of itens) {
     const qtd = Math.max(1, item.quantity || 1);
@@ -92,13 +93,24 @@ export function calcularSacola(itens: ItemSacola[], agora: Date = new Date()) {
     const efetivo = Math.max(sale, progressivo);
     subtotal += item.price * qtd;
     total += arredonda(cheio * (100 - efetivo) / 100) * qtd;
+    if (sale <= 0) baseCupom += item.price * qtd;
   }
 
   subtotal = arredonda(subtotal);
   total = arredonda(total);
-  return { pecas, progressivo, subtotal, total, desconto: arredonda(subtotal - total) };
+  baseCupom = arredonda(baseCupom);
+  return { pecas, progressivo, subtotal, total, baseCupom, desconto: arredonda(subtotal - total) };
 }
 
 function arredonda(v: number) {
   return Math.round(v * 100) / 100;
+}
+
+/**
+ * Quanto um cupom vale numa sacola. Peça em SALE não acumula cupom, então a
+ * porcentagem incide apenas sobre o que está a preço cheio.
+ */
+export function descontoDoCupom(baseCupom: number, percentual: number): number {
+  if (!percentual || baseCupom <= 0) return 0;
+  return arredonda((baseCupom * percentual) / 100);
 }

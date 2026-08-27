@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/store/cart";
-import { calcularSacola, CAMPANHA } from "@/lib/campanha";
+import { calcularSacola, descontoDoCupom, CAMPANHA } from "@/lib/campanha";
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
@@ -97,7 +97,8 @@ function CheckoutContent() {
   ].filter(Boolean) as string[];
 
   const sacola = calcularSacola(items);
-  const descontoCupom = couponDiscount ? (total() * couponDiscount) / 100 : 0;
+  // Cupom não vale em peça de SALE: incide só sobre o que está a preço cheio
+  const descontoCupom = descontoDoCupom(sacola.baseCupom, couponDiscount || 0);
   // Campanha e cupom não somam: vale a melhor condição
   const campanhaGanha = sacola.desconto > descontoCupom + 0.001;
   const desconto = Math.max(sacola.desconto, descontoCupom);
