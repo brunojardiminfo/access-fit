@@ -5,7 +5,7 @@ import { useAdmin } from "@/store/admin";
 import { useMobileView } from "@/hooks/useMediaQuery";
 import ProdutosSemCusto from "../ProdutosSemCusto";
 import OrderTimeline from "../../components/OrderTimeline";
-import { ORDER_STATUS_LABEL as STATUS_LABEL, ORDER_STATUS_COLOR as STATUS_COLOR } from "@/lib/orderStatus";
+import { ORDER_STATUS_LABEL as STATUS_LABEL, ORDER_STATUS_COLOR as STATUS_COLOR, ORDER_STATUS_ICON as STATUS_ICON } from "@/lib/orderStatus";
 
 type OrderItem = { id: string; quantity: number; price: number; size?: string; costPrice?: number | null; product: { id: string; name: string; costPrice?: number | null } };
 type Installment = { id: string; number: number; amount: number; dueDate: string; status: string; paidAt?: string | null };
@@ -1199,6 +1199,45 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                           {activeTab === "jornada" && (
                               <div style={{ backgroundColor: "#fff", borderRadius: "0.75rem", padding: "1.25rem 1rem", border: "1px solid rgba(140,100,20,0.08)" }}>
                                 <OrderTimeline history={order.statusHistory} fallbackCreatedAt={order.createdAt} />
+
+                                {/* Mudar o status aqui mesmo, sem voltar para a linha da tabela */}
+                                <div style={{ marginTop: "1.25rem", paddingTop: "1rem", borderTop: "1px solid rgba(140,100,20,0.1)" }}>
+                                  <p style={{ fontSize: "0.72rem", fontWeight: 800, color: "#9a8060", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "0.625rem" }}>
+                                    Marcar como
+                                  </p>
+                                  <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                                    {Object.entries(STATUS_LABEL).map(([valor, rotulo]) => {
+                                      const atual = order.status === valor;
+                                      const cor = STATUS_COLOR[valor] || { bg: "#f0f0f0", color: "#666" };
+                                      const salvando = updatingId === order.id;
+                                      return (
+                                        <button key={valor}
+                                          disabled={atual || salvando}
+                                          onClick={() => {
+                                            if (valor === "cancelled" && !confirm("Cancelar este pedido? O estoque das peças volta para o catálogo.")) return;
+                                            updateStatus(order.id, valor);
+                                          }}
+                                          title={atual ? "É o status atual" : `Mudar para ${rotulo}`}
+                                          style={{
+                                            display: "inline-flex", alignItems: "center", gap: "0.35rem",
+                                            fontSize: "0.78rem", fontWeight: 700, padding: "0.45rem 0.875rem",
+                                            borderRadius: "999px", cursor: atual || salvando ? "default" : "pointer",
+                                            backgroundColor: atual ? cor.bg : "#fff",
+                                            color: atual ? cor.color : "#5a4a2a",
+                                            border: `1.5px solid ${atual ? cor.color : "rgba(140,100,20,0.2)"}`,
+                                            opacity: salvando && !atual ? 0.5 : 1,
+                                          }}>
+                                          <span>{STATUS_ICON[valor] || "•"}</span>
+                                          {rotulo}
+                                          {atual && <span style={{ fontSize: "0.68rem", opacity: 0.75 }}>· atual</span>}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                  <p style={{ fontSize: "0.7rem", color: "#9a8060", marginTop: "0.6rem", lineHeight: 1.5 }}>
+                                    A cliente recebe um aviso no celular quando o pedido é confirmado, enviado, entregue ou cancelado.
+                                  </p>
+                                </div>
                               </div>
                           )}
                           </div>
