@@ -87,13 +87,15 @@ function CheckoutContent() {
     !name.trim() && "seu nome",
     !phone.trim() && "telefone",
     !nascimento && "data de nascimento",
+    // Endereço é obrigatório em qualquer pedido: sem ele não há como entregar
+    !cep.trim() && "CEP",
+    !street.trim() && "rua",
+    !number.trim() && "número",
+    !neighborhood.trim() && "bairro",
+    !city.trim() && "cidade",
+    !state.trim() && "estado",
     ...(type === "tryon" ? [
       !cpf.trim() && "CPF",
-      !street.trim() && "rua",
-      !number.trim() && "número",
-      !neighborhood.trim() && "bairro",
-      !city.trim() && "cidade",
-      !cep.trim() && "CEP",
       !termsAccepted && "aceite dos termos",
     ] : []),
   ].filter(Boolean) as string[];
@@ -138,9 +140,8 @@ function CheckoutContent() {
       ? "Home Try-On (experimentar em casa - 48h para devolver)\nTaxa de R$ 30,00 se devolver"
       : "Compra";
 
-    const enderecoCompleto = type === "tryon"
-      ? `${street}, ${number}${complement ? ` - ${complement}` : ""}, ${neighborhood}, ${city} - ${state}, CEP: ${cep}`
-      : "";
+    // Endereço vai na mensagem dos dois tipos de pedido
+    const enderecoCompleto = `${street}, ${number}${complement ? ` - ${complement}` : ""}, ${neighborhood}, ${city} - ${state.toUpperCase()}, CEP: ${cep}`;
 
     const cupomLinha = campanhaGanha
       ? `\n${CAMPANHA.nome}: ${sacola.pecas} peças (-${sacola.progressivo}%) = -${formatCurrency(desconto)}`
@@ -158,8 +159,11 @@ function CheckoutContent() {
       `Tipo: ${tipoTexto}`,
       `Nome: ${name}`,
       `Telefone: ${phone}`,
+      `Nascimento: ${nascimento ? nascimento.split("-").reverse().join("/") : "-"}`,
       type === "tryon" && cpf ? `CPF: ${cpf}` : "",
-      type === "tryon" ? `Endereco: ${enderecoCompleto}` : city ? `Cidade: ${city}` : "",
+      ``,
+      `*Entrega:*`,
+      enderecoCompleto,
       type === "compra" ? `Pagamento: ${PAY_LABELS[payMethod] || payMethod}` : "",
     ].filter(Boolean).join("\n");
 
@@ -180,6 +184,10 @@ function CheckoutContent() {
           discount: desconto,
           paymentMethod: type === "tryon" ? "pix" : payMethod,
           cliente: { nome: name.trim(), telefone: phone.trim(), cidade: city.trim() || null, nascimento: nascimento || null },
+          endereco: {
+            rua: street.trim(), numero: number.trim(), complemento: complement.trim() || null,
+            bairro: neighborhood.trim(), cidade: city.trim(), estado: state.trim().toUpperCase(), cep: cep.trim(),
+          },
           notes: `${city ? `${city}` : ""}${couponCode ? `${city ? " | " : ""}Cupom: ${couponCode}` : ""}` || null,
           couponCode: couponCode || null,
           status: type === "tryon" ? "try-on" : "pending",
@@ -336,12 +344,18 @@ function CheckoutContent() {
                   </div>
                 )}
 
-                {type === "tryon" ? (
-                  <>
-                    <div>
-                      <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>CPF *</label>
-                      <input style={inp} placeholder="000.000.000-00" value={cpf} onChange={e => setCpf(e.target.value)} />
-                    </div>
+                {type === "tryon" && (
+                  <div>
+                    <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>CPF *</label>
+                    <input style={inp} placeholder="000.000.000-00" value={cpf} onChange={e => setCpf(e.target.value)} />
+                  </div>
+                )}
+
+                {/* Endereço de entrega — vale para compra e para try-on */}
+                <>
+                    <p style={{ fontSize: "0.78rem", fontWeight: 800, color: "#1a1510", marginTop: "0.4rem" }}>
+                      📍 Endereço de entrega
+                    </p>
                     <div>
                       <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>CEP *</label>
                       <input style={inp} placeholder="00000-000" value={cep} onChange={e => setCep(e.target.value)} />
@@ -374,13 +388,7 @@ function CheckoutContent() {
                       <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>Cidade *</label>
                       <input style={inp} placeholder="Sua cidade" value={city} onChange={e => setCity(e.target.value)} />
                     </div>
-                  </>
-                ) : (
-                  <div>
-                    <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>Cidade</label>
-                    <input style={inp} placeholder="Sua cidade" value={city} onChange={e => setCity(e.target.value)} />
-                  </div>
-                )}
+                </>
               </div>
             </div>
 

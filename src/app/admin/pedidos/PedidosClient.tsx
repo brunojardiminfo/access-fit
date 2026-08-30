@@ -15,6 +15,7 @@ type Order = {
   total: number; subtotal: number; shipping: number; discount: number; notes?: string;
   createdAt: string; dueDate?: string | null; installmentCount: number;
   user: { id: string; name: string; email: string; phone?: string };
+  address?: { street: string; number: string; complement?: string | null; district: string; city: string; state: string; zipCode: string } | null;
   items: OrderItem[];
   installments: Installment[];
   statusHistory: StatusHistoryEntry[];
@@ -1182,6 +1183,22 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                                     <p style={{ color: "#3a2a10", fontSize: "0.8rem", marginBottom: "0.3rem" }}>👤 {order.user.name}</p>
                                     <p style={{ color: "#3a2a10", fontSize: "0.8rem", marginBottom: "0.3rem" }}>📧 {order.user.email}</p>
                                     {order.user.phone && <p style={{ color: "#3a2a10", fontSize: "0.8rem", marginBottom: "0.3rem" }}>📞 {order.user.phone}</p>}
+                                    {order.address && (() => {
+                                      const e = order.address;
+                                      const completo = `${e.street}, ${e.number}${e.complement ? ` - ${e.complement}` : ""}, ${e.district}, ${e.city} - ${e.state}, CEP ${e.zipCode}`;
+                                      return (
+                                        <div style={{ marginTop: "0.5rem", padding: "0.6rem 0.75rem", backgroundColor: "#FAF6EE", borderRadius: "0.5rem" }}>
+                                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                                            <p style={{ fontSize: "0.78rem", color: "#3a2a10", lineHeight: 1.5, margin: 0 }}>📍 {completo}</p>
+                                            <button onClick={() => navigator.clipboard?.writeText(completo)}
+                                              title="Copiar endereço"
+                                              style={{ background: "none", border: "none", cursor: "pointer", color: "#b8891a", fontSize: "0.7rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+                                              copiar
+                                            </button>
+                                          </div>
+                                        </div>
+                                      );
+                                    })()}
                                   </>
                                 )}
                                 {order.notes && (

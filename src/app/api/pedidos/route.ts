@@ -57,7 +57,7 @@ async function resolvePrices(items: IncomingItem[], ignorarCampanha = false) {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { items, paymentMethod, notes, couponCode, status, previewId, cliente } = body;
+  const { items, paymentMethod, notes, couponCode, status, previewId, cliente, endereco } = body;
 
   if (!items?.length) return NextResponse.json({ error: "Nenhum item" }, { status: 400 });
 
@@ -153,6 +153,27 @@ export async function POST(req: Request) {
     userId = guest.id;
   }
 
+  // Endereco de entrega fica no cadastro da cliente, para a proxima compra
+  // ja vir preenchido e para a entrega nao depender da mensagem do WhatsApp
+  let addressId: string | null = null;
+  if (endereco?.rua && endereco?.numero && endereco?.cidade) {
+    const dados = {
+      street: String(endereco.rua),
+      number: String(endereco.numero),
+      complement: endereco.complemento ? String(endereco.complemento) : null,
+      district: String(endereco.bairro || ""),
+      city: String(endereco.cidade),
+      state: String(endereco.estado || "").toUpperCase().slice(0, 2),
+      zipCode: String(endereco.cep || "").replace(/\D/g, ""),
+    };
+    // Mesmo endereco de novo nao vira duplicata: atualiza o que ja existe
+    const atual = await prisma.address.findFirst({ where: { userId } });
+    const salvo = atual
+      ? await prisma.address.update({ where: { id: atual.id }, data: dados })
+      : await prisma.address.create({ data: { ...dados, userId, label: "Entrega" } });
+    addressId = salvo.id;
+  }
+
   const vendaManual = await prisma.product.findFirst({ where: { name: "Venda Manual" } });
 
   const orderItems = pricedItems.map(i => ({ ...i, productId: i.productId || vendaManual?.id }));
@@ -171,6 +192,7 @@ export async function POST(req: Request) {
     discount: Math.round(discount * 100) / 100,
     shipping: 0,
     notes: [notes, notaCampanha].filter(Boolean).join(" | ") || null,
+    ...(addressId ? { addressId } : {}),
     couponCode: validCouponCode,
   };
   const itemsData = orderItems.map(i => ({
