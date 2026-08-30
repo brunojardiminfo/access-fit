@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { decrementProductStock } from "@/lib/stock";
+import { decrementProductStock, consomeEstoque } from "@/lib/stock";
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -75,10 +75,14 @@ export async function POST(req: Request) {
   const paid = parseFloat(amountPaid) || 0;
 
   try {
-    // Decrementar estoque dos produtos vinculados (por tamanho, quando configurado)
-    for (const item of items) {
-      if (item.productId) {
-        await decrementProductStock(item.productId, item.quantity, item.size);
+    // Baixa só quando o pedido já nasce num status que consome estoque.
+    // Nascendo como "aguardando", a baixa acontece ao confirmar.
+    const statusInicial = body.status || "delivered";
+    if (consomeEstoque(statusInicial)) {
+      for (const item of items) {
+        if (item.productId) {
+          await decrementProductStock(item.productId, item.quantity, item.size);
+        }
       }
     }
 

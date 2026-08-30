@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/firebase-admin";
-import { restoreProductStock } from "@/lib/stock";
+import { restoreProductStock, ajustarEstoquePorStatus, consomeEstoque } from "@/lib/stock";
 import { recalcOrderTotals } from "@/lib/orderTotals";
 
 const STATUS_NOTIFICATION: Record<string, { title: string; body: string }> = {
@@ -32,14 +32,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (body.userId !== undefined) data.userId = body.userId;
   if (body.discount !== undefined) data.discount = Math.max(0, Number(body.discount) || 0);
 
-  // Restaurar estoque ao cancelar um pedido try-on ou qualquer pedido
-  if (body.status === "cancelled") {
-    const current = await prisma.order.findUnique({ where: { id }, include: { items: true } });
-    if (current && current.status !== "cancelled") {
-      for (const item of current.items) {
-        await restoreProductStock(item.productId, item.quantity, item.size);
-      }
-    }
+  // Estoque acompanha o status: sai ao confirmar/enviar/entregar/try-on e volta
+  // ao cancelar. Pedido que nunca passou por esses status nao tem o que devolver.
+  if (body.status !== undefined && body.status !== previousStatus) {
+    await ajustarEstoquePorStatus(id, previousStatus, body.status);
   }
 
   // Marca data de entrega na primeira vez que o status vira "delivered"
@@ -147,7 +143,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     where: { id },
     include: { items: true },
   });
-  if (order && order.status !== "cancelled") {
+  if (order && consomeEstoque(order.status)) {
     for (const item of order.items) {
       await restoreProductStock(item.productId, item.quantity, item.size);
     }

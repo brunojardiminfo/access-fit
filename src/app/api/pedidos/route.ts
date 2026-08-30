@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getSaleInfo, calculateSalePrice } from "@/lib/saleHelper";
 import { descontoEfetivo, descontoProgressivo, faseCampanha, CAMPANHA } from "@/lib/campanha";
+import { decrementProductStock, consomeEstoque } from "@/lib/stock";
 
 type IncomingItem = { productId?: string; quantity?: number; price?: number; size?: string | null };
 
@@ -170,6 +171,14 @@ export async function POST(req: Request) {
   }
 
   await prisma.orderStatusHistory.create({ data: { orderId: order.id, status: order.status } });
+
+  // Home Try-On ja sai com as pecas; pedido "aguardando" so da baixa quando
+  // for confirmado no admin
+  if (consomeEstoque(order.status)) {
+    for (const item of orderItems) {
+      await decrementProductStock(item.productId as string, item.quantity, item.size);
+    }
+  }
 
   // Incrementar usedCount do cupom
   if (validCouponCode) {
