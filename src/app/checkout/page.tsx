@@ -36,6 +36,7 @@ function CheckoutContent() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
+  const [nascimento, setNascimento] = useState("");
   const [type, setType] = useState<"compra" | "tryon">("compra");
   const [payMethod, setPayMethod] = useState("pix");
   const [sent, setSent] = useState(false);
@@ -85,6 +86,7 @@ function CheckoutContent() {
   const faltando = [
     !name.trim() && "seu nome",
     !phone.trim() && "telefone",
+    !nascimento && "data de nascimento",
     ...(type === "tryon" ? [
       !cpf.trim() && "CPF",
       !street.trim() && "rua",
@@ -177,7 +179,8 @@ function CheckoutContent() {
           subtotal: total(),
           discount: desconto,
           paymentMethod: type === "tryon" ? "pix" : payMethod,
-          notes: `${name} | ${phone}${city ? ` | ${city}` : ""}${couponCode ? ` | Cupom: ${couponCode}` : ""}`,
+          cliente: { nome: name.trim(), telefone: phone.trim(), cidade: city.trim() || null, nascimento: nascimento || null },
+          notes: `${city ? `${city}` : ""}${couponCode ? `${city ? " | " : ""}Cupom: ${couponCode}` : ""}` || null,
           couponCode: couponCode || null,
           status: type === "tryon" ? "try-on" : "pending",
           previewId: previewId || null,
@@ -309,6 +312,14 @@ function CheckoutContent() {
                 <div>
                   <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>WhatsApp *</label>
                   <input style={inp} placeholder="(51) 9..." value={phone} onChange={e => setPhone(e.target.value)} />
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>Data de nascimento *</label>
+                  <input style={inp} type="date" value={nascimento} onChange={e => setNascimento(e.target.value)}
+                    max={new Date().toISOString().split("T")[0]} />
+                  <p style={{ fontSize: "0.72rem", color: "#9a8060", marginTop: "0.25rem" }}>
+                    Guardamos para te mimar no seu aniversário 🎁
+                  </p>
                 </div>
 
                 {type === "compra" && (

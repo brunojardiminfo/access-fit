@@ -57,7 +57,7 @@ async function resolvePrices(items: IncomingItem[], ignorarCampanha = false) {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { items, paymentMethod, notes, couponCode, status, previewId } = body;
+  const { items, paymentMethod, notes, couponCode, status, previewId, cliente } = body;
 
   if (!items?.length) return NextResponse.json({ error: "Nenhum item" }, { status: 400 });
 
@@ -113,7 +113,36 @@ export async function POST(req: Request) {
     userId = user?.id || "";
   }
 
-  // Se não logado, cria/busca usuário anônimo
+  // Sem login, o pedido vai para a propria cliente: o nome que ela digitou no
+  // checkout vira cadastro, em vez de cair no generico "Pedido Site"
+  if (!userId! && cliente?.nome) {
+    const telefone = String(cliente.telefone || "").replace(/\D/g, "");
+    const nascimento = cliente.nascimento ? new Date(`${cliente.nascimento}T12:00:00`) : null;
+
+    // Mesma pessoa comprando de novo: reaproveita o cadastro pelo telefone
+    const existente = telefone
+      ? await prisma.user.findFirst({ where: { phone: telefone, role: "customer" } })
+      : null;
+
+    if (existente) {
+      // Completa o que faltava, sem apagar o que ja estava preenchido
+      const faltando: { name?: string; birthDate?: Date } = {};
+      if (!existente.name && cliente.nome) faltando.name = cliente.nome;
+      if (!existente.birthDate && nascimento) faltando.birthDate = nascimento;
+      if (Object.keys(faltando).length) {
+        await prisma.user.update({ where: { id: existente.id }, data: faltando });
+      }
+      userId = existente.id;
+    } else {
+      const email = `${cliente.nome.toLowerCase().trim().replace(/\s+/g, ".")}.${Date.now()}@cliente.accessfit.com.br`;
+      const nova = await prisma.user.create({
+        data: { name: cliente.nome, email, phone: telefone || null, birthDate: nascimento, role: "customer" },
+      });
+      userId = nova.id;
+    }
+  }
+
+  // Ultimo recurso: pedido sem nome nenhum ainda precisa de dono
   if (!userId!) {
     const guestEmail = "pedido.site@accessfit.com.br";
     const guest = await prisma.user.upsert({
