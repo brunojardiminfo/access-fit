@@ -18,8 +18,8 @@ export const CAMPANHA = {
   // campanha começaria às 21h do dia anterior
   inicio: new Date("2026-09-01T00:00:00-03:00"),
   fim: new Date("2026-09-30T23:59:59-03:00"),
-  revelarRegras: false,
-  // Só entram em cena quando revelarRegras virar true
+  revelarRegras: true,
+  // A barra e o site so mostram a escada com revelarRegras ligado
   regras: [
     { pecas: 1, desconto: 10 },
     { pecas: 2, desconto: 20 },
