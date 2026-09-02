@@ -27,7 +27,11 @@ function itemDisplayName(item: any): string {
 
 export default function NotaPublicaClient({ order }: { order: any }) {
   const createdAt = new Date(order.createdAt);
-  const saldoPendente = order.total - order.amountPaid;
+  const quitado = order.paymentStatus === "paid";
+  // Pedido quitado nao tem saldo. Quando a diferenca e taxa da operadora, ela e
+  // custo nosso: para a cliente o pedido foi pago integralmente
+  const saldoPendente = quitado ? 0 : order.total - order.amountPaid;
+  const valorPago = quitado ? order.total : order.amountPaid;
 
   useEffect(() => {
     document.title = `Nota do Pedido #${order.id.slice(-6).toUpperCase()} — Access Fit`;
@@ -120,6 +124,18 @@ export default function NotaPublicaClient({ order }: { order: any }) {
                 <span style={{ color: "#1a1510" }}>{fmt(order.shipping)}</span>
               </div>
             )}
+            {order.discount > 0 && (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "0.3rem 0", fontSize: "0.85rem" }}>
+                  <span style={{ color: "#9a8060" }}>Subtotal</span>
+                  <span style={{ color: "#1a1510" }}>{fmt(order.subtotal)}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "0.3rem 0", fontSize: "0.85rem" }}>
+                  <span style={{ color: "#1a8a2a", fontWeight: 700 }}>Desconto</span>
+                  <span style={{ color: "#1a8a2a", fontWeight: 700 }}>− {fmt(order.discount)}</span>
+                </div>
+              </>
+            )}
             <div style={{ display: "flex", justifyContent: "space-between", padding: "0.6rem 0.875rem", marginTop: "0.4rem", backgroundColor: "#b8891a", borderRadius: "0.625rem" }}>
               <span style={{ color: "#fff", fontWeight: 700 }}>TOTAL</span>
               <span style={{ color: "#fff", fontWeight: 900, fontSize: "1.05rem" }}>{fmt(order.total)}</span>
@@ -142,10 +158,10 @@ export default function NotaPublicaClient({ order }: { order: any }) {
                   {PAY_LABEL[order.paymentStatus]}
                 </p>
               </div>
-              {order.amountPaid > 0 && (
+              {valorPago > 0 && (
                 <div>
                   <span style={{ fontSize: "0.68rem", color: "#9a8060" }}>Pago</span>
-                  <p style={{ fontWeight: 700, color: "#1a8a2a", fontSize: "0.875rem", margin: "0.1rem 0 0" }}>{fmt(order.amountPaid)}</p>
+                  <p style={{ fontWeight: 700, color: "#1a8a2a", fontSize: "0.875rem", margin: "0.1rem 0 0" }}>{fmt(valorPago)}</p>
                 </div>
               )}
             </div>

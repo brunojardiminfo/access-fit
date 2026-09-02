@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 type Customer = { id: string; name: string; email: string; phone?: string };
-type Product = { id: string; name: string; price: number; stock: number; sizes: string; sizeStock?: string; colors: string; images: string; isConjunto?: boolean; sellComponentsSeparately?: boolean; conjuntoItems?: Array<{ id: string; name: string; price: number }> };
+type Product = { id: string; name: string; price: number; stock: number; active?: boolean; sizes: string; sizeStock?: string; colors: string; images: string; isConjunto?: boolean; sellComponentsSeparately?: boolean; conjuntoItems?: Array<{ id: string; name: string; price: number }> };
 type Item = { productId?: string; description: string; price: number; quantity: number; size?: string; componentName?: string; product?: Product };
 
 const inp = {
@@ -24,6 +24,8 @@ export default function NovoPedidoPage() {
   const [isNewCustomer, setIsNewCustomer] = useState(false);
 
   const [items, setItems] = useState<Item[]>([{ description: "", price: 0, quantity: 1 }]);
+  const [desconto, setDesconto] = useState("");
+  const [descontoTipo, setDescontoTipo] = useState<"reais" | "percent">("reais");
   const [productSearch, setProductSearch] = useState<string[]>([""]);
   const [productResults, setProductResults] = useState<Product[][]>([[]]);
   const [showProductDropdown, setShowProductDropdown] = useState<boolean[]>([false]);
@@ -77,8 +79,15 @@ export default function NovoPedidoPage() {
   }, [search, customers]);
 
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+  const descontoBruto = parseFloat(desconto.replace(",", ".")) || 0;
+  // Percentual vira reais aqui: o pedido sempre guarda o valor do desconto
+  const descontoValor = Math.min(
+    descontoTipo === "percent" ? (subtotal * descontoBruto) / 100 : descontoBruto,
+    subtotal
+  );
+  const totalFinal = Math.round((subtotal - descontoValor) * 100) / 100;
   const paid = parseFloat(amountPaid) || 0;
-  const saldo = paymentStatus !== "paid" ? subtotal - paid : 0;
+  const saldo = paymentStatus !== "paid" ? totalFinal - paid : 0;
 
   const addItem = () => {
     setItems(p => [...p, { description: "", price: 0, quantity: 1 }]);
@@ -148,7 +157,8 @@ export default function NovoPedidoPage() {
         items, status: orderStatus,
         paymentMethod: orderStatus === "try-on" ? "pix" : paymentMethod,
         paymentStatus: orderStatus === "try-on" ? "pending" : paymentStatus,
-        amountPaid: orderStatus === "try-on" ? 0 : (paymentStatus === "paid" ? subtotal : paid),
+        amountPaid: orderStatus === "try-on" ? 0 : (paymentStatus === "paid" ? totalFinal : paid),
+        discount: descontoValor,
         notes, createdAt: date, dueDate: dueDate || null, installments,
       }),
     });
@@ -287,7 +297,12 @@ export default function NovoPedidoPage() {
                               </div>
                               {/* Info */}
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "#1a1510" }}>{p.name}</div>
+                                <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "#1a1510" }}>
+                                  {p.name}
+                                  {p.active === false && (
+                                    <span style={{ marginLeft: "0.4rem", fontSize: "0.6rem", fontWeight: 800, backgroundColor: "#f0f0f0", color: "#888", padding: "0.1rem 0.4rem", borderRadius: 999 }}>oculto no site</span>
+                                  )}
+                                </div>
                                 <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap", marginTop: "0.2rem" }}>
                                   {szs.length > 0
                                     ? szs.map(s => {
@@ -368,8 +383,29 @@ export default function NovoPedidoPage() {
           <button onClick={addItem} style={{ marginTop: "0.75rem", padding: "0.4rem 0.875rem", backgroundColor: "#EDE4CC", border: "none", borderRadius: "0.5rem", cursor: "pointer", fontSize: "0.8rem", fontWeight: 700, color: "#6a4a10" }}>
             + Adicionar item
           </button>
-          <div style={{ marginTop: "0.75rem", textAlign: "right", fontWeight: 900, color: "#b8891a", fontSize: "1.1rem" }}>
+          <div style={{ marginTop: "0.75rem", display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "0.8rem", color: "#9a8060", fontWeight: 700 }}>Desconto</span>
+            <input value={desconto} onChange={e => setDesconto(e.target.value)} placeholder="0,00" inputMode="decimal"
+              style={{ ...inp, width: 90, padding: "0.35rem 0.6rem", fontSize: "0.85rem" }} />
+            <div style={{ display: "flex", gap: "2px" }}>
+              {(["reais", "percent"] as const).map(t => (
+                <button key={t} type="button" onClick={() => setDescontoTipo(t)}
+                  style={{ fontSize: "0.75rem", fontWeight: 800, padding: "0.35rem 0.6rem", border: "1px solid rgba(140,100,20,0.2)", borderRadius: "0.4rem", cursor: "pointer", backgroundColor: descontoTipo === t ? "#b8891a" : "#fff", color: descontoTipo === t ? "#fff" : "#9a8060" }}>
+                  {t === "reais" ? "R$" : "%"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginTop: "0.5rem", textAlign: "right", fontSize: "0.85rem", color: "#9a8060" }}>
             Subtotal: {subtotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            {descontoValor > 0 && (
+              <span style={{ color: "#1a8a2a", fontWeight: 700 }}>
+                {"  −  "}{descontoValor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              </span>
+            )}
+          </div>
+          <div style={{ marginTop: "0.2rem", textAlign: "right", fontWeight: 900, color: "#b8891a", fontSize: "1.1rem" }}>
+            Total: {totalFinal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
           </div>
         </div>
 
@@ -431,7 +467,7 @@ export default function NovoPedidoPage() {
                 {paymentMethod === "link" && paymentStatus !== "paid" && (
                   <div style={{ gridColumn: "1 / -1" }}>
                     <label style={label}>💰 Valor Recebido (com desconto da operadora)</label>
-                    <input style={inp} type="number" min="0" step="0.01" placeholder={`Ex: ${subtotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} value={amountPaid}
+                    <input style={inp} type="number" min="0" step="0.01" placeholder={`Ex: ${totalFinal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} value={amountPaid}
                       onChange={e => setAmountPaid(e.target.value)} />
                   </div>
                 )}
@@ -461,7 +497,7 @@ export default function NovoPedidoPage() {
               </>
             )}
           </div>
-          {orderStatus === "delivered" && paymentStatus !== "paid" && subtotal > 0 && (
+          {orderStatus === "delivered" && paymentStatus !== "paid" && totalFinal > 0 && (
             <div style={{ marginTop: "0.75rem", padding: "0.6rem 0.875rem", backgroundColor: "#fff8e1", borderRadius: "0.625rem", display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
               <span style={{ color: "#5a4a2a" }}>Saldo em aberto:</span>
               <span style={{ fontWeight: 900, color: "#b8891a" }}>{saldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>

@@ -5,7 +5,7 @@ import { useAdmin } from "@/store/admin";
 import { useMobileView } from "@/hooks/useMediaQuery";
 import ProdutosSemCusto from "../ProdutosSemCusto";
 import OrderTimeline from "../../components/OrderTimeline";
-import { ORDER_STATUS_LABEL as STATUS_LABEL, ORDER_STATUS_COLOR as STATUS_COLOR } from "@/lib/orderStatus";
+import { ORDER_STATUS_LABEL as STATUS_LABEL, ORDER_STATUS_COLOR as STATUS_COLOR, ORDER_STATUS_ICON as STATUS_ICON } from "@/lib/orderStatus";
 
 type OrderItem = { id: string; quantity: number; price: number; size?: string; costPrice?: number | null; product: { id: string; name: string; costPrice?: number | null } };
 type Installment = { id: string; number: number; amount: number; dueDate: string; status: string; paidAt?: string | null };
@@ -15,6 +15,7 @@ type Order = {
   total: number; subtotal: number; shipping: number; discount: number; notes?: string;
   createdAt: string; dueDate?: string | null; installmentCount: number;
   user: { id: string; name: string; email: string; phone?: string };
+  address?: { street: string; number: string; complement?: string | null; district: string; city: string; state: string; zipCode: string } | null;
   items: OrderItem[];
   installments: Installment[];
   statusHistory: StatusHistoryEntry[];
@@ -107,6 +108,11 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
   const [editPaymentMethod, setEditPaymentMethod] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
   const [editInstallments, setEditInstallments] = useState(1);
+  const [taxaAbsorvida, setTaxaAbsorvida] = useState(true);
+  const [editandoDesconto, setEditandoDesconto] = useState<string | null>(null);
+  const [descontoValor, setDescontoValor] = useState("");
+  const [descontoTipo, setDescontoTipo] = useState<"reais" | "percent">("reais");
+  const [salvandoDesconto, setSalvandoDesconto] = useState(false);
   const [togglingInstallment, setTogglingInstallment] = useState<string | null>(null);
   const [editingItemCost, setEditingItemCost] = useState<string | null>(null);
   const [itemCostValue, setItemCostValue] = useState("");
@@ -119,6 +125,13 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
   const [reassigningId, setReassigningId] = useState<string | null>(null);
   const [reassignSearch, setReassignSearch] = useState("");
   const [reassignSaving, setReassignSaving] = useState(false);
+  const [localCustomers, setLocalCustomers] = useState<Customer[]>(customers);
+  const [newCustomerOpen, setNewCustomerOpen] = useState(false);
+  const [ncName, setNcName] = useState("");
+  const [ncPhone, setNcPhone] = useState("");
+  const [ncEmail, setNcEmail] = useState("");
+  const [ncError, setNcError] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [copyingLinkId, setCopyingLinkId] = useState<string | null>(null);
   const [trocaOrderId, setTrocaOrderId] = useState<string | null>(null);
@@ -129,6 +142,8 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
   const filtered = useMemo(() => {
     return localOrders.filter(o => {
       if (statusFilter && o.status !== statusFilter) return false;
+      // Rascunhos gerados por link de preview ficam fora da listagem por padrao
+      if (o.status === "preview" && !showPreview && statusFilter !== "preview" && o.id !== expanded) return false;
       if (payFilter && o.paymentStatus !== payFilter) return false;
       if (methodFilter && o.paymentMethod !== methodFilter) return false;
       if (filterPending && o.status !== "pending") return false;
@@ -142,7 +157,7 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
       }
       return true;
     });
-  }, [localOrders, statusFilter, payFilter, methodFilter, filterPending, dateFrom, dateTo, search]);
+  }, [localOrders, statusFilter, payFilter, methodFilter, filterPending, dateFrom, dateTo, search, showPreview, expanded]);
 
   const selectedOrders = localOrders.filter(o => selectedIds.includes(o.id));
   const selectedSameCustomer = selectedOrders.length > 0 && selectedOrders.every(o => o.user.id === selectedOrders[0].user.id);
@@ -210,6 +225,7 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
     setEditPaymentMethod(order.paymentMethod || "pix");
     setEditDueDate(order.dueDate ? new Date(order.dueDate).toISOString().slice(0, 10) : "");
     setEditInstallments(order.installmentCount || 1);
+    setTaxaAbsorvida(true);
   };
 
   const savePayment = async (orderId: string) => {
@@ -217,17 +233,23 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
     const order = localOrders.find(o => o.id === orderId);
     if (!order) return;
 
+    // Link de pagamento com taxa absorvida: a cliente pagou tudo, a diferenca
+    // ficou com a operadora — o pedido esta quitado, nao ha saldo a cobrar
+    const ehTaxaLink = editPaymentMethod === "link" && amountPaid > 0 && amountPaid < order.total;
+    const statusFinal = ehTaxaLink && taxaAbsorvida ? "paid" : editPaymentStatus;
+
     const res = await fetch(`/api/admin/pedidos/${orderId}`, {
       method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        paymentStatus: editPaymentStatus, paymentMethod: editPaymentMethod, amountPaid,
+        paymentStatus: statusFinal, paymentMethod: editPaymentMethod, amountPaid,
         dueDate: editDueDate || null, installmentCount: editInstallments,
         generateInstallments: !!editDueDate && editInstallments > 0,
       }),
     });
 
-    // Se é link de pagamento e houve desconto, registra como despesa
-    if (editPaymentMethod === "link" && amountPaid > 0 && amountPaid < order.total) {
+    // Registra a taxa como despesa uma vez so: salvar de novo o mesmo valor
+    // nao pode gerar outro lancamento
+    if (ehTaxaLink && Math.abs(order.amountPaid - amountPaid) > 0.001) {
       const taxAmount = order.total - amountPaid;
       await fetch("/api/admin/despesas", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -246,6 +268,28 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
       setLocalOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...updated } : o));
     }
     setEditingPayment(null);
+  };
+
+  const salvarDesconto = async (orderId: string) => {
+    const order = localOrders.find(o => o.id === orderId);
+    if (!order) return;
+    const bruto = parseFloat(descontoValor.replace(",", ".")) || 0;
+    const subtotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
+    // Percentual e convertido em reais na hora: o pedido guarda sempre o valor
+    const desconto = Math.min(descontoTipo === "percent" ? (subtotal * bruto) / 100 : bruto, subtotal);
+
+    setSalvandoDesconto(true);
+    const res = await fetch(`/api/admin/pedidos/${orderId}`, {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ discount: Math.round(desconto * 100) / 100 }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setLocalOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...updated, items: o.items, user: o.user } : o));
+    }
+    setSalvandoDesconto(false);
+    setEditandoDesconto(null);
+    setDescontoValor("");
   };
 
   const generateShareLink = (orderId: string) => {
@@ -354,6 +398,30 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
     setEditingInstallmentId(null);
   };
 
+  const createAndAssignCustomer = async (orderId: string) => {
+    const name = ncName.trim();
+    if (!name) { setNcError("Informe o nome do cliente."); return; }
+    setNcError("");
+    setReassignSaving(true);
+    // Sem e-mail informado, o servidor gera um interno automaticamente
+    const res = await fetch("/api/admin/clientes", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email: ncEmail.trim() || null, phone: ncPhone.trim() || null }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setNcError(data.error || "Não foi possível cadastrar o cliente.");
+      setReassignSaving(false);
+      return;
+    }
+    const created = await res.json();
+    setLocalCustomers(prev => [...prev, { id: created.id, name: created.name, email: created.email }]);
+    setReassignSaving(false);
+    setNewCustomerOpen(false);
+    setNcName(""); setNcPhone(""); setNcEmail("");
+    await reassignCustomer(orderId, created);
+  };
+
   const reassignCustomer = async (orderId: string, newUser: { id: string; name: string | null; email: string }) => {
     setReassignSaving(true);
     const res = await fetch(`/api/admin/pedidos/${orderId}`, {
@@ -366,12 +434,22 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
     setReassignSaving(false);
     setReassigningId(null);
     setReassignSearch("");
+    setNewCustomerOpen(false);
   };
 
   const inp = { padding: "0.55rem 0.875rem", border: "1px solid rgba(140,100,20,0.25)", borderRadius: "0.625rem", fontSize: "0.8rem", backgroundColor: "#FAF6EE", outline: "none" };
 
+  // Mantem a coluna de acoes visivel quando a tabela precisa rolar na horizontal
+  const stickyRight = (bg: string) => ({
+    position: "sticky" as const,
+    right: 0,
+    zIndex: 2,
+    backgroundColor: bg,
+    boxShadow: "-6px 0 8px -6px rgba(0,0,0,0.12)",
+  });
+
   return (
-    <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "1rem" : "2rem 1.5rem", backgroundColor: "#FAF6EE", minHeight: "100vh" }}>
+    <div style={{ maxWidth: 1440, margin: "0 auto", padding: isMobile ? "1rem" : "2rem 1.5rem", backgroundColor: "#FAF6EE", minHeight: "100vh" }}>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
@@ -438,6 +516,15 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
           <span style={{ fontSize: "0.75rem", color: "#9a8060" }}>até:</span>
           <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} style={{ ...inp, width: 135 }} />
         </div>
+        {/* Rascunhos de link de preview */}
+        {localOrders.some(o => o.status === "preview") && (
+          <button onClick={() => setShowPreview(!showPreview)}
+            title="Rascunhos criados automaticamente quando alguém gera um link de preview do carrinho"
+            style={{ fontSize: "0.72rem", fontWeight: 700, padding: "0.35rem 0.7rem", borderRadius: "999px", border: "none", cursor: "pointer", whiteSpace: "nowrap", backgroundColor: showPreview ? "#8a1ab8" : "#FAF6EE", color: showPreview ? "#fff" : "#9a8060" }}>
+            {showPreview ? "Ocultar" : "Ver"} rascunhos ({localOrders.filter(o => o.status === "preview").length})
+          </button>
+        )}
+
         {/* Atalhos de período */}
         <div style={{ display: "flex", gap: "0.375rem", flexWrap: "wrap" }}>
           {[
@@ -499,14 +586,14 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
             <thead>
               <tr style={{ backgroundColor: "#FAF6EE" }}>
-                <th style={{ padding: isMobile ? "0.625rem 0.5rem" : "0.875rem 0.75rem", borderBottom: "1px solid rgba(140,100,20,0.1)" }}>
+                <th style={{ padding: isMobile ? "0.625rem 0.5rem" : "0.875rem 0.75rem", borderBottom: "1px solid rgba(140,100,20,0.1)", position: "sticky", left: 0, zIndex: 2, backgroundColor: "#FAF6EE" }}>
                   <input type="checkbox"
                     checked={filtered.length > 0 && filtered.every(o => selectedIds.includes(o.id))}
                     onChange={e => setSelectedIds(e.target.checked ? filtered.map(o => o.id) : [])}
                     style={{ cursor: "pointer" }} />
                 </th>
                 {["Pedido", "Cliente", ...(isMobile ? [] : ["Produtos"]), "Total", ...(isMobile ? [] : ["Entrega", "Pagamento", "Forma", "Data", "Ações"])].map(h => (
-                  <th key={h} style={{ textAlign: "left", padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 1rem", color: "#9a8060", fontWeight: 700, fontSize: isMobile ? "0.7rem" : "0.75rem", borderBottom: "1px solid rgba(140,100,20,0.1)", whiteSpace: "nowrap" }}>{h}</th>
+                  <th key={h} style={{ textAlign: "left", padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 0.75rem", color: "#9a8060", fontWeight: 700, fontSize: isMobile ? "0.7rem" : "0.75rem", borderBottom: "1px solid rgba(140,100,20,0.1)", whiteSpace: "nowrap", ...(h === "Ações" ? stickyRight("#FAF6EE") : {}) }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -529,29 +616,29 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                   <Fragment key={order.id}>
                     <tr id={`order-${order.id}`} style={{ borderBottom: isExpanded ? "none" : "1px solid rgba(140,100,20,0.06)", cursor: "pointer", backgroundColor: isExpanded ? "#FDFAF4" : "transparent" }}
                       onClick={() => { setExpanded(isExpanded ? null : order.id); setActiveTab("itens"); }}>
-                      <td style={{ padding: isMobile ? "0.625rem 0.5rem" : "0.875rem 0.75rem" }} onClick={e => e.stopPropagation()}>
+                      <td style={{ padding: isMobile ? "0.625rem 0.5rem" : "0.875rem 0.75rem", position: "sticky", left: 0, zIndex: 1, backgroundColor: isExpanded ? "#FDFAF4" : "#fff" }} onClick={e => e.stopPropagation()}>
                         <input type="checkbox"
                           checked={selectedIds.includes(order.id)}
                           onChange={e => setSelectedIds(prev => e.target.checked ? [...prev, order.id] : prev.filter(id => id !== order.id))}
                           style={{ cursor: "pointer" }} />
                       </td>
-                      <td style={{ padding: "0.875rem 1rem", fontFamily: "monospace", fontSize: "0.72rem", color: "#9a8060" }}>
+                      <td style={{ padding: "0.875rem 0.75rem", fontFamily: "monospace", fontSize: "0.72rem", color: "#9a8060" }}>
                         {isExpanded ? "▼" : "▶"} #{order.id.slice(-8).toUpperCase()}
                       </td>
-                      <td style={{ padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 1rem" }}>
+                      <td style={{ padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 0.75rem" }}>
                         <div style={{ color: "#1a1510", fontWeight: 600, fontSize: isMobile ? "0.8rem" : "0.875rem" }}>{order.user.name}</div>
-                        {!isMobile && <div style={{ color: "#9a8060", fontSize: "0.7rem" }}>{order.user.email}</div>}
+                        {!isMobile && <div title={order.user.email} style={{ color: "#9a8060", fontSize: "0.7rem", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{order.user.email}</div>}
                       </td>
-                      {!isMobile && <td style={{ padding: "0.875rem 1rem", color: "#5a4a2a", fontSize: "0.8rem" }}>
+                      {!isMobile && <td style={{ padding: "0.875rem 0.75rem", color: "#5a4a2a", fontSize: "0.8rem" }}>
                         {produtoNome}{maisItens && <span style={{ color: "#b8891a", fontWeight: 700 }}>{maisItens}</span>}
                       </td>}
-                      <td style={{ padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 1rem", color: "#1a1510", fontWeight: 700, whiteSpace: "nowrap" }}>{fmt(order.total)}</td>
-                      <td style={{ padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 1rem" }}>
+                      <td style={{ padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 0.75rem", color: "#1a1510", fontWeight: 700, whiteSpace: "nowrap" }}>{fmt(order.total)}</td>
+                      <td style={{ padding: isMobile ? "0.625rem 0.75rem" : "0.875rem 0.75rem" }}>
                         <span style={{ backgroundColor: sc.bg, color: sc.color, fontSize: "0.7rem", fontWeight: 700, padding: "0.25rem 0.625rem", borderRadius: "999px", whiteSpace: "nowrap" }}>
                           {STATUS_LABEL[order.status] || order.status}
                         </span>
                       </td>
-                      {!isMobile && <td style={{ padding: "0.875rem 1rem" }}>
+                      {!isMobile && <td style={{ padding: "0.875rem 0.75rem" }}>
                         <span style={{ backgroundColor: pc.bg, color: pc.color, fontSize: "0.7rem", fontWeight: 700, padding: "0.25rem 0.625rem", borderRadius: "999px", whiteSpace: "nowrap" }}>
                           {PAY_LABEL[order.paymentStatus] || order.paymentStatus}
                         </span>
@@ -559,20 +646,20 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                           <div style={{ color: "#9a8060", fontSize: "0.65rem", marginTop: "0.2rem" }}>Pago: {fmt(order.amountPaid)}</div>
                         )}
                       </td>}
-                      {!isMobile && <td style={{ padding: "0.875rem 1rem" }}>
+                      {!isMobile && <td style={{ padding: "0.875rem 0.75rem" }}>
                         <span style={{ backgroundColor: mc.bg, color: mc.color, fontSize: "0.7rem", fontWeight: 700, padding: "0.25rem 0.625rem", borderRadius: "999px", whiteSpace: "nowrap" }}>
                           {METHOD_LABEL[order.paymentMethod] || order.paymentMethod}
                         </span>
                       </td>}
-                      {!isMobile && <td style={{ padding: "0.875rem 1rem", color: "#9a8060", fontSize: "0.8rem", whiteSpace: "nowrap" }}>
+                      {!isMobile && <td style={{ padding: "0.875rem 0.75rem", color: "#9a8060", fontSize: "0.8rem", whiteSpace: "nowrap" }}>
                         {new Date(order.createdAt).toLocaleDateString("pt-BR")}
                       </td>}
-                      {!isMobile && <td style={{ padding: "0.875rem 1rem" }} onClick={e => e.stopPropagation()}>
+                      {!isMobile && <td style={{ padding: "0.875rem 0.75rem", ...stickyRight(isExpanded ? "#FDFAF4" : "#fff") }} onClick={e => e.stopPropagation()}>
                         <select
                           value={order.status}
                           disabled={updatingId === order.id}
                           onChange={e => updateStatus(order.id, e.target.value)}
-                          style={{ ...inp, fontSize: "0.72rem", padding: "0.3rem 0.5rem", cursor: "pointer" }}>
+                          style={{ ...inp, fontSize: "0.72rem", padding: "0.3rem 0.5rem", cursor: "pointer", maxWidth: 130 }}>
                           {Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                         </select>
                       </td>}
@@ -748,10 +835,59 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                                   </div>
                                 );
                               })}
+                              {/* Desconto do pedido */}
+                              {(() => {
+                                const subtotalItens = order.items.reduce((sm, i) => sm + i.price * i.quantity, 0);
+                                const editando = editandoDesconto === order.id;
+                                return (
+                                  <>
+                                    {(order.discount > 0 || editando) && (
+                                      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.5rem", fontSize: "0.8rem" }}>
+                                        <span style={{ color: "#5a4a2a" }}>Subtotal</span>
+                                        <span style={{ color: "#1a1510", fontWeight: 700 }}>{fmt(subtotalItens)}</span>
+                                      </div>
+                                    )}
+                                    {order.discount > 0 && !editando && (
+                                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginTop: "0.2rem" }}>
+                                        <span style={{ color: "#1a8a2a" }}>Desconto</span>
+                                        <span style={{ color: "#1a8a2a", fontWeight: 700 }}>− {fmt(order.discount)}</span>
+                                      </div>
+                                    )}
+                                    {editando && (
+                                      <div style={{ marginTop: "0.4rem", padding: "0.5rem 0.625rem", backgroundColor: "#FAF6EE", borderRadius: "0.5rem", display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap" }}>
+                                        <input autoFocus value={descontoValor} onChange={e => setDescontoValor(e.target.value)}
+                                          placeholder="0,00" inputMode="decimal"
+                                          style={{ ...inp, fontSize: "0.75rem", padding: "0.25rem 0.5rem", width: 80 }} />
+                                        <div style={{ display: "flex", gap: "2px" }}>
+                                          {(["reais", "percent"] as const).map(t => (
+                                            <button key={t} onClick={() => setDescontoTipo(t)}
+                                              style={{ fontSize: "0.7rem", fontWeight: 800, padding: "0.25rem 0.5rem", border: "none", borderRadius: "0.35rem", cursor: "pointer", backgroundColor: descontoTipo === t ? "#b8891a" : "#fff", color: descontoTipo === t ? "#fff" : "#9a8060" }}>
+                                              {t === "reais" ? "R$" : "%"}
+                                            </button>
+                                          ))}
+                                        </div>
+                                        <button onClick={() => salvarDesconto(order.id)} disabled={salvandoDesconto}
+                                          style={{ fontSize: "0.7rem", fontWeight: 700, padding: "0.25rem 0.6rem", backgroundColor: "#b8891a", color: "#fff", border: "none", borderRadius: "0.4rem", cursor: "pointer" }}>
+                                          {salvandoDesconto ? "..." : "Aplicar"}
+                                        </button>
+                                        <button onClick={() => setEditandoDesconto(null)}
+                                          style={{ fontSize: "0.7rem", color: "#9a8060", background: "none", border: "none", cursor: "pointer" }}>✕</button>
+                                      </div>
+                                    )}
+                                  </>
+                                );
+                              })()}
+
                               <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.5rem", fontWeight: 900, fontSize: "0.875rem" }}>
                                 <span style={{ color: "#1a1510" }}>Total</span>
                                 <span style={{ color: "#b8891a" }}>{fmt(order.total)}</span>
                               </div>
+                              {order.paymentStatus !== "paid" && editandoDesconto !== order.id && (
+                                <button onClick={() => { setEditandoDesconto(order.id); setDescontoValor(order.discount ? String(order.discount) : ""); setDescontoTipo("reais"); }}
+                                  style={{ marginTop: "0.35rem", fontSize: "0.7rem", color: "#b8891a", background: "none", border: "none", cursor: "pointer", fontWeight: 700, padding: 0 }}>
+                                  {order.discount > 0 ? "✎ Alterar desconto" : "+ Dar desconto"}
+                                </button>
+                              )}
                               {!hideProfit && order.paymentStatus !== "paid" && order.installments.length === 0 && (
                                 <div style={{ marginTop: "0.5rem", padding: "0.5rem 0.75rem", backgroundColor: PAY_COLOR[order.paymentStatus]?.bg || "#fee8e8", borderRadius: "0.5rem" }}>
                                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
@@ -862,14 +998,29 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                                         {Object.entries(METHOD_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                                       </select>
                                     </div>
-                                    {editPaymentMethod === "link" && (
-                                      <div>
-                                        <label style={{ fontSize: "0.72rem", color: "#9a8060", display: "block", marginBottom: "0.2rem" }}>💰 Valor Recebido (com desconto da operadora)</label>
-                                        <input type="number" step="0.01" value={editAmountPaid} onChange={e => setEditAmountPaid(e.target.value)}
-                                          placeholder={`Ex: ${order.total}`}
-                                          style={{ ...inp, width: "100%", boxSizing: "border-box" as const }} />
-                                      </div>
-                                    )}
+                                    {editPaymentMethod === "link" && (() => {
+                                      const recebido = parseFloat(editAmountPaid) || 0;
+                                      const taxa = order.total - recebido;
+                                      const temTaxa = recebido > 0 && taxa > 0.001;
+                                      return (
+                                        <div>
+                                          <label style={{ fontSize: "0.72rem", color: "#9a8060", display: "block", marginBottom: "0.2rem" }}>💰 Valor recebido (líquido, já com a taxa descontada)</label>
+                                          <input type="number" step="0.01" value={editAmountPaid} onChange={e => setEditAmountPaid(e.target.value)}
+                                            placeholder={`Ex: ${order.total}`}
+                                            style={{ ...inp, width: "100%", boxSizing: "border-box" as const }} />
+                                          {temTaxa && (
+                                            <label style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start", marginTop: "0.5rem", padding: "0.5rem 0.625rem", backgroundColor: "#fff8e1", borderRadius: "0.5rem", cursor: "pointer" }}>
+                                              <input type="checkbox" checked={taxaAbsorvida} onChange={e => setTaxaAbsorvida(e.target.checked)}
+                                                style={{ marginTop: 2, accentColor: "#b8891a", cursor: "pointer" }} />
+                                              <span style={{ fontSize: "0.7rem", color: "#7a6030", lineHeight: 1.4 }}>
+                                                Os {fmt(taxa)} que faltam são taxa da operadora, não dívida da cliente.
+                                                Marcando, o pedido fica <strong>quitado</strong> e a taxa vira despesa.
+                                              </span>
+                                            </label>
+                                          )}
+                                        </div>
+                                      );
+                                    })()}
                                     <div>
                                       <label style={{ fontSize: "0.72rem", color: "#9a8060", display: "block", marginBottom: "0.2rem" }}>Status de Pagamento</label>
                                       <select value={editPaymentStatus} onChange={e => setEditPaymentStatus(e.target.value)}
@@ -970,7 +1121,7 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                                     />
                                     {reassignSearch.length >= 2 && (
                                       <div style={{ border: "1px solid rgba(140,100,20,0.2)", borderRadius: "0.5rem", overflow: "hidden" }}>
-                                        {customers
+                                        {localCustomers
                                           .filter(c => c.id !== order.user.id && (
                                             (c.name || "").toLowerCase().includes(reassignSearch.toLowerCase()) ||
                                             c.email.toLowerCase().includes(reassignSearch.toLowerCase())
@@ -986,12 +1137,44 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                                               <span style={{ color: "#9a8060", marginLeft: "0.5rem", fontSize: "0.72rem" }}>{c.email}</span>
                                             </button>
                                           ))}
-                                        {customers.filter(c => c.id !== order.user.id && (
+                                        {localCustomers.filter(c => c.id !== order.user.id && (
                                           (c.name || "").toLowerCase().includes(reassignSearch.toLowerCase()) ||
                                           c.email.toLowerCase().includes(reassignSearch.toLowerCase())
                                         )).length === 0 && (
                                           <p style={{ padding: "0.5rem 0.75rem", color: "#9a8060", fontSize: "0.8rem" }}>Nenhum cliente encontrado.</p>
                                         )}
+                                      </div>
+                                    )}
+
+                                    {/* Cadastro de cliente novo sem sair do pedido */}
+                                    {!newCustomerOpen ? (
+                                      <button onClick={() => { setNewCustomerOpen(true); setNcName(reassignSearch); setNcError(""); }}
+                                        style={{ marginTop: "0.6rem", fontSize: "0.75rem", fontWeight: 700, color: "#b8891a", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                                        + Cadastrar novo cliente
+                                      </button>
+                                    ) : (
+                                      <div style={{ marginTop: "0.6rem", padding: "0.75rem", backgroundColor: "#FAF6EE", borderRadius: "0.625rem", border: "1px solid rgba(140,100,20,0.15)" }}>
+                                        <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "#1a1510", marginBottom: "0.5rem" }}>Novo cliente</p>
+                                        <input style={{ ...inp, width: "100%", boxSizing: "border-box" as const, backgroundColor: "#fff", marginBottom: "0.4rem" }}
+                                          placeholder="Nome *" value={ncName} onChange={e => setNcName(e.target.value)} autoFocus />
+                                        <input style={{ ...inp, width: "100%", boxSizing: "border-box" as const, backgroundColor: "#fff", marginBottom: "0.4rem" }}
+                                          placeholder="Telefone (opcional)" value={ncPhone} onChange={e => setNcPhone(e.target.value)} />
+                                        <input style={{ ...inp, width: "100%", boxSizing: "border-box" as const, backgroundColor: "#fff", marginBottom: "0.4rem" }}
+                                          placeholder="E-mail (opcional)" value={ncEmail} onChange={e => setNcEmail(e.target.value)} />
+                                        {ncError && <p style={{ fontSize: "0.72rem", color: "#c04040", marginBottom: "0.4rem" }}>{ncError}</p>}
+                                        <div style={{ display: "flex", gap: "0.4rem" }}>
+                                          <button disabled={reassignSaving} onClick={() => createAndAssignCustomer(order.id)}
+                                            style={{ flex: 1, padding: "0.45rem", backgroundColor: "#b8891a", color: "#fff", border: "none", borderRadius: "0.5rem", fontWeight: 800, fontSize: "0.75rem", cursor: reassignSaving ? "wait" : "pointer" }}>
+                                            {reassignSaving ? "Salvando..." : "Cadastrar e vincular"}
+                                          </button>
+                                          <button onClick={() => { setNewCustomerOpen(false); setNcError(""); }}
+                                            style={{ padding: "0.45rem 0.75rem", backgroundColor: "#fff", color: "#9a8060", border: "1px solid rgba(140,100,20,0.2)", borderRadius: "0.5rem", fontWeight: 700, fontSize: "0.75rem", cursor: "pointer" }}>
+                                            Cancelar
+                                          </button>
+                                        </div>
+                                        <p style={{ fontSize: "0.68rem", color: "#9a8060", marginTop: "0.4rem" }}>
+                                          Sem e-mail, geramos um interno automaticamente.
+                                        </p>
                                       </div>
                                     )}
                                   </div>
@@ -1000,6 +1183,22 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                                     <p style={{ color: "#3a2a10", fontSize: "0.8rem", marginBottom: "0.3rem" }}>👤 {order.user.name}</p>
                                     <p style={{ color: "#3a2a10", fontSize: "0.8rem", marginBottom: "0.3rem" }}>📧 {order.user.email}</p>
                                     {order.user.phone && <p style={{ color: "#3a2a10", fontSize: "0.8rem", marginBottom: "0.3rem" }}>📞 {order.user.phone}</p>}
+                                    {order.address && (() => {
+                                      const e = order.address;
+                                      const completo = `${e.street}, ${e.number}${e.complement ? ` - ${e.complement}` : ""}, ${e.district}, ${e.city} - ${e.state}, CEP ${e.zipCode}`;
+                                      return (
+                                        <div style={{ marginTop: "0.5rem", padding: "0.6rem 0.75rem", backgroundColor: "#FAF6EE", borderRadius: "0.5rem" }}>
+                                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                                            <p style={{ fontSize: "0.78rem", color: "#3a2a10", lineHeight: 1.5, margin: 0 }}>📍 {completo}</p>
+                                            <button onClick={() => navigator.clipboard?.writeText(completo)}
+                                              title="Copiar endereço"
+                                              style={{ background: "none", border: "none", cursor: "pointer", color: "#b8891a", fontSize: "0.7rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+                                              copiar
+                                            </button>
+                                          </div>
+                                        </div>
+                                      );
+                                    })()}
                                   </>
                                 )}
                                 {order.notes && (
@@ -1017,6 +1216,45 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                           {activeTab === "jornada" && (
                               <div style={{ backgroundColor: "#fff", borderRadius: "0.75rem", padding: "1.25rem 1rem", border: "1px solid rgba(140,100,20,0.08)" }}>
                                 <OrderTimeline history={order.statusHistory} fallbackCreatedAt={order.createdAt} />
+
+                                {/* Mudar o status aqui mesmo, sem voltar para a linha da tabela */}
+                                <div style={{ marginTop: "1.25rem", paddingTop: "1rem", borderTop: "1px solid rgba(140,100,20,0.1)" }}>
+                                  <p style={{ fontSize: "0.72rem", fontWeight: 800, color: "#9a8060", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "0.625rem" }}>
+                                    Marcar como
+                                  </p>
+                                  <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                                    {Object.entries(STATUS_LABEL).map(([valor, rotulo]) => {
+                                      const atual = order.status === valor;
+                                      const cor = STATUS_COLOR[valor] || { bg: "#f0f0f0", color: "#666" };
+                                      const salvando = updatingId === order.id;
+                                      return (
+                                        <button key={valor}
+                                          disabled={atual || salvando}
+                                          onClick={() => {
+                                            if (valor === "cancelled" && !confirm("Cancelar este pedido? O estoque das peças volta para o catálogo.")) return;
+                                            updateStatus(order.id, valor);
+                                          }}
+                                          title={atual ? "É o status atual" : `Mudar para ${rotulo}`}
+                                          style={{
+                                            display: "inline-flex", alignItems: "center", gap: "0.35rem",
+                                            fontSize: "0.78rem", fontWeight: 700, padding: "0.45rem 0.875rem",
+                                            borderRadius: "999px", cursor: atual || salvando ? "default" : "pointer",
+                                            backgroundColor: atual ? cor.bg : "#fff",
+                                            color: atual ? cor.color : "#5a4a2a",
+                                            border: `1.5px solid ${atual ? cor.color : "rgba(140,100,20,0.2)"}`,
+                                            opacity: salvando && !atual ? 0.5 : 1,
+                                          }}>
+                                          <span>{STATUS_ICON[valor] || "•"}</span>
+                                          {rotulo}
+                                          {atual && <span style={{ fontSize: "0.68rem", opacity: 0.75 }}>· atual</span>}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                  <p style={{ fontSize: "0.7rem", color: "#9a8060", marginTop: "0.6rem", lineHeight: 1.5 }}>
+                                    A cliente recebe um aviso no celular quando o pedido é confirmado, enviado, entregue ou cancelado.
+                                  </p>
+                                </div>
                               </div>
                           )}
                           </div>

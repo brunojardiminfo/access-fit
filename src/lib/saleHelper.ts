@@ -1,8 +1,19 @@
+export const DIAS_PARA_SALE = 60;
+
 export function isSaleEligible(createdAt: Date): boolean {
   const daysSinceCreation = Math.floor(
     (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
   );
-  return daysSinceCreation >= 60;
+  return daysSinceCreation >= DIAS_PARA_SALE;
+}
+
+/**
+ * Filtro Prisma das peças em SALE: marcadas na mão ou com DIAS_PARA_SALE dias
+ * de cadastro. Fica aqui para a vitrine, a home e o admin usarem a mesma regra.
+ */
+export function saleWhere() {
+  const corte = new Date(Date.now() - DIAS_PARA_SALE * 24 * 60 * 60 * 1000);
+  return { OR: [{ createdAt: { lte: corte } }, { onSale: true }] };
 }
 
 export function calculateSalePrice(price: number, discount: number = 20): number {

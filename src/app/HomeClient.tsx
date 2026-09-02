@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { useMobileView } from "@/hooks/useMediaQuery";
 import ProductCard from "@/components/products/ProductCard";
+import HeroCarousel from "./components/HeroCarousel";
 
 interface HomeClientProps {
   newArrivals: any[];
@@ -56,24 +57,44 @@ export default function HomeClient({
             </div>
           </div>
 
-          {/* Grid de preview de produtos - esconde em mobile */}
-          {!isMobile && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.875rem" }}>
-              {heroProducts.map((p, i) => {
-                const imgs = JSON.parse(p.images || "[]");
-                return (
-                  <Link key={p.id} href={`/produtos/${p.slug}`} style={{ textDecoration: "none", display: "block", borderRadius: "1rem", overflow: "hidden", aspectRatio: i === 0 ? "1/1.4" : "1/1", backgroundColor: "#2a2010", border: "1px solid rgba(184,137,26,0.15)", position: "relative" }}>
-                    {imgs[0] ? (
-                      <img src={imgs[0]} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: 0.9 }} />
-                    ) : (
-                      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(184,137,26,0.3)", fontSize: "0.7rem" }}>Access Fit</div>
-                    )}
-                    <div style={{ position: "absolute", bottom: 8, left: 8, right: 8, backgroundColor: "rgba(26,21,16,0.85)", borderRadius: "0.5rem", padding: "0.4rem 0.6rem", backdropFilter: "blur(4px)" }}>
-                      <p style={{ color: "#FAF6EE", fontSize: "0.65rem", fontWeight: 700, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{p.name}</p>
-                    </div>
-                  </Link>
-                );
-              })}
+          {/* Carrossel de peças */}
+          <HeroCarousel produtos={heroProducts} isMobile={isMobile} />
+        </div>
+      </section>
+
+      {/* SALE */}
+      <section style={{ padding: isMobile ? "2rem 1rem" : "4.5rem 1.5rem", background: "linear-gradient(180deg, #fff5f3 0%, #FAF6EE 100%)", borderTop: "3px solid #e74c3c" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "0.75rem" }}>
+            <span style={{ display: "inline-block", backgroundColor: "#e74c3c", color: "#fff", fontSize: isMobile ? "0.6rem" : "0.7rem", fontWeight: 900, letterSpacing: "0.18em", padding: "0.35rem 1rem", borderRadius: "999px", marginBottom: "0.75rem" }}>
+              PREÇOS REDUZIDOS
+            </span>
+            <h2 style={{ fontSize: isMobile ? "1.75rem" : "3rem", fontWeight: 900, color: "#e74c3c", margin: 0, lineHeight: 1 }}>
+              🔥 SALE
+            </h2>
+          </div>
+          <p style={{ textAlign: "center", color: "#9a8060", marginBottom: isMobile ? "1.5rem" : "2.5rem", fontSize: isMobile ? "0.8rem" : "1rem" }}>
+            {saleProducts.length > 0
+              ? `${saleProducts.length} peça${saleProducts.length === 1 ? "" : "s"} com desconto agora — enquanto durar o estoque`
+              : "Fique atento para nossas promoções exclusivas"}
+          </p>
+          {saleProducts.length > 0 ? (
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? "1rem" : "1.25rem" }}>
+              {saleProducts.map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : null}
+          {saleProducts.length > 0 ? (
+            <div style={{ textAlign: "center", marginTop: isMobile ? "1.25rem" : "2rem" }}>
+              <Link href="/produtos?sale=1" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", backgroundColor: "#e74c3c", color: "#fff", fontWeight: 900, padding: isMobile ? "0.75rem 1.5rem" : "0.9rem 2rem", borderRadius: "0.875rem", textDecoration: "none", fontSize: isMobile ? "0.85rem" : "0.95rem", boxShadow: "0 4px 18px rgba(231,76,60,0.35)" }}>
+                Ver tudo em SALE <ArrowRight size={16} />
+              </Link>
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", padding: "3rem 1rem", backgroundColor: "#fff", borderRadius: "1rem", border: "1px solid rgba(231,76,60,0.2)" }}>
+              <span style={{ fontSize: "3rem", display: "block", marginBottom: "1rem" }}>🎉</span>
+              <p style={{ color: "#9a8060", fontSize: "1rem", fontWeight: 600 }}>Volte em breve para aproveitar ofertas especiais!</p>
             </div>
           )}
         </div>
@@ -123,32 +144,6 @@ export default function HomeClient({
               </Link>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* SALE */}
-      <section style={{ padding: isMobile ? "1.5rem 1rem" : "5rem 1.5rem", backgroundColor: "#FAF6EE", borderTop: "2px solid rgba(231,76,60,0.2)" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <h2 style={{ fontSize: isMobile ? "1.25rem" : "2.2rem", fontWeight: 900, color: "#e74c3c", marginBottom: "0.75rem", textAlign: "center" }}>
-            🔥 SALE
-          </h2>
-          <p style={{ textAlign: "center", color: "#9a8060", marginBottom: isMobile ? "1.5rem" : "2.5rem", fontSize: isMobile ? "0.8rem" : "1rem" }}>
-            {saleProducts.length > 0
-              ? "Produtos com desconto especial - aproveita!"
-              : "Fique atento para nossas promoções exclusivas"}
-          </p>
-          {saleProducts.length > 0 ? (
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? "1rem" : "1.25rem" }}>
-              {saleProducts.map(product => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <div style={{ textAlign: "center", padding: "3rem 1rem", backgroundColor: "#fff", borderRadius: "1rem", border: "1px solid rgba(231,76,60,0.2)" }}>
-              <span style={{ fontSize: "3rem", display: "block", marginBottom: "1rem" }}>🎉</span>
-              <p style={{ color: "#9a8060", fontSize: "1rem", fontWeight: 600 }}>Volte em breve para aproveitar ofertas especiais!</p>
-            </div>
-          )}
         </div>
       </section>
 

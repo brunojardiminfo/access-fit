@@ -1,16 +1,18 @@
 import { prisma } from "@/lib/prisma";
 import ProductCard from "@/components/products/ProductCard";
 import Link from "next/link";
+import { saleWhere } from "@/lib/saleHelper";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProdutosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ categoria?: string; busca?: string; tamanho?: string; ordem?: string }>;
+  searchParams: Promise<{ categoria?: string; busca?: string; tamanho?: string; ordem?: string; sale?: string }>;
 }) {
   const params = await searchParams;
-  const { categoria, busca, tamanho, ordem } = params;
+  const { categoria, busca, tamanho, ordem, sale } = params;
+  const soSale = sale === "1";
 
   const categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
 
@@ -20,6 +22,7 @@ export default async function ProdutosPage({
       ...(categoria ? { category: { slug: categoria } } : {}),
       ...(busca ? { name: { contains: busca, mode: "insensitive" } } : {}),
       ...(tamanho ? { sizes: { contains: tamanho } } : {}),
+      ...(soSale ? saleWhere() : {}),
     },
     include: { category: true },
     orderBy: ordem === "preco_asc" ? { price: "asc" }
@@ -39,7 +42,7 @@ export default async function ProdutosPage({
 
   const buildUrl = (overrides: Record<string, string | undefined>) => {
     const p = new URLSearchParams();
-    const merged = { categoria, busca, tamanho, ordem, ...overrides };
+    const merged = { categoria, busca, tamanho, ordem, sale, ...overrides };
     Object.entries(merged).forEach(([k, v]) => { if (v) p.set(k, v); });
     const s = p.toString();
     return `/produtos${s ? `?${s}` : ""}`;
@@ -74,6 +77,10 @@ export default async function ProdutosPage({
           <Link href={buildUrl({ categoria: undefined })}
             style={{ flexShrink: 0, padding: "0.4rem 0.875rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: 700, textDecoration: "none", backgroundColor: !categoria ? "#b8891a" : "#fff", color: !categoria ? "#fff" : "#7a6030", border: !categoria ? "none" : "1px solid rgba(140,100,20,0.2)" }}>
             Todos
+          </Link>
+          <Link href={buildUrl({ sale: soSale ? undefined : "1" })}
+            style={{ flexShrink: 0, padding: "0.4rem 0.875rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: 800, textDecoration: "none", whiteSpace: "nowrap", backgroundColor: soSale ? "#e74c3c" : "#fff", color: soSale ? "#fff" : "#e74c3c", border: soSale ? "none" : "1px solid rgba(231,76,60,0.35)" }}>
+            🔥 SALE
           </Link>
           {categories.map(cat => (
             <Link key={cat.id} href={buildUrl({ categoria: cat.slug })}
@@ -139,6 +146,15 @@ export default async function ProdutosPage({
         {/* Sidebar desktop */}
         <aside style={{ width: 230, flexShrink: 0, position: "sticky", top: 88 }} className="hide-mobile">
           <div style={{ backgroundColor: "#fff", borderRadius: "1rem", border: "1px solid rgba(140,100,20,0.1)", overflow: "hidden" }}>
+
+            {/* SALE */}
+            <Link href={buildUrl({ sale: soSale ? undefined : "1" })}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", padding: "0.875rem 1.25rem", borderBottom: "1px solid rgba(140,100,20,0.08)", textDecoration: "none", backgroundColor: soSale ? "#e74c3c" : "#fff5f3" }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: 900, color: soSale ? "#fff" : "#e74c3c" }}>🔥 SALE</span>
+              <span style={{ fontSize: "0.7rem", fontWeight: 700, whiteSpace: "nowrap", color: soSale ? "rgba(255,255,255,0.8)" : "#c0705a" }}>
+                {soSale ? "✕ limpar" : "ver ofertas"}
+              </span>
+            </Link>
 
             {/* Categorias */}
             <div style={{ padding: "1.25rem", borderBottom: "1px solid rgba(140,100,20,0.08)" }}>

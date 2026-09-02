@@ -35,11 +35,11 @@ export default function SaleManagerClient({
     return d.toLocaleDateString("pt-BR");
   };
 
-  const daysUntilSale = (createdAt: string | Date) => {
+  // Peca entra em SALE automatico de 20% ao completar 60 dias de cadastro
+  const daysInStock = (createdAt: string | Date) => {
     const created = typeof createdAt === "string" ? new Date(createdAt) : createdAt;
     const today = new Date();
-    const days = Math.floor((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.max(0, 60 - days);
+    return Math.floor((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
   };
 
   const calculateSalePrice = (price: number, discount: number) => {
@@ -160,8 +160,8 @@ export default function SaleManagerClient({
         <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#9a8060" }}>
           <p style={{ fontSize: "1rem", fontWeight: 600 }}>
             {activeTab === "upcoming"
-              ? "Nenhuma peça próxima de entrar em SALE nos próximos 60 dias"
-              : "Nenhuma peça autorizada para SALE"}
+              ? "Nenhuma peça com 60 dias ou mais de cadastro"
+              : "Nenhuma peça com desconto personalizado"}
           </p>
         </div>
       );
@@ -171,9 +171,9 @@ export default function SaleManagerClient({
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {products.map((product) => {
           const discount = product.saleDiscount || 20;
-          const daysLeft =
+          const diasEstoque =
             activeTab === "upcoming"
-              ? daysUntilSale(product.createdAt)
+              ? daysInStock(product.createdAt)
               : undefined;
           return (
             <div
@@ -209,17 +209,9 @@ export default function SaleManagerClient({
                 <p style={{ fontWeight: 600, color: "#1a1510" }}>
                   {formatDate(product.createdAt)}
                 </p>
-                {daysLeft !== undefined && (
-                  <p
-                    style={{
-                      fontSize: "0.75rem",
-                      color: daysLeft === 0 ? "#e74c3c" : "#b8891a",
-                      fontWeight: 700,
-                    }}
-                  >
-                    {daysLeft === 0
-                      ? "🔥 ENTRA HOJE!"
-                      : `${daysLeft} dias`}
+                {diasEstoque !== undefined && (
+                  <p style={{ fontSize: "0.75rem", color: "#e74c3c", fontWeight: 700 }}>
+                    🔥 {diasEstoque} dias no estoque · em SALE automático
                   </p>
                 )}
               </div>
@@ -345,7 +337,7 @@ export default function SaleManagerClient({
             fontSize: "0.95rem",
           }}
         >
-          📅 Próximos de SALE ({upcomingSaleProducts.length})
+          🕒 Em SALE automático — 20% ({upcomingSaleProducts.length})
         </button>
         <button
           onClick={() => setActiveTab("active")}
@@ -360,7 +352,7 @@ export default function SaleManagerClient({
             fontSize: "0.95rem",
           }}
         >
-          🔥 Em SALE Agora ({activeSaleProducts.length})
+          🔥 Desconto personalizado ({activeSaleProducts.length})
         </button>
       </div>
 

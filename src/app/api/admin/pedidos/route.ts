@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { decrementProductStock } from "@/lib/stock";
+import { decrementProductStock, consomeEstoque } from "@/lib/stock";
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = await req.json();
-  const { userId, newCustomer, items, paymentMethod, paymentStatus, amountPaid, notes, createdAt, dueDate, installments } = body;
+  const { userId, newCustomer, items, paymentMethod, paymentStatus, amountPaid, notes, createdAt, dueDate, installments, discount } = body;
 
   let customerId = userId;
 
@@ -70,13 +70,19 @@ export async function POST(req: Request) {
   }
 
   const subtotal = items.reduce((s: number, i: any) => s + i.price * i.quantity, 0);
+  const desconto = Math.min(Math.max(0, Number(discount) || 0), subtotal);
+  const totalComDesconto = Math.round((subtotal - desconto) * 100) / 100;
   const paid = parseFloat(amountPaid) || 0;
 
   try {
-    // Decrementar estoque dos produtos vinculados (por tamanho, quando configurado)
-    for (const item of items) {
-      if (item.productId) {
-        await decrementProductStock(item.productId, item.quantity, item.size);
+    // Baixa só quando o pedido já nasce num status que consome estoque.
+    // Nascendo como "aguardando", a baixa acontece ao confirmar.
+    const statusInicial = body.status || "delivered";
+    if (consomeEstoque(statusInicial)) {
+      for (const item of items) {
+        if (item.productId) {
+          await decrementProductStock(item.productId, item.quantity, item.size);
+        }
       }
     }
 
@@ -87,10 +93,10 @@ export async function POST(req: Request) {
         paymentMethod: paymentMethod || "pix",
         paymentStatus: paymentStatus || "paid",
         amountPaid: paid,
-        total: subtotal,
+        total: totalComDesconto,
         subtotal,
         shipping: 0,
-        discount: 0,
+        discount: desconto,
         notes: notes || null,
         dueDate: dueDate ? new Date(dueDate) : null,
         installmentCount: installments || 1,

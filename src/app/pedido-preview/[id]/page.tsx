@@ -84,7 +84,7 @@ export default function PedidoPreviewPage() {
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
           <h1 style={{ fontSize: "1.75rem", fontWeight: 900, color: "#1a1510", margin: "0 0 0.5rem" }}>Confira seu Pedido</h1>
-          <p style={{ color: "#9a8060", fontSize: "0.875rem" }}>Clique em "Confirmar e Pagar" para finalizar sua compra</p>
+          <p style={{ color: "#9a8060", fontSize: "0.875rem" }}>Esta sacola ainda não é um pedido. Finalize para falar com a gente no WhatsApp.</p>
         </div>
 
         {/* Card */}
@@ -140,12 +140,12 @@ export default function PedidoPreviewPage() {
             style={{ width: "100%", padding: "1rem", backgroundColor: "#b8891a", color: "#fff", fontWeight: 900, fontSize: "1rem", border: "none", borderRadius: "0.875rem", cursor: "pointer", transition: "background-color 0.2s" }}
             onMouseOver={e => (e.currentTarget.style.backgroundColor = "#d4a028")}
             onMouseOut={e => (e.currentTarget.style.backgroundColor = "#b8891a")}>
-            ✓ Confirmar e Pagar
+            ✓ Finalizar este pedido
           </button>
 
           <button onClick={copyLink}
             style={{ width: "100%", padding: "1rem", backgroundColor: "#fff", color: "#b8891a", fontWeight: 900, fontSize: "1rem", border: "2px solid #b8891a", borderRadius: "0.875rem", cursor: "pointer" }}>
-            {copied ? "✓ Copiado!" : "📋 Copiar Link"}
+            {copied ? "✓ Link copiado!" : "📋 Copiar link para enviar a alguém"}
           </button>
 
           <Link href="/" style={{ textAlign: "center", padding: "1rem", color: "#b8891a", textDecoration: "none", fontWeight: 700 }}>

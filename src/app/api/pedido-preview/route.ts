@@ -39,6 +39,7 @@ export async function POST(req: Request) {
           productId: item.productId,
           quantity: item.quantity,
           price: item.price,
+          size: item.size || null,
         })),
       },
     },

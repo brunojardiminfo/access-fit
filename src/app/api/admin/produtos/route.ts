@@ -11,13 +11,14 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q") || "";
 
+  // Inclui inativos: produto oculto na loja continua vendavel no balcao.
+  // Ativos aparecem primeiro na busca.
   const products = await prisma.product.findMany({
     where: {
-      active: true,
       ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
     },
     include: { conjuntoItems: true },
-    orderBy: { name: "asc" },
+    orderBy: [{ active: "desc" }, { name: "asc" }],
     take: 10,
   });
 

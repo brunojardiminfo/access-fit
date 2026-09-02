@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useCart } from "@/store/cart";
 import { formatCurrency, parseJson } from "@/lib/utils";
+import { getSaleInfo, calculateSalePrice } from "@/lib/saleHelper";
 import Link from "next/link";
 import SizeGuide from "@/app/components/SizeGuide";
 import RecommendedProducts from "@/app/components/RecommendedProducts";
@@ -15,6 +16,7 @@ type Product = {
   price: number; compareAt: number | null; images: string;
   sizes: string; sizeRange: string | null; colors: string; stock: number; sku: string | null; sizeStock: string;
   isConjunto: boolean; sellComponentsSeparately: boolean; conjuntoItems: ConjuntoItem[];
+  createdAt: string | Date; onSale?: boolean; saleDiscount?: number | null;
   category: { name: string; slug: string };
 };
 
@@ -70,6 +72,16 @@ export default function ProductPageClient() {
   const isSizeAvailable = (size: string) => !hasSizeStock || (sizeStock[size] ?? 0) > 0;
   const selectedSizeAvailable = !selectedSize || isSizeAvailable(selectedSize);
   const discount = product.compareAt ? Math.round((1 - product.price / product.compareAt) * 100) : null;
+  const createdDate = typeof product.createdAt === "string" ? new Date(product.createdAt) : product.createdAt;
+  const saleInfo = getSaleInfo({
+    price: product.price,
+    createdAt: createdDate,
+    onSale: product.onSale,
+    saleDiscount: product.saleDiscount,
+  });
+  const finalPrice = saleInfo ? saleInfo.salePrice : product.price;
+  // Componentes do conjunto seguem o mesmo percentual de desconto da peca
+  const componentPrice = (value: number) => saleInfo ? calculateSalePrice(value, saleInfo.discount) : value;
   // Para conjuntos com componentes separados: esgotado só se o conjunto E todos os componentes estiverem sem estoque
   // stock >= 0 = disponível (0 = padrão/nunca vendido), stock < 0 = esgotado (foi vendido)
   const hasAvailableComponents = product.isConjunto && product.sellComponentsSeparately
@@ -102,17 +114,23 @@ export default function ProductPageClient() {
     if (!selectedSizeAvailable) return;
 
     let itemName = product.name;
-    let itemPrice = product.price;
+    let itemPrice = finalPrice;
+    let itemCheio = product.price;
 
     if (selectedComponent && selectedComponent !== "completo") {
       const component = product.conjuntoItems.find(c => c.id === selectedComponent);
       if (component) {
         itemName = `${product.name} - ${component.name}`;
-        itemPrice = component.price;
+        itemPrice = componentPrice(component.price);
+        itemCheio = component.price;
       }
     }
 
-    addItem({ productId: product.id, name: itemName, price: itemPrice, image: images[0] || "", size: selectedSize || "Único", color: "Padrão", quantity: 1 });
+    addItem({
+      productId: product.id, name: itemName, price: itemPrice,
+      precoCheio: itemCheio, descontoSale: saleInfo?.discount ?? 0,
+      image: images[0] || "", size: selectedSize || "Único", color: "Padrão", quantity: 1,
+    });
     setAdded(true);
     setTimeout(() => setAdded(false), 2500);
     openCart();
@@ -220,13 +238,18 @@ export default function ProductPageClient() {
             </h1>
 
             <div style={{ display: "flex", alignItems: "center", gap: "0.875rem", marginTop: "1.25rem", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "2rem", fontWeight: 900, color: "#b8891a" }}>{formatCurrency(product.price)}</span>
-              {product.compareAt && (
+              <span style={{ fontSize: "2rem", fontWeight: 900, color: saleInfo ? "#e74c3c" : "#b8891a" }}>{formatCurrency(finalPrice)}</span>
+              {saleInfo ? (
+                <>
+                  <span style={{ fontSize: "1.1rem", color: "#b8a080", textDecoration: "line-through" }}>{formatCurrency(product.compareAt || product.price)}</span>
+                  <span style={{ backgroundColor: "#e74c3c", color: "#fff", fontSize: "0.8rem", fontWeight: 900, padding: "0.2rem 0.7rem", borderRadius: "999px" }}>SALE -{saleInfo.discount}%</span>
+                </>
+              ) : product.compareAt ? (
                 <>
                   <span style={{ fontSize: "1.1rem", color: "#b8a080", textDecoration: "line-through" }}>{formatCurrency(product.compareAt)}</span>
                   <span style={{ backgroundColor: "rgba(184,137,26,0.12)", color: "#b8891a", fontSize: "0.8rem", fontWeight: 900, padding: "0.2rem 0.7rem", borderRadius: "999px" }}>-{discount}%</span>
                 </>
-              )}
+              ) : null}
             </div>
 
             {outOfStock && (
@@ -283,7 +306,7 @@ export default function ProductPageClient() {
                           <p style={{ fontWeight: 700, color: compSoldOut ? "#9a8060" : "#1a1510", fontSize: "0.9rem", textDecoration: compSoldOut ? "line-through" : "none" }}>Conjunto Completo</p>
                           <p style={{ fontSize: "0.8rem", color: "#9a8060" }}>{compSoldOut ? "Esgotado" : "Todas as peças juntas"}</p>
                         </div>
-                        <span style={{ fontSize: "1rem", fontWeight: 900, color: compSoldOut ? "#9a8060" : "#b8891a" }}>{formatCurrency(product.price)}</span>
+                        <span style={{ fontSize: "1rem", fontWeight: 900, color: compSoldOut ? "#9a8060" : saleInfo ? "#e74c3c" : "#b8891a" }}>{formatCurrency(finalPrice)}</span>
                       </label>
                     );
                   })()}
@@ -298,7 +321,7 @@ export default function ProductPageClient() {
                           <p style={{ fontWeight: 700, color: compSoldOut ? "#9a8060" : "#1a1510", fontSize: "0.9rem", textDecoration: compSoldOut ? "line-through" : "none" }}>{comp.name}</p>
                           {compSoldOut && <p style={{ fontSize: "0.75rem", color: "#c04040" }}>Esgotado</p>}
                         </div>
-                        <span style={{ fontSize: "1rem", fontWeight: 900, color: compSoldOut ? "#9a8060" : "#b8891a" }}>{formatCurrency(comp.price)}</span>
+                        <span style={{ fontSize: "1rem", fontWeight: 900, color: compSoldOut ? "#9a8060" : saleInfo ? "#e74c3c" : "#b8891a" }}>{formatCurrency(componentPrice(comp.price))}</span>
                       </label>
                     );
                   })}

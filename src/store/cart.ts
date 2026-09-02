@@ -6,6 +6,11 @@ export type CartItem = {
   productId: string;
   name: string;
   price: number;
+  // Guardados para a campanha saber comparar SALE x progressivo sem consultar
+  // o servidor. Itens antigos do carrinho podem nao ter — o preco cobrado e
+  // sempre recalculado no servidor de qualquer forma.
+  precoCheio?: number;
+  descontoSale?: number;
   image: string;
   size: string;
   color: string;

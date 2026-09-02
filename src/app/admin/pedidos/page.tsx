@@ -14,6 +14,7 @@ export default async function PedidosPage() {
       orderBy: { createdAt: "desc" },
       include: {
         user: { select: { id: true, name: true, email: true, phone: true } },
+        address: true,
         items: { include: { product: { select: { id: true, name: true, costPrice: true } } } },
         installments: { orderBy: { number: "asc" } },
         statusHistory: { orderBy: { createdAt: "desc" } },

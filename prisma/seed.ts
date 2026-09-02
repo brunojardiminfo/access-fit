@@ -1,21 +1,38 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 
 const prisma = new PrismaClient();
 
+/**
+ * Senha do admin. Vem de ADMIN_PASSWORD; sem ela, o seed sorteia uma senha
+ * forte e imprime uma unica vez. Nunca deixe uma senha fixa aqui: este arquivo
+ * fica no repositorio, e o painel admin abre pedidos, clientes e financeiro.
+ */
+function senhaDoAdmin(): { senha: string; sorteada: boolean } {
+  const doAmbiente = process.env.ADMIN_PASSWORD?.trim();
+  if (doAmbiente) return { senha: doAmbiente, sorteada: false };
+  return { senha: randomBytes(12).toString("base64url"), sorteada: true };
+}
+
 async function main() {
   // Admin user
-  const hashedPassword = await bcrypt.hash("admin123", 10);
+  const email = process.env.ADMIN_EMAIL?.trim() || "admin@accessfit.com.br";
+  const { senha, sorteada } = senhaDoAdmin();
+  const hashedPassword = await bcrypt.hash(senha, 10);
   await prisma.user.upsert({
-    where: { email: "admin@accessfit.com.br" },
+    where: { email },
     update: {},
     create: {
       name: "Admin Access Fit",
-      email: "admin@accessfit.com.br",
+      email,
       password: hashedPassword,
       role: "admin",
     },
   });
+  if (sorteada) {
+    console.log(`\n  Admin criado: ${email}\n  Senha sorteada: ${senha}\n  Anote agora — ela nao e exibida de novo. Para definir a sua, use ADMIN_PASSWORD.\n`);
+  }
 
   // Categories
   const categories = await Promise.all([
