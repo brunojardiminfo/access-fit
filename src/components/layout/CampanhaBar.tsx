@@ -1,7 +1,7 @@
 "use client";
 
 import { useMobileView } from "@/hooks/useMediaQuery";
-import { CAMPANHA, faseCampanha, mesDaCampanha, TETO_PROGRESSIVO } from "@/lib/campanha";
+import { CAMPANHA, faseCampanha, mesDaCampanha, diaDeInicio, TETO_PROGRESSIVO } from "@/lib/campanha";
 
 const OURO = "linear-gradient(90deg, #b8891a 0%, #e0b64a 50%, #b8891a 100%)";
 const TINTA = "#1a1510";
@@ -9,12 +9,14 @@ const TINTA = "#1a1510";
 /**
  * Aviso da campanha, logo abaixo do menu. Tem dois estados:
  *
- *  - teaser → antes de comecar: so avisa que vem ai e leva para o WhatsApp
- *  - ativa  → com a campanha no ar E revelarRegras ligado: mostra a escada de
- *             desconto e leva para a vitrine, que e onde a cliente converte
+ *  - teaser → antes de comecar. Com revelarRegras ligado ja publica a escada
+ *             e a data de estreia, para a cliente ir se planejando; sem ele,
+ *             so avisa que vem ai. Leva para o WhatsApp, para captar o aviso.
+ *  - ativa  → com a campanha no ar E revelarRegras ligado: mostra a escada e
+ *             leva para a vitrine, que e onde a cliente converte
  *
- * Com a campanha ativa mas revelarRegras desligado a barra sai de cena: o
- * desconto continua valendo na sacola, so nao esta anunciado.
+ * A barra nunca decide desconto, so anuncia. No teaser a escada aparece na
+ * tela mas nao vale na sacola: quem aplica e a fase, em campanha.ts.
  *
  * Fica fora do admin e do checkout: no meio da finalizacao, sair da pagina
  * derruba a compra.
@@ -54,10 +56,18 @@ function Teaser({ isMobile }: { isMobile: boolean }) {
 
   return (
     <Moldura href={zap} externo isMobile={isMobile}>
-      <Selo isMobile={isMobile}>✦ Em {mesDaCampanha()}</Selo>
+      <Selo isMobile={isMobile}>
+        {CAMPANHA.revelarRegras ? `✦ A partir de ${diaDeInicio()}` : `✦ Em ${mesDaCampanha()}`}
+      </Selo>
       <span style={{ color: TINTA, fontSize: isMobile ? "0.8rem" : "0.95rem", fontWeight: 800 }}>
-        {CAMPANHA.nome} está chegando
+        {CAMPANHA.nome}
+        {!CAMPANHA.revelarRegras && " está chegando"}
       </span>
+      {CAMPANHA.revelarRegras && (
+        <span style={{ color: "rgba(26,21,16,0.82)", fontSize: isMobile ? "0.72rem" : "0.85rem", fontWeight: 700 }}>
+          {textoDaEscada()}
+        </span>
+      )}
       <span style={{ color: "rgba(26,21,16,0.75)", fontSize: isMobile ? "0.75rem" : "0.88rem", fontWeight: 700, textDecoration: "underline", whiteSpace: "nowrap" }}>
         quero ser avisada →
       </span>
@@ -65,10 +75,17 @@ function Teaser({ isMobile }: { isMobile: boolean }) {
   );
 }
 
-function Ativa({ isMobile }: { isMobile: boolean }) {
-  // A escada sai do proprio arquivo da campanha: mudou a regra la, muda aqui
+/** "1 peça 10% · 2 peças 20% · 3+ peças 30%", lido das regras da campanha. */
+function textoDaEscada(): string {
   const escada = [...CAMPANHA.regras].sort((a, b) => a.pecas - b.pecas);
+  return escada.map((r, i) => {
+    const ultima = i === escada.length - 1;
+    const pecas = ultima ? `${r.pecas}+ peças` : r.pecas === 1 ? "1 peça" : `${r.pecas} peças`;
+    return `${pecas} ${r.desconto}%`;
+  }).join(" · ");
+}
 
+function Ativa({ isMobile }: { isMobile: boolean }) {
   return (
     <Moldura href="/produtos" isMobile={isMobile}>
       <Selo isMobile={isMobile}>✦ Até {TETO_PROGRESSIVO}% OFF</Selo>
@@ -76,11 +93,7 @@ function Ativa({ isMobile }: { isMobile: boolean }) {
         {CAMPANHA.nome}
       </span>
       <span style={{ color: "rgba(26,21,16,0.82)", fontSize: isMobile ? "0.72rem" : "0.85rem", fontWeight: 700 }}>
-        {escada.map((r, i) => {
-          const ultima = i === escada.length - 1;
-          const pecas = ultima ? `${r.pecas}+ peças` : r.pecas === 1 ? "1 peça" : `${r.pecas} peças`;
-          return `${pecas} ${r.desconto}%`;
-        }).join(" · ")}
+        {textoDaEscada()}
       </span>
       <span style={{ color: "rgba(26,21,16,0.75)", fontSize: isMobile ? "0.75rem" : "0.88rem", fontWeight: 700, textDecoration: "underline", whiteSpace: "nowrap" }}>
         aproveitar →
