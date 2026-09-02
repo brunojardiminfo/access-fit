@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DIAS_PARA_SALE } from "@/lib/saleHelper";
 
 interface Product {
   id: string;
@@ -35,7 +36,7 @@ export default function SaleManagerClient({
     return d.toLocaleDateString("pt-BR");
   };
 
-  // Peca entra em SALE automatico de 20% ao completar 60 dias de cadastro
+  // Peca entra em SALE automatico de 20% ao completar DIAS_PARA_SALE dias de cadastro
   const daysInStock = (createdAt: string | Date) => {
     const created = typeof createdAt === "string" ? new Date(createdAt) : createdAt;
     const today = new Date();
@@ -160,7 +161,7 @@ export default function SaleManagerClient({
         <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#9a8060" }}>
           <p style={{ fontSize: "1rem", fontWeight: 600 }}>
             {activeTab === "upcoming"
-              ? "Nenhuma peça com 60 dias ou mais de cadastro"
+              ? `Nenhuma peça com ${DIAS_PARA_SALE} dias ou mais de cadastro`
               : "Nenhuma peça com desconto personalizado"}
           </p>
         </div>

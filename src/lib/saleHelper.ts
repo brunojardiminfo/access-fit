@@ -1,4 +1,4 @@
-export const DIAS_PARA_SALE = 60;
+export const DIAS_PARA_SALE = 90;
 
 export function isSaleEligible(createdAt: Date): boolean {
   const daysSinceCreation = Math.floor(
@@ -40,7 +40,7 @@ export function getSaleInfo(product: {
     };
   }
 
-  // Se é elegível por data (60+ dias) e não foi bloqueado
+  // Se é elegível por data (DIAS_PARA_SALE+ dias) e não foi bloqueado
   if (isSaleEligible(product.createdAt)) {
     return {
       salePrice: calculateSalePrice(product.price, 20),
