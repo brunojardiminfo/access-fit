@@ -4,22 +4,24 @@
  * Para ligar, desligar ou mudar as datas, mexa só neste arquivo.
  *
  * Fases:
- *  - "teaser"    → antes de `inicio`: o site avisa que vem aí, sem contar o que é
+ *  - "teaser"    → antes de `inicio`: o site anuncia, mas nenhum desconto sai
  *  - "ativa"     → entre `inicio` e `fim`
  *  - "encerrada" → depois de `fim`, ou com `ligada: false`
  *
- * Enquanto `revelarRegras` for false, o site não mostra a mecânica em lugar
- * nenhum — nem durante a campanha. Vire para true no dia do anúncio.
+ * `revelarRegras` controla só o que aparece na tela, nunca o que é cobrado:
+ * com ele ligado o site publica a escada em qualquer fase (no teaser, junto
+ * com a data de estreia); desligado, não mostra a mecânica em lugar nenhum.
+ * Quem decide se o desconto sai é a fase — no teaser não sai.
  */
 export const CAMPANHA = {
   ligada: true,
   nome: "Mês do Consumidor",
   // Fuso de Brasília explícito: o servidor roda em UTC, e sem o -03:00 a
   // campanha começaria às 21h do dia anterior
-  inicio: new Date("2026-09-01T00:00:00-03:00"),
+  inicio: new Date("2026-09-10T00:00:00-03:00"),
   fim: new Date("2026-09-30T23:59:59-03:00"),
   revelarRegras: true,
-  // A barra e o site so mostram a escada com revelarRegras ligado
+  // Só aparecem na tela com revelarRegras ligado; só valem na fase ativa
   regras: [
     { pecas: 1, desconto: 10 },
     { pecas: 2, desconto: 20 },
@@ -39,6 +41,13 @@ export function faseCampanha(agora: Date = new Date()): FaseCampanha {
 /** Ex.: "setembro" — usado no aviso sem entregar a mecânica. */
 export function mesDaCampanha(): string {
   return CAMPANHA.inicio.toLocaleDateString("pt-BR", { month: "long" });
+}
+
+/** Ex.: "10/09" — a data de estreia, para o anúncio antes da campanha. */
+export function diaDeInicio(): string {
+  return CAMPANHA.inicio.toLocaleDateString("pt-BR", {
+    day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo",
+  });
 }
 
 /** Teto da escada progressiva. Nunca passa disso, por mais peças que levem. */
