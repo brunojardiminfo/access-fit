@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { slugify } from "@/lib/utils";
+import EstoquePorVariacao from "@/components/admin/EstoquePorVariacao";
+import { parseEstoque, totalDoEstoque } from "@/lib/variacoes";
 
 type Category = { id: string; name: string };
 type Product = {
@@ -50,8 +52,10 @@ export default function ProductForm({ categories, product, kitItems: initialKitI
   const [newConjuntoPrice, setNewConjuntoPrice] = useState("");
   const [newConjuntoStock, setNewConjuntoStock] = useState("0");
 
+  // Estoque por variação (cor + tamanho). Chave sem cor é lançamento antigo,
+  // preservado como está para nenhum número sumir.
   const [sizeStockMap, setSizeStockMap] = useState<Record<string, number>>(
-    product?.sizeStock ? JSON.parse(product.sizeStock) : {}
+    parseEstoque(product?.sizeStock)
   );
 
   const [form, setForm] = useState({
@@ -132,15 +136,17 @@ export default function ProductForm({ categories, product, kitItems: initialKitI
     setLoading(true);
 
     const sizesArr = form.sizes.split(",").map((s: string) => s.trim()).filter(Boolean);
-    const hasSizes = sizesArr.length > 0;
+    const temVariacao = Object.keys(sizeStockMap).length > 0;
 
     const body = {
       ...form,
       price: parseFloat(form.price),
       costPrice: form.costPrice ? parseFloat(form.costPrice) : null,
       compareAt: form.compareAt ? parseFloat(form.compareAt) : null,
-      stock: hasSizes ? sizesArr.reduce((sum: number, s: string) => sum + (sizeStockMap[s] || 0), 0) : parseInt(form.stock),
-      sizeStock: hasSizes ? JSON.stringify(Object.fromEntries(sizesArr.map((s: string) => [s, sizeStockMap[s] || 0]))) : "{}",
+      // O estoque por variação manda no total quando existe; sem ele, vale o
+      // número digitado no campo simples
+      stock: temVariacao ? totalDoEstoque(sizeStockMap) : parseInt(form.stock),
+      sizeStock: temVariacao ? JSON.stringify(sizeStockMap) : "{}",
       images: JSON.stringify(form.images.split("\n").map((s: string) => s.trim()).filter(Boolean)),
       sizes: JSON.stringify(sizesArr),
       colors: JSON.stringify(form.colors.split(",").map((s: string) => s.trim()).filter(Boolean)),
@@ -160,7 +166,8 @@ export default function ProductForm({ categories, product, kitItems: initialKitI
 
   const imageList = form.images.split("\n").map((s: string) => s.trim()).filter(Boolean);
   const sizesList = form.sizes.split(",").map((s: string) => s.trim()).filter(Boolean);
-  const totalSizeStock = sizesList.reduce((sum: number, s: string) => sum + (sizeStockMap[s] || 0), 0);
+  const coresList = form.colors.split(",").map((c: string) => c.trim()).filter(Boolean);
+  const temVariacaoLancada = Object.keys(sizeStockMap).length > 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -212,11 +219,11 @@ export default function ProductForm({ categories, product, kitItems: initialKitI
             <input type="number" step="0.01" value={form.compareAt} onChange={e => setForm({ ...form, compareAt: e.target.value })} placeholder="189.90" style={field} onFocus={focus} onBlur={blur} />
           </div>
           <div>
-            <label style={label}>Qtd em Estoque{sizesList.length > 0 && " (soma dos tamanhos)"}</label>
-            <input type="number" value={sizesList.length > 0 ? totalSizeStock : form.stock}
+            <label style={label}>Qtd em Estoque{temVariacaoLancada && " (soma das variações)"}</label>
+            <input type="number" value={temVariacaoLancada ? totalDoEstoque(sizeStockMap) : form.stock}
               onChange={e => setForm({ ...form, stock: e.target.value })}
-              readOnly={sizesList.length > 0}
-              style={{ ...field, ...(sizesList.length > 0 && { backgroundColor: "#F0E8D0", color: "#7a5a20", fontWeight: 700, cursor: "default" }) }}
+              readOnly={temVariacaoLancada}
+              style={{ ...field, ...(temVariacaoLancada && { backgroundColor: "#F0E8D0", color: "#7a5a20", fontWeight: 700, cursor: "default" }) }}
               onFocus={focus} onBlur={blur} />
           </div>
         </div>
@@ -236,23 +243,15 @@ export default function ProductForm({ categories, product, kitItems: initialKitI
           </div>
         </div>
 
-        {sizesList.length > 0 && (
+        {(sizesList.length > 0 || coresList.length > 0) && (
           <div style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid rgba(140,100,20,0.1)" }}>
-            <label style={label}>Estoque por Tamanho</label>
-            <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(sizesList.length, 4)}, 1fr)`, gap: "0.75rem" }}>
-              {sizesList.map((s: string) => (
-                <div key={s}>
-                  <label style={{ ...label, fontSize: "0.7rem", marginBottom: "0.25rem" }}>{s}</label>
-                  <input type="number" min="0" value={sizeStockMap[s] ?? 0}
-                    onChange={e => setSizeStockMap({ ...sizeStockMap, [s]: Math.max(0, parseInt(e.target.value) || 0) })}
-                    style={field} onFocus={focus} onBlur={blur} />
-                </div>
-              ))}
-            </div>
-            <p style={{ fontSize: "0.75rem", color: "#9a8060", marginTop: "0.625rem" }}>
-              Total: <strong style={{ color: "#5a4a2a" }}>{totalSizeStock} un</strong>
-              {product && !product.sizeStock?.includes(":") && " · produto antigo — confira se a quantidade por tamanho está correta abaixo"}
-            </p>
+            <label style={label}>Estoque por Cor e Tamanho</label>
+            <EstoquePorVariacao
+              cores={coresList}
+              tamanhos={sizesList}
+              estoque={sizeStockMap}
+              onChange={setSizeStockMap}
+            />
           </div>
         )}
       </div>

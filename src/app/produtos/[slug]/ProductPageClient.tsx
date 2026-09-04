@@ -9,6 +9,10 @@ import Link from "next/link";
 import SizeGuide from "@/app/components/SizeGuide";
 import RecommendedProducts from "@/app/components/RecommendedProducts";
 import { bolinhasDeCor } from "@/lib/cores";
+import {
+  parseEstoque, quantidadeDe, totalDaCor, coresDoEstoque, tamanhosDaCor,
+  temEstoquePorVariacao, temCorNoEstoque, SEM_COR,
+} from "@/lib/variacoes";
 
 type ConjuntoItem = { id: string; name: string; price: number; quantity: number; stock?: number | null };
 
@@ -28,6 +32,7 @@ export default function ProductPageClient() {
   const [loading, setLoading] = useState(true);
   const [notFoundState, setNotFoundState] = useState(false);
   const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
   const [selectedImage, setSelectedImage] = useState(0);
   const [added, setAdded] = useState(false);
   const [lightbox, setLightbox] = useState(false);
@@ -68,11 +73,43 @@ export default function ProductPageClient() {
 
   const images = parseJson<string[]>(product.images, []);
   const sizes = parseJson<string[]>(product.sizes, []);
-  const cores = bolinhasDeCor(parseJson<string[]>(product.colors, []));
-  const sizeStock = parseJson<Record<string, number>>(product.sizeStock, {});
-  const hasSizeStock = Object.keys(sizeStock).length > 0;
-  const isSizeAvailable = (size: string) => !hasSizeStock || (sizeStock[size] ?? 0) > 0;
+  const coresCadastradas = parseJson<string[]>(product.colors, []);
+  const estoque = parseEstoque(product.sizeStock);
+  const hasSizeStock = temEstoquePorVariacao(estoque);
+  const estoquePorCor = temCorNoEstoque(estoque);
+
+  // Só entram as cores que a peça de fato tem lançadas. Enquanto o estoque
+  // estiver no formato antigo, sem cor, as cores seguem informativas — igual
+  // ao que a vitrine já mostra.
+  const coresEmEstoque = estoquePorCor
+    ? coresDoEstoque(estoque, coresCadastradas).filter(c => c !== SEM_COR)
+    : [];
+  const cores = bolinhasDeCor(estoquePorCor ? coresEmEstoque : coresCadastradas);
+  const precisaEscolherCor = coresEmEstoque.length > 0;
+  const corAtual = precisaEscolherCor ? selectedColor : "";
+
+  const corDisponivel = (cor: string) => totalDaCor(estoque, cor) > 0;
+
+  // Sem estoque lançado, tudo disponível (comportamento antigo). Com cor
+  // escolhida, o tamanho é julgado dentro daquela cor.
+  const isSizeAvailable = (size: string) => {
+    if (!hasSizeStock) return true;
+    // Antes de escolher a cor nao da para dizer se o tamanho existe: depende
+    // da cor. Nenhum tamanho aparece riscado ate a cliente escolher.
+    if (precisaEscolherCor) return !corAtual || quantidadeDe(estoque, corAtual, size) > 0;
+    return quantidadeDe(estoque, SEM_COR, size) > 0;
+  };
+
+  // Tamanhos que aparecem: os da cor escolhida, senão os cadastrados na peça
+  const tamanhosVisiveis = precisaEscolherCor && corAtual
+    ? (() => {
+        const daCor = tamanhosDaCor(estoque, corAtual, sizes);
+        return daCor.length > 0 ? daCor : sizes;
+      })()
+    : sizes;
+
   const selectedSizeAvailable = !selectedSize || isSizeAvailable(selectedSize);
+  const faltaEscolherCor = precisaEscolherCor && !corAtual;
   const discount = product.compareAt ? Math.round((1 - product.price / product.compareAt) * 100) : null;
   const createdDate = typeof product.createdAt === "string" ? new Date(product.createdAt) : product.createdAt;
   const saleInfo = getSaleInfo({
@@ -114,6 +151,7 @@ export default function ProductPageClient() {
     }
     if (outOfStock) return;
     if (!selectedSizeAvailable) return;
+    if (faltaEscolherCor) return;
 
     let itemName = product.name;
     let itemPrice = finalPrice;
@@ -131,7 +169,8 @@ export default function ProductPageClient() {
     addItem({
       productId: product.id, name: itemName, price: itemPrice,
       precoCheio: itemCheio, descontoSale: saleInfo?.discount ?? 0,
-      image: images[0] || "", size: selectedSize || "Único", color: "Padrão", quantity: 1,
+      image: images[0] || "", size: selectedSize || "Único",
+      color: corAtual || "Padrão", quantity: 1,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2500);
@@ -264,19 +303,40 @@ export default function ProductPageClient() {
             {cores.length > 0 && (
               <div style={{ marginTop: "1.75rem" }}>
                 <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#5a4a2a", marginBottom: "0.625rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  {cores.length === 1 ? "Cor" : `Cores disponíveis (${cores.length})`}
+                  {precisaEscolherCor
+                    ? <>Cor: <span style={{ color: "#b8891a" }}>{corAtual || "escolha"}</span></>
+                    : cores.length === 1 ? "Cor" : `Cores disponíveis (${cores.length})`}
                 </p>
                 <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-                  {cores.map(c => (
-                    <div key={c.nome} style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.35rem 0.7rem 0.35rem 0.4rem", borderRadius: "999px", border: "1px solid rgba(140,100,20,0.2)", backgroundColor: "#fff" }}>
-                      <span aria-hidden style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: c.fundo, border: `1px solid ${c.borda}`, display: "block", flexShrink: 0 }} />
-                      <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#5a4a2a" }}>{c.nome}</span>
-                    </div>
-                  ))}
+                  {cores.map(c => {
+                    const disponivel = !precisaEscolherCor || corDisponivel(c.nome);
+                    const escolhida = corAtual === c.nome;
+                    return (
+                      <button key={c.nome} type="button"
+                        onClick={() => {
+                          if (!precisaEscolherCor || !disponivel) return;
+                          setSelectedColor(c.nome);
+                          // Tamanho escolhido antes pode nao existir nesta cor
+                          if (selectedSize && quantidadeDe(estoque, c.nome, selectedSize) <= 0) setSelectedSize("");
+                        }}
+                        disabled={precisaEscolherCor && !disponivel}
+                        style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.35rem 0.7rem 0.35rem 0.4rem", borderRadius: "999px", border: `2px solid ${escolhida ? "#b8891a" : "rgba(140,100,20,0.2)"}`, backgroundColor: escolhida ? "#fdf6e6" : "#fff", cursor: !precisaEscolherCor ? "default" : disponivel ? "pointer" : "not-allowed", opacity: disponivel ? 1 : 0.45, textDecoration: disponivel ? "none" : "line-through" }}>
+                        <span aria-hidden style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: c.fundo, border: `1px solid ${c.borda}`, display: "block", flexShrink: 0 }} />
+                        <span style={{ fontSize: "0.82rem", fontWeight: escolhida ? 800 : 600, color: "#5a4a2a" }}>{c.nome}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-                <p style={{ fontSize: "0.72rem", color: "#9a8060", marginTop: "0.5rem" }}>
-                  Combine a cor com a gente no WhatsApp ao finalizar o pedido.
-                </p>
+                {faltaEscolherCor && (
+                  <p style={{ fontSize: "0.75rem", color: "#b8891a", fontWeight: 700, marginTop: "0.5rem" }}>
+                    Escolha a cor para ver os tamanhos disponíveis.
+                  </p>
+                )}
+                {!precisaEscolherCor && (
+                  <p style={{ fontSize: "0.72rem", color: "#9a8060", marginTop: "0.5rem" }}>
+                    Combine a cor com a gente no WhatsApp ao finalizar o pedido.
+                  </p>
+                )}
               </div>
             )}
 
@@ -287,7 +347,7 @@ export default function ProductPageClient() {
                   Tamanho: <span style={{ color: "#b8891a" }}>{selectedSize}</span>
                 </p>
                 <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                  {sizes.map(size => {
+                  {tamanhosVisiveis.map(size => {
                     const available = isSizeAvailable(size);
                     return (
                       <button key={size} onClick={() => available && setSelectedSize(size)} disabled={!available}
@@ -357,11 +417,14 @@ export default function ProductPageClient() {
                 ? product.conjuntoItems.find(c => c.id === selectedComponent) : null;
               const selectedCompSoldOut = selectedComponent === "completo" ? product.stock === 0
                 : selectedComp ? (selectedComp.stock ?? 0) < 0 : false;
-              const btnDisabled = outOfStock || selectedCompSoldOut || !selectedSizeAvailable;
+              const btnDisabled = outOfStock || selectedCompSoldOut || !selectedSizeAvailable || faltaEscolherCor;
               return (
                 <button onClick={handleAddToCart} disabled={btnDisabled}
                   style={{ width: "100%", marginTop: "2rem", padding: "1rem 1.5rem", backgroundColor: added ? "#2a6a2a" : btnDisabled ? "#e8e0d0" : "#1a1510", color: added ? "#fff" : btnDisabled ? "#9a8060" : "#FAF6EE", fontWeight: 900, fontSize: "1rem", border: "none", borderRadius: "0.875rem", cursor: btnDisabled ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", transition: "background-color 0.3s", letterSpacing: "0.03em", boxShadow: btnDisabled ? "none" : "0 4px 14px rgba(26,21,16,0.25)" }}>
-                  {added ? "✓ Adicionado ao carrinho!" : btnDisabled ? "Esgotado" : "🛍️ Adicionar ao Carrinho"}
+                  {added ? "✓ Adicionado ao carrinho!"
+                    : faltaEscolherCor ? "Escolha a cor"
+                    : btnDisabled ? "Esgotado"
+                    : "🛍️ Adicionar ao Carrinho"}
                 </button>
               );
             })()}

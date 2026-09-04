@@ -81,7 +81,11 @@ export default function CartDrawer() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontWeight: 700, color: "#1a1510", fontSize: "0.875rem", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{item.name}</p>
-                    {item.size !== "Único" && <p style={{ color: "#9a8060", fontSize: "0.75rem" }}>{item.size}</p>}
+                    {(item.size !== "Único" || (item.color && item.color !== "Padrão")) && (
+                      <p style={{ color: "#9a8060", fontSize: "0.75rem" }}>
+                        {[item.color && item.color !== "Padrão" ? item.color : null, item.size !== "Único" ? item.size : null].filter(Boolean).join(" · ")}
+                      </p>
+                    )}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "0.5rem" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid rgba(140,100,20,0.2)", backgroundColor: "#FAF6EE", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
