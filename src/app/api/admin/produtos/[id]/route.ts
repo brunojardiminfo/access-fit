@@ -16,11 +16,20 @@ export async function PUT(
     const { conjuntoItems, ...data } = await req.json();
 
     const produtoAntes = await prisma.product.findUnique({ where: { id }, select: { stock: true } });
-    const product = await prisma.product.update({ where: { id }, data });
+    // Estoque que sobe e reposicao: carimba a data para a vitrine mostrar
+    // "Novidade". Nao ha historico de movimentacao no banco, entao este e o
+    // unico momento em que da para saber que entraram unidades.
+    const houveReposicao =
+      data.stock !== undefined && produtoAntes !== null && data.stock > produtoAntes.stock;
+
+    const product = await prisma.product.update({
+      where: { id },
+      data: houveReposicao ? { ...data, restockedAt: new Date() } : data,
+    });
 
     // Dispara webhook se houve reposição de estoque
     const webhookUrl = process.env.N8N_PRODUTO_WEBHOOK_URL;
-    if (webhookUrl && data.stock !== undefined && produtoAntes && data.stock > produtoAntes.stock) {
+    if (webhookUrl && houveReposicao) {
       const imagens: string[] = typeof product.images === "string" ? JSON.parse(product.images) : (product.images as string[]) || [];
       fetch(webhookUrl, {
         method: "POST",

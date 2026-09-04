@@ -105,6 +105,7 @@ model Product {
   colors      String   @default("[]")
   sizeStock    String   @default("{}") // Estoque por tamanho: {"P/M": 2, "G/GG": 1}. "stock" abaixo é sempre a soma.
   stock        Int      @default(0)
+  restockedAt  DateTime? // Última vez que o estoque subiu. Alimenta o selo "Novidade".
   sku          String?  @unique
   supplierCode String?
   featuredHero Boolean  @default(false)

@@ -8,6 +8,7 @@ import { getSaleInfo, calculateSalePrice } from "@/lib/saleHelper";
 import Link from "next/link";
 import SizeGuide from "@/app/components/SizeGuide";
 import RecommendedProducts from "@/app/components/RecommendedProducts";
+import { bolinhasDeCor } from "@/lib/cores";
 
 type ConjuntoItem = { id: string; name: string; price: number; quantity: number; stock?: number | null };
 
@@ -67,6 +68,7 @@ export default function ProductPageClient() {
 
   const images = parseJson<string[]>(product.images, []);
   const sizes = parseJson<string[]>(product.sizes, []);
+  const cores = bolinhasDeCor(parseJson<string[]>(product.colors, []));
   const sizeStock = parseJson<Record<string, number>>(product.sizeStock, {});
   const hasSizeStock = Object.keys(sizeStock).length > 0;
   const isSizeAvailable = (size: string) => !hasSizeStock || (sizeStock[size] ?? 0) > 0;
@@ -255,6 +257,26 @@ export default function ProductPageClient() {
             {outOfStock && (
               <div style={{ marginTop: "0.75rem", padding: "0.6rem 1rem", backgroundColor: "#fee8e8", borderRadius: "0.625rem", fontSize: "0.8rem", color: "#c04040", fontWeight: 700 }}>
                 Produto esgotado no momento
+              </div>
+            )}
+
+            {/* Cores */}
+            {cores.length > 0 && (
+              <div style={{ marginTop: "1.75rem" }}>
+                <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#5a4a2a", marginBottom: "0.625rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  {cores.length === 1 ? "Cor" : `Cores disponíveis (${cores.length})`}
+                </p>
+                <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+                  {cores.map(c => (
+                    <div key={c.nome} style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.35rem 0.7rem 0.35rem 0.4rem", borderRadius: "999px", border: "1px solid rgba(140,100,20,0.2)", backgroundColor: "#fff" }}>
+                      <span aria-hidden style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: c.fundo, border: `1px solid ${c.borda}`, display: "block", flexShrink: 0 }} />
+                      <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#5a4a2a" }}>{c.nome}</span>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ fontSize: "0.72rem", color: "#9a8060", marginTop: "0.5rem" }}>
+                  Combine a cor com a gente no WhatsApp ao finalizar o pedido.
+                </p>
               </div>
             )}
 
