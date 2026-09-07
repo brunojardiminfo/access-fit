@@ -361,10 +361,11 @@ model Return {
   reimbursedAt    DateTime?
   notes           String?
   orderItemIds         String    @default("[]") // JSON com os IDs de OrderItem trocados/devolvidos
-  returnedItemsSnapshot String   @default("[]") // JSON [{productId,size,quantity}] no momento da solicitação, usado para restaurar estoque mesmo se o OrderItem for trocado depois
+  returnedItemsSnapshot String   @default("[]") // JSON [{productId,size,color,quantity}] no momento da solicitação, usado para restaurar estoque mesmo se o OrderItem for trocado depois
   stockRestored        Boolean   @default(false) // Estoque dos itens devolvidos já foi restaurado?
   replacementProductId String?
   replacementSize      String?
+  replacementColor     String?
   replacementSentAt    DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

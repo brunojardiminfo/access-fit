@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     if (consomeEstoque(statusInicial)) {
       for (const item of items) {
         if (item.productId) {
-          await decrementProductStock(item.productId, item.quantity, item.size);
+          await decrementProductStock(item.productId, item.quantity, item.size, item.color);
         }
       }
     }
@@ -110,6 +110,7 @@ export async function POST(req: Request) {
               quantity: i.quantity,
               price: i.price,
               size: i.size || null,
+              color: i.color || null,
               componentName: i.componentName || null,
               costPrice: prod?.costPrice ?? null,
             };
