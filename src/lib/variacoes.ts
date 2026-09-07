@@ -100,3 +100,24 @@ export function somarNaVariacao(
   const chave = montarChave(cor, tamanho);
   return { ...mapa, [chave]: (mapa[chave] ?? 0) + delta };
 }
+
+/**
+ * Move o estoque de uma variação para outra, somando quando o destino já
+ * existe. Usado para dar cor ao estoque lançado antes do controle por cor:
+ * a peça continua sendo a mesma, só passa a saber de que cor ela é.
+ */
+export function moverVariacao(
+  mapa: Record<string, number>,
+  de: { cor: string; tamanho: string },
+  para: { cor: string; tamanho: string }
+): Record<string, number> {
+  const origem = montarChave(de.cor, de.tamanho);
+  const destino = montarChave(para.cor, para.tamanho);
+  if (origem === destino || !(origem in mapa)) return { ...mapa };
+
+  const copia = { ...mapa };
+  const quantidade = copia[origem] ?? 0;
+  delete copia[origem];
+  copia[destino] = (copia[destino] ?? 0) + quantidade;
+  return copia;
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { lerChave, totalDoEstoque, somarNaVariacao, SEM_COR } from "@/lib/variacoes";
+import { lerChave, totalDoEstoque, somarNaVariacao, moverVariacao, SEM_COR } from "@/lib/variacoes";
 import { bolinhaDeCor } from "@/lib/cores";
 
 const campo: React.CSSProperties = {
@@ -56,6 +56,12 @@ export default function EstoquePorVariacao({
     onChange({ ...estoque, [chave]: Number.isNaN(n) ? 0 : n });
   };
 
+  /** Dá cor a uma linha lançada antes do controle por cor. */
+  const definirCor = (tamanho: string, cor: string) => {
+    if (!cor) return;
+    onChange(moverVariacao(estoque, { cor: SEM_COR, tamanho }, { cor, tamanho }));
+  };
+
   const remover = (chave: string) => {
     const copia = { ...estoque };
     delete copia[chave];
@@ -107,7 +113,7 @@ export default function EstoquePorVariacao({
           {linhas.map(l => {
             const b = bolinhaDeCor(l.cor || "sem cor");
             return (
-              <div key={l.chave} style={{ display: "grid", gridTemplateColumns: "1fr 90px 32px", gap: "0.6rem", alignItems: "center", padding: "0.5rem 0.75rem", borderTop: "1px solid rgba(140,100,20,0.08)", backgroundColor: l.quantidade < 0 ? "#fff4f4" : l.quantidade === 0 ? "#faf8f4" : "#fff" }}>
+              <div key={l.chave} style={{ display: "grid", gridTemplateColumns: !l.cor && cores.length > 0 ? "1fr 110px 90px 32px" : "1fr 90px 32px", gap: "0.6rem", alignItems: "center", padding: "0.5rem 0.75rem", borderTop: "1px solid rgba(140,100,20,0.08)", backgroundColor: l.quantidade < 0 ? "#fff4f4" : l.quantidade === 0 ? "#faf8f4" : "#fff" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0 }}>
                   {l.cor ? (
                     <span aria-hidden style={{ width: 14, height: 14, borderRadius: "50%", backgroundColor: b.fundo, border: `1px solid ${b.borda}`, flexShrink: 0 }} />
@@ -119,6 +125,14 @@ export default function EstoquePorVariacao({
                     {l.tamanho ? ` · ${l.tamanho}` : ""}
                   </span>
                 </div>
+                {!l.cor && cores.length > 0 && (
+                  <select value="" onChange={e => definirCor(l.tamanho, e.target.value)}
+                    title="Dizer de que cor é este estoque"
+                    style={{ ...campo, padding: "0.35rem 0.4rem", fontSize: "0.78rem", borderColor: "#b8891a", color: "#b8891a", fontWeight: 700 }}>
+                    <option value="">definir cor</option>
+                    {cores.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                )}
                 <input type="number" value={l.quantidade} onChange={e => corrigir(l.chave, e.target.value)}
                   style={{ ...campo, padding: "0.4rem 0.5rem", textAlign: "right", color: l.quantidade < 0 ? "#c04040" : "#1a1510" }} />
                 <button type="button" onClick={() => remover(l.chave)} title="Remover esta variação"
@@ -131,7 +145,9 @@ export default function EstoquePorVariacao({
 
       <p style={{ fontSize: "0.78rem", color: "#9a8060", marginTop: "0.625rem" }}>
         Total: <strong style={{ color: "#5a4a2a" }}>{totalDoEstoque(estoque)} un</strong>
-        {linhas.some(l => l.cor === SEM_COR) && " · há estoque sem cor definida, lançado antes do controle por cor"}
+        {linhas.some(l => l.cor === SEM_COR) && (cores.length > 0
+          ? " · use \u201cdefinir cor\u201d nas linhas sem cor para acertar sem perder quantidade"
+          : " · há estoque sem cor definida; cadastre as cores acima para poder acertar")}
       </p>
     </div>
   );
