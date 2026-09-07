@@ -6,7 +6,7 @@ import { getSaleInfo, calculateSalePrice } from "@/lib/saleHelper";
 import { descontoEfetivo, descontoProgressivo, faseCampanha, CAMPANHA } from "@/lib/campanha";
 import { decrementProductStock, consomeEstoque } from "@/lib/stock";
 
-type IncomingItem = { productId?: string; quantity?: number; price?: number; size?: string | null };
+type IncomingItem = { productId?: string; quantity?: number; price?: number; size?: string | null; color?: string | null };
 
 // O preco cobrado nunca vem do cliente: e recalculado aqui a partir do banco,
 // aplicando o desconto de SALE quando a peca esta em promocao.
@@ -200,6 +200,7 @@ export async function POST(req: Request) {
     quantity: i.quantity,
     price: i.price,
     size: i.size || null,
+    color: i.color || null,
   }));
 
   // Veio de um link de compartilhamento: aproveita o rascunho em vez de criar
@@ -227,7 +228,7 @@ export async function POST(req: Request) {
   // for confirmado no admin
   if (consomeEstoque(order.status)) {
     for (const item of orderItems) {
-      await decrementProductStock(item.productId as string, item.quantity, item.size);
+      await decrementProductStock(item.productId as string, item.quantity, item.size, item.color);
     }
   }
 

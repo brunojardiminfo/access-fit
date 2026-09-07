@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { formatCurrency, parseJson } from "@/lib/utils";
 import { getSaleInfo } from "@/lib/saleHelper";
+import { seloDeFrescor, TEXTO_SELO } from "@/lib/selos";
+import { bolinhasDeCor } from "@/lib/cores";
 import { useCart } from "@/store/cart";
 
 type Product = {
   id: string; name: string; slug: string; price: number;
   compareAt: number | null; images: string; sizes: string;
   colors: string; stock: number; createdAt: string | Date;
+  restockedAt?: string | Date | null;
   onSale?: boolean; saleDiscount?: number | null;
   category: { name: string };
 };
@@ -19,7 +22,8 @@ export default function ProductCard({ product }: { product: Product }) {
   const sizes  = parseJson<string[]>(product.sizes, []);
   const discount = product.compareAt ? Math.round((1 - product.price / product.compareAt) * 100) : null;
   const createdDate = typeof product.createdAt === "string" ? new Date(product.createdAt) : product.createdAt;
-  const isNew = (Date.now() - createdDate.getTime()) < 1000 * 60 * 60 * 24 * 30;
+  const selo = seloDeFrescor(product);
+  const cores = bolinhasDeCor(parseJson<string[]>(product.colors, []));
   const saleInfo = getSaleInfo({
     price: product.price,
     createdAt: createdDate,
@@ -53,8 +57,10 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
 
           <div style={{ position: "absolute", top: 6, left: 6, display: "flex", flexDirection: "column", gap: "3px" }}>
-            {isNew && !outOfStock && !saleInfo && (
-              <span style={{ backgroundColor: "#b8891a", color: "#fff", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>Novo</span>
+            {selo && !outOfStock && (
+              <span style={{ backgroundColor: selo === "novidade" ? "#2f8f52" : "#b8891a", color: "#fff", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>
+                {TEXTO_SELO[selo]}
+              </span>
             )}
             {saleInfo && !outOfStock && (
               <span style={{ backgroundColor: "#e74c3c", color: "#fff", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>SALE</span>
@@ -66,6 +72,18 @@ export default function ProductCard({ product }: { product: Product }) {
               <span style={{ backgroundColor: "rgba(0,0,0,0.55)", color: "#fff", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>Esgotado</span>
             )}
           </div>
+
+          {cores.length > 0 && !outOfStock && (
+            <div style={{ position: "absolute", bottom: 6, left: 6, display: "flex", alignItems: "center", gap: 4, backgroundColor: "rgba(255,255,255,0.88)", padding: "3px 6px", borderRadius: "999px", backdropFilter: "blur(3px)" }}>
+              {cores.slice(0, 4).map(c => (
+                <span key={c.nome} title={c.nome} aria-label={c.nome}
+                  style={{ width: 11, height: 11, borderRadius: "50%", backgroundColor: c.fundo, border: `1px solid ${c.borda}`, display: "block", flexShrink: 0 }} />
+              ))}
+              {cores.length > 4 && (
+                <span style={{ fontSize: "0.55rem", fontWeight: 800, color: "#5a4a30", lineHeight: 1 }}>+{cores.length - 4}</span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Info */}
@@ -84,6 +102,12 @@ export default function ProductCard({ product }: { product: Product }) {
               ))}
               {sizes.length > 4 && <span style={{ fontSize: "0.55rem", color: "#b8891a", fontWeight: 700 }}>+{sizes.length - 4}</span>}
             </div>
+          )}
+
+          {cores.length > 0 && (
+            <p style={{ fontSize: "0.58rem", color: "#9a8060", fontWeight: 600, marginBottom: "0.5rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {cores.length === 1 ? cores[0].nome : `${cores.length} cores: ${cores.map(c => c.nome).join(", ")}`}
+            </p>
           )}
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", marginBottom: "0.6rem", flexWrap: "wrap" }}>

@@ -1,10 +1,11 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { parseEstoque, quantidadeDe, coresDoEstoque, tamanhosDaCor, temCorNoEstoque, SEM_COR } from "@/lib/variacoes";
 
 type Customer = { id: string; name: string; email: string; phone?: string };
 type Product = { id: string; name: string; price: number; stock: number; active?: boolean; sizes: string; sizeStock?: string; colors: string; images: string; isConjunto?: boolean; sellComponentsSeparately?: boolean; conjuntoItems?: Array<{ id: string; name: string; price: number }> };
-type Item = { productId?: string; description: string; price: number; quantity: number; size?: string; componentName?: string; product?: Product };
+type Item = { productId?: string; description: string; price: number; quantity: number; size?: string; color?: string; componentName?: string; product?: Product };
 
 const inp = {
   padding: "0.6rem 0.875rem", border: "1px solid rgba(140,100,20,0.25)",
@@ -113,13 +114,26 @@ export default function NovoPedidoPage() {
     setProductResults(p => p.map((v, idx) => idx === i ? data : v));
   };
 
+  /** Cores que a peça tem lançadas no estoque. Vazio = peça sem controle por cor. */
+  const coresDoProduto = (product?: Product): string[] => {
+    if (!product) return [];
+    const estoque = parseEstoque(product.sizeStock);
+    if (!temCorNoEstoque(estoque)) return [];
+    const cadastradas = JSON.parse(product.colors || "[]") as string[];
+    return coresDoEstoque(estoque, cadastradas).filter(c => c !== SEM_COR);
+  };
+
   const selectProduct = (i: number, product: Product) => {
     const sizes = JSON.parse(product.sizes || "[]") as string[];
-    // Só preenche o tamanho sozinho quando não há escolha real (0 ou 1 opção) —
-    // com mais de um tamanho, obriga o admin a escolher pra dar baixa no estoque certo
+    const cores = coresDoProduto(product);
+    // Só preenche sozinho quando não há escolha real (0 ou 1 opção) — com mais
+    // de uma, obriga o admin a escolher pra dar baixa na variação certa
     setItems(p => p.map((it, idx) => idx === i ? {
       ...it, productId: product.id, description: product.name,
-      price: product.price, size: sizes.length === 1 ? sizes[0] : undefined, componentName: undefined, product,
+      price: product.price,
+      size: sizes.length === 1 ? sizes[0] : undefined,
+      color: cores.length === 1 ? cores[0] : undefined,
+      componentName: undefined, product,
     } : it));
     setProductSearch(p => p.map((v, idx) => idx === i ? product.name : v));
     setShowProductDropdown(p => p.map((v, idx) => idx === i ? false : v));
@@ -130,6 +144,7 @@ export default function NovoPedidoPage() {
     setError("");
     if (items.some(i => !i.description || i.price <= 0)) { setError("Preencha descrição e valor de todos os itens."); return; }
     if (items.some(i => (JSON.parse(i.product?.sizes || "[]") as string[]).length > 0 && !i.size)) { setError("Selecione o tamanho de todos os itens."); return; }
+    if (items.some(i => coresDoProduto(i.product).length > 0 && !i.color)) { setError("Selecione a cor de todos os itens."); return; }
     setSaving(true);
     const res = await fetch(`/api/admin/pedidos/${existingCadernoOrder.id}`, {
       method: "PUT",
@@ -146,6 +161,7 @@ export default function NovoPedidoPage() {
     if (!selectedCustomer && !newCustomer.name) { setError("Selecione ou cadastre um cliente."); return; }
     if (items.some(i => !i.description || i.price <= 0)) { setError("Preencha descrição e valor de todos os itens."); return; }
     if (items.some(i => (JSON.parse(i.product?.sizes || "[]") as string[]).length > 0 && !i.size)) { setError("Selecione o tamanho de todos os itens."); return; }
+    if (items.some(i => coresDoProduto(i.product).length > 0 && !i.color)) { setError("Selecione a cor de todos os itens."); return; }
 
     setSaving(true);
     const res = await fetch("/api/admin/pedidos", {
@@ -359,16 +375,48 @@ export default function NovoPedidoPage() {
                   )}
 
                   {/* Tamanho, preço e quantidade */}
-                  <div style={{ display: "grid", gridTemplateColumns: item.productId && JSON.parse(item.product?.sizes || "[]").length > 0 ? "1fr 110px 70px" : "1fr 70px", gap: "0.5rem" }}>
+                  {(() => {
+                    const prod = item.product || productResults[i]?.find(p => p.id === item.productId);
+                    const estoque = parseEstoque(prod?.sizeStock);
+                    const coresItem = coresDoProduto(prod);
+                    const temCor = coresItem.length > 0;
+                    const tamanhosCadastrados = JSON.parse(prod?.sizes || "[]") as string[];
+                    // Com cor escolhida, só os tamanhos daquela cor
+                    const tamanhosItem = temCor && item.color
+                      ? (tamanhosDaCor(estoque, item.color, tamanhosCadastrados).length > 0
+                          ? tamanhosDaCor(estoque, item.color, tamanhosCadastrados)
+                          : tamanhosCadastrados)
+                      : tamanhosCadastrados;
+                    const temTamanho = Boolean(item.productId) && tamanhosItem.length > 0;
+                    const colunas = ["1fr", temCor ? "120px" : null, temTamanho ? "110px" : null, "70px"].filter(Boolean).join(" ");
+                    return (
+                  <div style={{ display: "grid", gridTemplateColumns: colunas, gap: "0.5rem" }}>
                     <input style={inp} type="number" placeholder="R$ preço" min="0" step="0.01" value={item.price || ""}
                       onChange={e => updateItem(i, "price", parseFloat(e.target.value) || 0)} />
-                    {item.productId && JSON.parse(item.product?.sizes || "[]").length > 0 && (
+                    {temCor && (
+                      <select style={{ ...inp, ...(item.color ? {} : { borderColor: "#c04040", color: "#c04040" }) }} value={item.color || ""}
+                        onChange={e => {
+                          const nova = e.target.value;
+                          updateItem(i, "color", nova);
+                          // Tamanho escolhido antes pode nao existir nesta cor
+                          if (item.size && quantidadeDe(estoque, nova, item.size) <= 0) updateItem(i, "size", "");
+                        }}>
+                        <option value="" disabled>Selecione a cor</option>
+                        {coresItem.map(c => {
+                          const qtd = tamanhosDaCor(estoque, c, tamanhosCadastrados)
+                            .reduce((soma, t) => soma + quantidadeDe(estoque, c, t), 0);
+                          return <option key={c} value={c}>{c} ({qtd} un)</option>;
+                        })}
+                      </select>
+                    )}
+                    {temTamanho && (
                       <select style={{ ...inp, ...(item.size ? {} : { borderColor: "#c04040", color: "#c04040" }) }} value={item.size || ""}
                         onChange={e => updateItem(i, "size", e.target.value)}>
                         <option value="" disabled>Selecione o tamanho</option>
-                        {(JSON.parse(item.product?.sizes || productResults[i]?.find(p => p.id === item.productId)?.sizes || "[]") as string[]).map(s => {
-                          const sst = JSON.parse(item.product?.sizeStock || productResults[i]?.find(p => p.id === item.productId)?.sizeStock || "{}") as Record<string, number>;
-                          const qty = sst[s];
+                        {tamanhosItem.map(s => {
+                          const qty = temCor
+                            ? (item.color ? quantidadeDe(estoque, item.color, s) : undefined)
+                            : quantidadeDe(estoque, SEM_COR, s);
                           return <option key={s} value={s}>{s}{qty !== undefined ? ` (${qty} un)` : ""}</option>;
                         })}
                       </select>
@@ -376,6 +424,8 @@ export default function NovoPedidoPage() {
                     <input style={inp} type="number" placeholder="Qtd" min="1" value={item.quantity}
                       onChange={e => updateItem(i, "quantity", parseInt(e.target.value) || 1)} />
                   </div>
+                    );
+                  })()}
                 </div>
               );
             })}

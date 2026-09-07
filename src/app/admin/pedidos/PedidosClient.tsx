@@ -52,12 +52,14 @@ function fmt(n: number) {
 }
 
 // Retorna o nome real do item — se for "Venda Manual", usa o campo size como nome
-function itemName(item: { product: { name: string }; size?: string; componentName?: string }): string {
+function itemName(item: { product: { name: string }; size?: string; color?: string | null; componentName?: string }): string {
   const isVendaManual = item.product.name === "Venda Manual";
   if (isVendaManual) return item.size || "Item";
-  if (item.componentName) return `${item.product.name} - ${item.componentName}`;
-  if (item.size) return `${item.product.name} (${item.size})`;
-  return item.product.name;
+  const base = item.componentName ? `${item.product.name} - ${item.componentName}` : item.product.name;
+  // Cor e tamanho juntos: e o que voce precisa para separar a peca certa
+  const detalhe = [item.color && item.color !== "Padrão" ? item.color : null, item.size]
+    .filter(Boolean).join(", ");
+  return detalhe ? `${base} (${detalhe})` : base;
 }
 
 type Customer = { id: string; name: string | null; email: string };
@@ -779,7 +781,7 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                                   <div key={item.id} style={{ padding: "0.4rem 0", borderBottom: "1px solid rgba(140,100,20,0.06)", fontSize: "0.8rem" }}>
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
                                       <span style={{ color: "#3a2a10", flex: 1 }}>
-                                        {itemName({ product: item.product, size: item.size, componentName: (item as any).componentName })}
+                                        {itemName({ product: item.product, size: item.size, color: (item as any).color, componentName: (item as any).componentName })}
                                       </span>
                                       {!canEditPrice ? (
                                         <span style={{ color: "#1a1510", fontWeight: 700 }}>{fmt(item.price)}</span>

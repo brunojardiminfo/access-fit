@@ -75,7 +75,7 @@ function CheckoutContent() {
           price: i.price,
           image: parseJson<string[]>(i.product?.images || "[]", [])[0] || "",
           size: i.size || "Único",
-          color: "Padrão",
+          color: i.color || "Padrão",
           quantity: i.quantity,
         }));
       })
@@ -132,8 +132,9 @@ function CheckoutContent() {
     const linhas = items.map(item => {
       const sku = skus[item.productId] ? `[${skus[item.productId]}] ` : "";
       const tam = item.size && item.size !== "Unico" ? ` - Tam. ${item.size}` : "";
+      const cor = item.color && item.color !== "Padrão" ? ` - ${item.color}` : "";
       const qtd = item.quantity > 1 ? ` x${item.quantity}` : "";
-      return `- ${sku}${item.name}${tam}${qtd}: ${formatCurrency(item.price * item.quantity)}`;
+      return `- ${sku}${item.name}${cor}${tam}${qtd}: ${formatCurrency(item.price * item.quantity)}`;
     }).join("\n");
 
     const tipoTexto = type === "tryon"
@@ -178,7 +179,7 @@ function CheckoutContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: items.map(i => ({ productId: i.productId, quantity: i.quantity, price: i.price, size: i.size })),
+          items: items.map(i => ({ productId: i.productId, quantity: i.quantity, price: i.price, size: i.size, color: i.color })),
           total: totalFinal,
           subtotal: total(),
           discount: desconto,
@@ -254,7 +255,7 @@ function CheckoutContent() {
                       <p style={{ fontSize: "0.68rem", color: "#b8891a", fontWeight: 700, fontFamily: "monospace" }}>{skus[item.productId]}</p>
                     )}
                     <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "#1a1510", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</p>
-                    <p style={{ fontSize: "0.75rem", color: "#9a8060" }}>{item.size}{item.quantity > 1 ? ` × ${item.quantity}` : ""}</p>
+                    <p style={{ fontSize: "0.75rem", color: "#9a8060" }}>{[item.color && item.color !== "Padrão" ? item.color : null, item.size].filter(Boolean).join(" · ")}{item.quantity > 1 ? ` × ${item.quantity}` : ""}</p>
                   </div>
                   <span style={{ fontWeight: 700, color: "#b8891a", whiteSpace: "nowrap" }}>{formatCurrency(item.price * item.quantity)}</span>
                 </div>

@@ -57,11 +57,11 @@ export async function POST(req: Request) {
     }
   }
 
-  // Guarda uma foto dos itens devolvidos (produto/tamanho/quantidade) antes de qualquer troca de produto
+  // Guarda uma foto dos itens devolvidos (produto/cor/tamanho/quantidade) antes de qualquer troca de produto
   const items = itemIds?.length
     ? await prisma.orderItem.findMany({ where: { id: { in: itemIds } } })
     : [];
-  const returnedItemsSnapshot = items.map(i => ({ productId: i.productId, size: i.size, quantity: i.quantity }));
+  const returnedItemsSnapshot = items.map(i => ({ productId: i.productId, size: i.size, color: i.color, quantity: i.quantity }));
 
   const devolution = await prisma.return.create({
     data: {
@@ -82,7 +82,7 @@ export async function PUT(req: Request) {
   if (!session || (session.user as any)?.role !== "admin")
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-  const { id, status, replacementProductId, replacementSize } = await req.json();
+  const { id, status, replacementProductId, replacementSize, replacementColor } = await req.json();
 
   // Troca do produto substituto (independente da mudança de status)
   if (replacementProductId !== undefined) {
@@ -97,11 +97,11 @@ export async function PUT(req: Request) {
 
     // Se já havia um substituto enviado, restaura o estoque dele antes de trocar
     if (current.replacementProductId && current.replacementSentAt) {
-      await restoreProductStock(current.replacementProductId, quantity, current.replacementSize);
+      await restoreProductStock(current.replacementProductId, quantity, current.replacementSize, current.replacementColor);
     }
 
     if (replacementProductId) {
-      await decrementProductStock(replacementProductId, quantity, replacementSize);
+      await decrementProductStock(replacementProductId, quantity, replacementSize, replacementColor);
 
       // Atualiza o item do pedido para refletir o produto de troca (quando há exatamente 1 item vinculado)
       if (items.length === 1) {
@@ -112,6 +112,7 @@ export async function PUT(req: Request) {
             data: {
               productId: replacementProductId,
               size: replacementSize || null,
+              color: replacementColor || null,
               price: newProduct.price,
               costPrice: newProduct.costPrice ?? null,
             },
@@ -128,6 +129,7 @@ export async function PUT(req: Request) {
       data: {
         replacementProductId: replacementProductId || null,
         replacementSize: replacementSize || null,
+        replacementColor: replacementColor || null,
         replacementSentAt: replacementProductId ? new Date() : null,
       },
     });
@@ -148,11 +150,11 @@ export async function PUT(req: Request) {
       include: { order: { include: { items: true } } },
     });
     if (current && !current.stockRestored) {
-      const snapshot: { productId: string; size: string | null; quantity: number }[] = JSON.parse(current.returnedItemsSnapshot || "[]");
+      const snapshot: { productId: string; size: string | null; color?: string | null; quantity: number }[] = JSON.parse(current.returnedItemsSnapshot || "[]");
       if (snapshot.length) {
         // Usa a foto tirada na solicitação — continua correta mesmo se o item do pedido já foi trocado por outro produto
         for (const s of snapshot) {
-          await restoreProductStock(s.productId, s.quantity, s.size);
+          await restoreProductStock(s.productId, s.quantity, s.size, s.color);
         }
       } else {
         const itemIds: string[] = JSON.parse(current.orderItemIds || "[]");
@@ -160,7 +162,7 @@ export async function PUT(req: Request) {
           ? current.order.items.filter(i => itemIds.includes(i.id))
           : current.order.items; // devoluções antigas sem itemIds/snapshot: restaura o pedido todo
         for (const item of items) {
-          await restoreProductStock(item.productId, item.quantity, item.size);
+          await restoreProductStock(item.productId, item.quantity, item.size, item.color);
         }
       }
     }

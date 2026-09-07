@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { parseEstoque, quantidadeDe, coresDoEstoque, tamanhosDaCor, temCorNoEstoque, SEM_COR } from "@/lib/variacoes";
 
 interface OrderUser {
   id: string;
@@ -12,6 +13,7 @@ interface Product {
   id: string;
   name: string;
   sizes?: string;
+  colors?: string;
   sizeStock?: string;
   stock?: number;
   active?: boolean;
@@ -48,6 +50,7 @@ interface Return {
   stockRestored?: boolean;
   replacementProductId?: string | null;
   replacementSize?: string | null;
+  replacementColor?: string | null;
   replacementSentAt?: string | null;
   replacementProduct?: Product | null;
 }
@@ -78,6 +81,7 @@ export default function DevolucoesPage() {
   const [productResults, setProductResults] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
   const [replacingSaving, setReplacingSaving] = useState(false);
 
   const loadDevolucoes = async (status?: string) => {
@@ -130,6 +134,7 @@ export default function DevolucoesPage() {
     setProductResults([]);
     setSelectedProduct(dev.replacementProduct || null);
     setSelectedSize(dev.replacementSize || "");
+    setSelectedColor(dev.replacementColor || "");
   };
 
   useEffect(() => {
@@ -141,13 +146,28 @@ export default function DevolucoesPage() {
     return () => clearTimeout(t);
   }, [productQuery, replacingId]);
 
-  const productSizes = (p: Product | null): string[] => {
-    if (!p?.sizeStock) return [];
-    try {
-      return Object.keys(JSON.parse(p.sizeStock));
-    } catch {
-      return [];
+  /** Cores lançadas na peça. Vazio quando ela não tem controle por cor. */
+  const productColors = (p: Product | null): string[] => {
+    if (!p) return [];
+    const estoque = parseEstoque(p.sizeStock);
+    if (!temCorNoEstoque(estoque)) return [];
+    let cadastradas: string[] = [];
+    try { cadastradas = JSON.parse(p.colors || "[]"); } catch { cadastradas = []; }
+    return coresDoEstoque(estoque, cadastradas).filter(c => c !== SEM_COR);
+  };
+
+  /** Tamanhos da peça — os da cor escolhida quando ela trabalha com cor. */
+  const productSizes = (p: Product | null, cor?: string): string[] => {
+    if (!p) return [];
+    const estoque = parseEstoque(p.sizeStock);
+    let cadastrados: string[] = [];
+    try { cadastrados = JSON.parse(p.sizes || "[]"); } catch { cadastrados = []; }
+    if (productColors(p).length > 0) {
+      if (!cor) return cadastrados;
+      const daCor = tamanhosDaCor(estoque, cor, cadastrados);
+      return daCor.length > 0 ? daCor : cadastrados;
     }
+    return Object.keys(estoque).map(k => k).filter(k => !k.includes("|"));
   };
 
   const handleSetReplacement = async () => {
@@ -156,7 +176,7 @@ export default function DevolucoesPage() {
     const res = await fetch("/api/admin/devolucoes", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: replacingId, replacementProductId: selectedProduct.id, replacementSize: selectedSize || null }),
+      body: JSON.stringify({ id: replacingId, replacementProductId: selectedProduct.id, replacementSize: selectedSize || null, replacementColor: selectedColor || null }),
     });
     if (res.ok) {
       setReplacingId(null);
@@ -311,7 +331,7 @@ export default function DevolucoesPage() {
                     {dev.replacementProduct ? (
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
                         <p style={{ fontSize: "0.8rem", color: "#1a1510", margin: 0 }}>
-                          🔄 Produto de troca: <strong>{dev.replacementProduct.name}</strong>{dev.replacementSize ? ` (${dev.replacementSize})` : ""}
+                          🔄 Produto de troca: <strong>{dev.replacementProduct.name}</strong>{[dev.replacementColor, dev.replacementSize].filter(Boolean).length ? ` (${[dev.replacementColor, dev.replacementSize].filter(Boolean).join(", ")})` : ""}
                         </p>
                         <button onClick={() => openReplacement(dev)} style={{ background: "none", border: "none", color: "#b8891a", fontWeight: 700, fontSize: "0.78rem", cursor: "pointer" }}>
                           Trocar produto
@@ -441,7 +461,31 @@ export default function DevolucoesPage() {
                   </div>
                 )}
               </div>
-              {selectedProduct && productSizes(selectedProduct).length > 0 && (
+              {selectedProduct && productColors(selectedProduct).length > 0 && (
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#5a4a2a", display: "block", marginBottom: "0.4rem" }}>
+                    Cor *
+                  </label>
+                  <select
+                    value={selectedColor}
+                    onChange={e => {
+                      const nova = e.target.value;
+                      setSelectedColor(nova);
+                      // Tamanho escolhido antes pode nao existir nesta cor
+                      if (selectedSize && quantidadeDe(parseEstoque(selectedProduct.sizeStock), nova, selectedSize) <= 0) setSelectedSize("");
+                    }}
+                    style={{ width: "100%", padding: "0.6rem", border: "1px solid rgba(140,100,20,0.2)", borderRadius: "0.5rem", fontFamily: "inherit" }}
+                  >
+                    <option value="">Selecione...</option>
+                    {productColors(selectedProduct).map(c => {
+                      const estoque = parseEstoque(selectedProduct.sizeStock);
+                      const qtd = tamanhosDaCor(estoque, c).reduce((soma, t) => soma + quantidadeDe(estoque, c, t), 0);
+                      return <option key={c} value={c}>{c} ({qtd} un)</option>;
+                    })}
+                  </select>
+                </div>
+              )}
+              {selectedProduct && productSizes(selectedProduct, selectedColor).length > 0 && (
                 <div>
                   <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#5a4a2a", display: "block", marginBottom: "0.4rem" }}>
                     Tamanho *
@@ -452,7 +496,13 @@ export default function DevolucoesPage() {
                     style={{ width: "100%", padding: "0.6rem", border: "1px solid rgba(140,100,20,0.2)", borderRadius: "0.5rem", fontFamily: "inherit" }}
                   >
                     <option value="">Selecione...</option>
-                    {productSizes(selectedProduct).map(s => <option key={s} value={s}>{s}</option>)}
+                    {productSizes(selectedProduct, selectedColor).map(s => {
+                      const estoque = parseEstoque(selectedProduct.sizeStock);
+                      const qtd = productColors(selectedProduct).length > 0
+                        ? (selectedColor ? quantidadeDe(estoque, selectedColor, s) : undefined)
+                        : quantidadeDe(estoque, SEM_COR, s);
+                      return <option key={s} value={s}>{s}{qtd !== undefined ? ` (${qtd} un)` : ""}</option>;
+                    })}
                   </select>
                 </div>
               )}
@@ -465,7 +515,7 @@ export default function DevolucoesPage() {
                 </button>
                 <button
                   onClick={handleSetReplacement}
-                  disabled={replacingSaving || !selectedProduct || (productSizes(selectedProduct).length > 0 && !selectedSize)}
+                  disabled={replacingSaving || !selectedProduct || (productColors(selectedProduct).length > 0 && !selectedColor) || (productSizes(selectedProduct, selectedColor).length > 0 && !selectedSize)}
                   style={{ flex: 1, backgroundColor: "#b8891a", color: "#fff", fontWeight: 700, padding: "0.75rem", borderRadius: "0.75rem", border: "none", cursor: replacingSaving ? "not-allowed" : "pointer", opacity: replacingSaving || !selectedProduct ? 0.7 : 1 }}
                 >
                   {replacingSaving ? "Salvando..." : "Confirmar"}
