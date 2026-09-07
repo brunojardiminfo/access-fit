@@ -14,6 +14,10 @@ export type CartItem = {
   image: string;
   size: string;
   color: string;
+  // Qual peca do conjunto a cliente quer. Vazio = conjunto completo, ou peca
+  // que nao e conjunto. O estoque continua sendo o do conjunto: quem leva so o
+  // top desmonta um conjunto, e e isso que sai do estoque.
+  componentName?: string;
   quantity: number;
 };
 
@@ -45,9 +49,9 @@ export const useCart = create<CartStore>()(
 
       addItem: (item) => {
         const items = get().items;
-        const key = `${item.productId}-${item.size}-${item.color}`;
+        const key = `${item.productId}-${item.size}-${item.color}-${item.componentName || ""}`;
         const existing = items.find(
-          (i) => i.productId === item.productId && i.size === item.size && i.color === item.color
+          (i) => i.productId === item.productId && i.size === item.size && i.color === item.color && (i.componentName || "") === (item.componentName || "")
         );
         if (existing) {
           set({ items: items.map((i) => i.id === existing.id ? { ...i, quantity: i.quantity + item.quantity } : i) });

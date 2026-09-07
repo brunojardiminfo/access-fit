@@ -121,12 +121,9 @@ export default function ProductPageClient() {
   const finalPrice = saleInfo ? saleInfo.salePrice : product.price;
   // Componentes do conjunto seguem o mesmo percentual de desconto da peca
   const componentPrice = (value: number) => saleInfo ? calculateSalePrice(value, saleInfo.discount) : value;
-  // Para conjuntos com componentes separados: esgotado só se o conjunto E todos os componentes estiverem sem estoque
-  // stock >= 0 = disponível (0 = padrão/nunca vendido), stock < 0 = esgotado (foi vendido)
-  const hasAvailableComponents = product.isConjunto && product.sellComponentsSeparately
-    ? product.conjuntoItems.some(c => (c.stock ?? 0) >= 0)
-    : false;
-  const outOfStock = product.stock === 0 && !hasAvailableComponents;
+  // Levar so o top desmonta um conjunto, entao quem manda no que da para vender
+  // e sempre o estoque do conjunto — nao existe contador por peca.
+  const outOfStock = product.stock === 0;
 
   // Calcular economia do conjunto
   const calculateComponentsTotal = () => {
@@ -142,13 +139,6 @@ export default function ProductPageClient() {
       alert("Selecione qual opção deseja comprar");
       return;
     }
-    // Bloqueia se selecionou conjunto completo sem estoque
-    if (selectedComponent === "completo" && product.stock === 0) return;
-    // Bloqueia se selecionou componente sem estoque
-    if (selectedComponent && selectedComponent !== "completo") {
-      const comp = product.conjuntoItems.find(c => c.id === selectedComponent);
-      if (comp && (comp.stock ?? 0) < 0) return;
-    }
     if (outOfStock) return;
     if (!selectedSizeAvailable) return;
     if (faltaEscolherCor) return;
@@ -156,6 +146,7 @@ export default function ProductPageClient() {
     let itemName = product.name;
     let itemPrice = finalPrice;
     let itemCheio = product.price;
+    let peca = "";
 
     if (selectedComponent && selectedComponent !== "completo") {
       const component = product.conjuntoItems.find(c => c.id === selectedComponent);
@@ -163,6 +154,7 @@ export default function ProductPageClient() {
         itemName = `${product.name} - ${component.name}`;
         itemPrice = componentPrice(component.price);
         itemCheio = component.price;
+        peca = component.name;
       }
     }
 
@@ -170,7 +162,7 @@ export default function ProductPageClient() {
       productId: product.id, name: itemName, price: itemPrice,
       precoCheio: itemCheio, descontoSale: saleInfo?.discount ?? 0,
       image: images[0] || "", size: selectedSize || "Único",
-      color: corAtual || "Padrão", quantity: 1,
+      color: corAtual || "Padrão", componentName: peca || undefined, quantity: 1,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2500);

@@ -76,6 +76,7 @@ function CheckoutContent() {
           image: parseJson<string[]>(i.product?.images || "[]", [])[0] || "",
           size: i.size || "Único",
           color: i.color || "Padrão",
+          componentName: i.componentName || undefined,
           quantity: i.quantity,
         }));
       })
@@ -179,7 +180,7 @@ function CheckoutContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: items.map(i => ({ productId: i.productId, quantity: i.quantity, price: i.price, size: i.size, color: i.color })),
+          items: items.map(i => ({ productId: i.productId, quantity: i.quantity, price: i.price, size: i.size, color: i.color, componentName: i.componentName })),
           total: totalFinal,
           subtotal: total(),
           discount: desconto,
