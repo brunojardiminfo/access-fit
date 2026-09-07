@@ -69,6 +69,7 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
   const isMobile = useMobileView();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [limpando, setLimpando] = useState(false);
   const [payFilter, setPayFilter] = useState("");
   const [methodFilter, setMethodFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -186,6 +187,24 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
   const cadernoTotal = localOrders.filter(o => o.paymentMethod === "caderno" && o.paymentStatus !== "paid" && o.status !== "cancelled")
     .reduce((s, o) => s + (o.total - o.amountPaid), 0);
   const cadernoCount = localOrders.filter(o => o.paymentMethod === "caderno" && o.paymentStatus !== "paid" && o.status !== "cancelled").length;
+
+  /** Apaga um pedido cancelado. Some da lista sem recarregar a pagina. */
+  const excluirPedido = async (orderId: string) => {
+    const res = await fetch(`/api/admin/pedidos/${orderId}`, { method: "DELETE" });
+    if (!res.ok) { alert("Não foi possível excluir o pedido."); return; }
+    setLocalOrders(prev => prev.filter(o => o.id !== orderId));
+  };
+
+  /** Limpa todos os cancelados de uma vez. Quem decide o que e cancelado e o servidor. */
+  const excluirCancelados = async () => {
+    setLimpando(true);
+    const res = await fetch("/api/admin/pedidos/cancelados", { method: "DELETE" });
+    setLimpando(false);
+    if (!res.ok) { alert("Não foi possível excluir os pedidos cancelados."); return; }
+    const { ids } = await res.json();
+    const apagados = new Set<string>(ids || []);
+    setLocalOrders(prev => prev.filter(o => !apagados.has(o.id)));
+  };
 
   const updateStatus = async (orderId: string, status: string) => {
     setUpdatingId(orderId);
@@ -467,6 +486,31 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
       {/* Aviso produtos sem custo */}
       <ProdutosSemCusto />
 
+      {/* Limpeza dos cancelados: so aparece com o filtro de cancelados ligado,
+          para o botao nunca ficar a um clique de distancia por acidente */}
+      {statusFilter === "cancelled" && (() => {
+        const cancelados = localOrders.filter(o => o.status === "cancelled");
+        if (cancelados.length === 0) return null;
+        return (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap", backgroundColor: "#fff5f5", border: "1px solid rgba(192,64,64,0.25)", borderRadius: "0.875rem", padding: "0.875rem 1.125rem", marginBottom: "1.25rem" }}>
+            <div>
+              <p style={{ margin: 0, color: "#c04040", fontWeight: 800, fontSize: "0.9rem" }}>
+                {cancelados.length} {cancelados.length === 1 ? "pedido cancelado" : "pedidos cancelados"} na lista
+              </p>
+              <p style={{ margin: "0.15rem 0 0", color: "#9a8060", fontSize: "0.78rem" }}>
+                Excluir tira do histórico de vez. O estoque não muda — a devolução já aconteceu no cancelamento.
+              </p>
+            </div>
+            <button onClick={() => {
+              if (confirm(`Excluir ${cancelados.length} ${cancelados.length === 1 ? "pedido cancelado" : "pedidos cancelados"}?\n\nEles somem do histórico e não tem como voltar atrás.`)) excluirCancelados();
+            }} disabled={limpando}
+              style={{ padding: "0.6rem 1.2rem", backgroundColor: limpando ? "#e8d0d0" : "#c04040", color: limpando ? "#9a7070" : "#fff", border: "none", borderRadius: "0.625rem", fontWeight: 800, fontSize: "0.85rem", cursor: limpando ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
+              {limpando ? "Excluindo..." : `🗑️ Excluir os ${cancelados.length} cancelados`}
+            </button>
+          </div>
+        );
+      })()}
+
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "0.875rem", marginBottom: "1.5rem" }}>
         {[
@@ -704,10 +748,17 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                                 style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "0.55rem 1rem", backgroundColor: "#fff8e1", color: "#b8891a", border: "1px solid rgba(184,137,26,0.3)", borderRadius: "0.625rem", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", textDecoration: "none", flex: "1 1 auto", minWidth: 140 }}>
                                 🧾 Ver Nota
                               </a>
-                              {order.status !== "cancelled" && (
+                              {order.status !== "cancelled" ? (
                                 <button onClick={() => { if (confirm("Cancelar este pedido?")) updateStatus(order.id, "cancelled"); }}
                                   style={{ padding: "0.55rem 1rem", backgroundColor: "#fee8e8", color: "#c04040", border: "1px solid rgba(192,64,64,0.2)", borderRadius: "0.625rem", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", flex: "1 1 auto", minWidth: 140 }}>
                                   🚫 Cancelar Pedido
+                                </button>
+                              ) : (
+                                <button onClick={() => {
+                                  if (confirm(`Excluir de vez este pedido cancelado?\n\nEle sai do histórico e não tem como voltar atrás.`)) excluirPedido(order.id);
+                                }}
+                                  style={{ padding: "0.55rem 1rem", backgroundColor: "#c04040", color: "#fff", border: "none", borderRadius: "0.625rem", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", flex: "1 1 auto", minWidth: 140 }}>
+                                  🗑️ Excluir Pedido
                                 </button>
                               )}
                               <button onClick={() => { setTrocaOrderId(order.id); setTrocaReason(""); setTrocaItemIds([]); }}

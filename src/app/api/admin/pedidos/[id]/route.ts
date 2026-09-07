@@ -145,7 +145,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   });
   if (order && consomeEstoque(order.status)) {
     for (const item of order.items) {
-      await restoreProductStock(item.productId, item.quantity, item.size);
+      await restoreProductStock(item.productId, item.quantity, item.size, item.color);
     }
   }
 
