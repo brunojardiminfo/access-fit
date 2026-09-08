@@ -8,6 +8,7 @@ import { getSaleInfo, calculateSalePrice } from "@/lib/saleHelper";
 import Link from "next/link";
 import SizeGuide from "@/app/components/SizeGuide";
 import RecommendedProducts from "@/app/components/RecommendedProducts";
+import CompleteOLook from "@/app/components/CompleteOLook";
 import { bolinhasDeCor } from "@/lib/cores";
 import {
   parseEstoque, quantidadeDe, totalDaCor, coresDoEstoque, tamanhosDaCor,
@@ -420,6 +421,8 @@ export default function ProductPageClient() {
                 </button>
               );
             })()}
+
+            <CompleteOLook productSlug={product.slug} />
 
             {/* Me avise quando voltar */}
             {outOfStock && (
