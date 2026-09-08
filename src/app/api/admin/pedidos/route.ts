@@ -127,18 +127,9 @@ export async function POST(req: Request) {
       });
     }
 
-    // Decrementar estoque dos componentes se foi vendido um componente de um Conjunto
-    for (const item of items) {
-      if (item.componentName) {
-        const product = await prisma.product.findUnique({ where: { id: item.productId } });
-        if (product?.isConjunto) {
-          await prisma.conjuntoItem.updateMany({
-            where: { conjuntoId: item.productId, name: item.componentName },
-            data: { stock: { decrement: item.quantity } },
-          });
-        }
-      }
-    }
+    // Peca de conjunto nao tem contador proprio: quem sai do estoque e o
+    // conjunto, ja debitado acima. Baixar os dois tirava um conjunto inteiro
+    // a mais a cada peca vendida.
 
     return NextResponse.json(order);
   } catch (e: any) {

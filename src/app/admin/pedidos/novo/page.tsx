@@ -348,16 +348,16 @@ export default function NovoPedidoPage() {
                   {item.product?.isConjunto && item.product?.sellComponentsSeparately && item.product?.conjuntoItems && item.product?.conjuntoItems.length > 0 && (
                     <select style={inp} value={item.componentName || ""}
                       onChange={e => {
-                        const componentId = e.target.value;
+                        const escolha = e.target.value;
                         const product = item.product;
 
-                        if (componentId && product) {
-                          if (componentId === "completo") {
+                        if (escolha && product) {
+                          if (escolha === "completo") {
                             updateItem(i, "price", product.price);
                             updateItem(i, "componentName", undefined);
                             updateItem(i, "description", product.name);
                           } else {
-                            const component = product.conjuntoItems?.find(c => c.id === componentId);
+                            const component = product.conjuntoItems?.find(c => c.name === escolha);
                             if (component) {
                               updateItem(i, "price", component.price);
                               updateItem(i, "componentName", component.name);
@@ -369,7 +369,7 @@ export default function NovoPedidoPage() {
                       <option value="">Selecione o componente</option>
                       <option value="completo">Conjunto Completo - R$ {item.product?.price?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</option>
                       {item.product?.conjuntoItems?.map(comp => (
-                        <option key={comp.id} value={comp.id}>{comp.name} - R$ {comp.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</option>
+                        <option key={comp.id} value={comp.name}>{comp.name} - R$ {comp.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</option>
                       ))}
                     </select>
                   )}

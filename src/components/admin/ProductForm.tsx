@@ -331,7 +331,12 @@ export default function ProductForm({ categories, product, kitItems: initialKitI
       {/* Componentes do Conjunto */}
       {form.isConjunto && (
         <div style={card}>
-          <h2 style={{ color: "#1a1510", fontWeight: 800, fontSize: "0.95rem", marginBottom: "1rem" }}>📦 Componentes do Conjunto</h2>
+          <h2 style={{ color: "#1a1510", fontWeight: 800, fontSize: "0.95rem", marginBottom: "0.35rem" }}>📦 Componentes do Conjunto</h2>
+          <p style={{ color: "#9a8060", fontSize: "0.78rem", marginBottom: "1rem" }}>
+            As peças definem o preço de quem quer levar só uma delas. O estoque
+            continua sendo o do conjunto, lançado acima: quem leva só o top
+            desmonta um conjunto, e é isso que sai do estoque.
+          </p>
 
           {/* Lista de componentes */}
           {conjuntoItems.length > 0 && (
@@ -346,7 +351,7 @@ export default function ProductForm({ categories, product, kitItems: initialKitI
                       <p style={{ fontWeight: 600, color: "#1a1510", fontSize: "0.9rem" }}>
                         {item.name}
                       </p>
-                      <p style={{ fontSize: "0.8rem", color: "#9a8060" }}>R$ {item.price.toFixed(2)} · Estoque: {item.stock}</p>
+                      <p style={{ fontSize: "0.8rem", color: "#9a8060" }}>R$ {item.price.toFixed(2)}</p>
                     </div>
                     <button type="button" onClick={() => handleRemoveConjuntoItem(idx)} style={{ padding: "0.5rem 1rem", backgroundColor: "#fee8e8", color: "#c04040", border: "1px solid rgba(192,64,64,0.2)", borderRadius: "0.4rem", cursor: "pointer", fontWeight: 600, fontSize: "0.8rem" }}>
                       🗑️
@@ -368,10 +373,6 @@ export default function ProductForm({ categories, product, kitItems: initialKitI
               <div style={{ width: "110px" }}>
                 <label style={label}>Preço (R$)</label>
                 <input type="number" step="0.01" value={newConjuntoPrice} onChange={e => setNewConjuntoPrice(e.target.value)} placeholder="69.90" style={field} onFocus={focus} onBlur={blur} />
-              </div>
-              <div style={{ width: "80px" }}>
-                <label style={label}>Estoque</label>
-                <input type="number" min="0" value={newConjuntoStock} onChange={e => setNewConjuntoStock(e.target.value)} style={field} onFocus={focus} onBlur={blur} />
               </div>
               <button type="button" onClick={handleAddConjuntoItem} style={{ padding: "0.75rem 1.5rem", backgroundColor: "#b8891a", color: "#fff", border: "none", borderRadius: "0.5rem", cursor: "pointer", fontWeight: 700, fontSize: "0.85rem" }}>
                 ✅ Adicionar

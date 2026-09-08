@@ -24,8 +24,8 @@ export const CAMPANHA = {
   // Só aparecem na tela com revelarRegras ligado; só valem na fase ativa
   regras: [
     { pecas: 1, desconto: 10 },
-    { pecas: 2, desconto: 20 },
-    { pecas: 3, desconto: 30 },
+    { pecas: 2, desconto: 15 },
+    { pecas: 3, desconto: 20 },
   ],
 };
 
@@ -51,7 +51,7 @@ export function diaDeInicio(): string {
 }
 
 /** Teto da escada progressiva. Nunca passa disso, por mais peças que levem. */
-export const TETO_PROGRESSIVO = 30;
+export const TETO_PROGRESSIVO = 20;
 
 /**
  * Desconto progressivo pela quantidade de peças na sacola: 1 peça 10%,

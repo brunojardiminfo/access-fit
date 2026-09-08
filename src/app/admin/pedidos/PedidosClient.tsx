@@ -652,10 +652,15 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
                 const mc = METHOD_COLOR[order.paymentMethod] || { bg: "#f0f0f0", color: "#666" };
                 const isExpanded = expanded === order.id;
                 const firstItem = order.items[0];
+                // Mesma regra do detalhe: a lista precisa dizer qual peça e qual
+                // cor, senão dois pedidos diferentes ficam com o mesmo nome
                 const produtoNome = firstItem
-                  ? (firstItem.product?.name !== "Venda Manual"
-                      ? `${firstItem.product?.name}${firstItem.size ? ` (${firstItem.size})` : ""}`
-                      : firstItem.size || firstItem.product?.name || "—")
+                  ? itemName({
+                      product: { name: firstItem.product?.name || "—" },
+                      size: firstItem.size,
+                      color: (firstItem as any).color,
+                      componentName: (firstItem as any).componentName,
+                    })
                   : "—";
                 const maisItens = order.items.length > 1 ? ` +${order.items.length - 1}` : "";
                 return (
