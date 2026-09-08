@@ -17,6 +17,7 @@ const ALL_LINKS = [
   { href: "/admin/financeiro",  label: "Financeiro",  emoji: "💳" },
   { href: "/admin/devolucoes",  label: "Devoluções",  emoji: "🔄" },
   { href: "/admin/marketing",   label: "Marketing",   emoji: "📣" },
+  { href: "/admin/link-look",   label: "Link do Look", emoji: "🔗" },
   { href: "/admin/gestao",      label: "Gestão",      emoji: "⚙️" },
 ];
 
