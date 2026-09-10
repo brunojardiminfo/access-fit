@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import CarrinhoAbandonado from "./CarrinhoAbandonado";
 
 type Item = { quantity: number; size: string | null; componentName?: string | null; product?: { name: string } | null };
 type Order = {
@@ -8,7 +9,7 @@ type Order = {
   items: Item[];
 };
 
-type Fila = "24h" | "7d" | "30d";
+type Fila = "24h" | "7d" | "30d" | "carrinho";
 
 function itemName(i: Item): string {
   const isVM = i.product?.name === "Venda Manual";
@@ -25,6 +26,7 @@ const FILAS: { id: Fila; label: string; emoji: string; desc: string }[] = [
   { id: "24h", label: "24h — Agradecimento", emoji: "🤍", desc: "Pagamento confirmado há 24h+" },
   { id: "7d",  label: "7 dias — Feedback",   emoji: "✨", desc: "Entregue há 7 dias+" },
   { id: "30d", label: "30 dias — Novidades",  emoji: "🎁", desc: "Entregue há 30 dias+" },
+  { id: "carrinho", label: "Carrinho abandonado", emoji: "🛒", desc: "Separou peças e não finalizou" },
 ];
 
 function buildMsg(fila: Fila, nome: string, itens: string): string {
@@ -84,7 +86,7 @@ export default function FollowUpPage() {
       .then(d => { setOrders(d.orders || []); setLoading(false); });
   };
 
-  useEffect(() => { load(fila); }, [fila]);
+  useEffect(() => { if (fila !== "carrinho") load(fila); }, [fila]);
 
   const enviar = (order: Order) => {
     if (!order.user.phone) return alert("Cliente sem telefone cadastrado.");
@@ -128,7 +130,9 @@ export default function FollowUpPage() {
 
       <p style={{ fontSize: "0.8rem", color: "#9a8060", marginBottom: "1rem" }}>{filaAtual.desc} — aguardando envio</p>
 
-      {loading ? (
+      {fila === "carrinho" ? (
+        <CarrinhoAbandonado />
+      ) : loading ? (
         <p style={{ color: "#9a8060" }}>Carregando...</p>
       ) : orders.length === 0 ? (
         <div style={{ textAlign: "center", padding: "4rem", color: "#9a8060", backgroundColor: "#fff", borderRadius: "1rem", border: "1px solid rgba(140,100,20,0.1)" }}>

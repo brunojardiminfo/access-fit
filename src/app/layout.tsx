@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CartDrawer from "@/components/cart/CartDrawer";
+import RegistroDeSacola from "@/components/cart/RegistroDeSacola";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import CampanhaBar from "@/components/layout/CampanhaBar";
 import NotificationSubscriber from "@/components/NotificationSubscriber";
@@ -59,6 +60,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <main style={{ flex: 1 }}>{children}</main>
           {!isAdmin && <Footer />}
           {!isAdmin && <CartDrawer />}
+          {!isAdmin && <RegistroDeSacola />}
           {!isAdmin && <WhatsAppButton />}
         </SessionProvider>
       </body>

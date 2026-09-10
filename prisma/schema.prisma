@@ -397,3 +397,29 @@ model NotificationToken {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+/// Sacola de uma visita ao site, gravada antes de virar pedido.
+///
+/// Serve para dois usos ao mesmo tempo: sem nome nem telefone, e o termometro
+/// de quais pecas entram no carrinho e nao sao compradas; com contato, e a
+/// cliente que voce pode chamar no WhatsApp para fechar a venda.
+///
+/// Uma linha por visita (sessionId), atualizada conforme a sacola muda, para
+/// nao encher o banco com uma linha por clique.
+model CartLead {
+  id          String    @id @default(cuid())
+  sessionId   String    @unique
+  name        String?
+  phone       String?
+  email       String?
+  items       String    @default("[]") // JSON da sacola no momento
+  total       Float     @default(0)
+  pecas       Int       @default(0)
+  status      String    @default("aberto") // aberto | comprou | contatado | descartado
+  orderId     String?   // pedido que nasceu desta sacola
+  contactedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, updatedAt])
+}

@@ -57,7 +57,7 @@ async function resolvePrices(items: IncomingItem[], ignorarCampanha = false) {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { items, paymentMethod, notes, couponCode, status, previewId, cliente, endereco } = body;
+  const { items, paymentMethod, notes, couponCode, status, previewId, cliente, endereco, sessionId } = body;
 
   if (!items?.length) return NextResponse.json({ error: "Nenhum item" }, { status: 400 });
 
@@ -224,6 +224,15 @@ export async function POST(req: Request) {
   }
 
   await prisma.orderStatusHistory.create({ data: { orderId: order.id, status: order.status } });
+
+  // A sacola virou pedido: sai da fila de abandono. Falhar aqui nao pode
+  // derrubar a compra que ja foi gravada.
+  if (typeof sessionId === "string" && sessionId) {
+    await prisma.cartLead.updateMany({
+      where: { sessionId },
+      data: { status: "comprou", orderId: order.id },
+    }).catch(() => {});
+  }
 
   // Home Try-On ja sai com as pecas; pedido "aguardando" so da baixa quando
   // for confirmado no admin
