@@ -16,6 +16,7 @@ const ESPERA = 2500;
  */
 export default function RegistroDeSacola() {
   const items = useCart(e => e.items);
+  const cliente = useCart(e => e.cliente);
   const jaMandou = useRef(false);
 
   useEffect(() => {
@@ -35,11 +36,13 @@ export default function RegistroDeSacola() {
           preco: i.price,
         })),
         total: items.reduce((s, i) => s + i.price * i.quantity, 0),
+        nome: cliente?.nome || undefined,
+        telefone: cliente?.telefone || undefined,
       });
     }, ESPERA);
 
     return () => clearTimeout(t);
-  }, [items]);
+  }, [items, cliente]);
 
   return null;
 }

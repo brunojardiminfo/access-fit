@@ -36,6 +36,8 @@ function CheckoutContent() {
   const [skus, setSkus] = useState<Record<string, string>>({});
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const clienteConhecida = useCart(e => e.cliente);
+
   const [city, setCity] = useState("");
   const [nascimento, setNascimento] = useState("");
   const [type, setType] = useState<"compra" | "tryon">("compra");
@@ -85,6 +87,13 @@ function CheckoutContent() {
   }, [previewId, items.length, addItem]);
 
   // O botao so fica cinza com a razao escrita embaixo, nunca sem explicacao
+  // Ela ja se identificou ao montar a sacola: nao faz sentido pedir de novo
+  useEffect(() => {
+    if (!clienteConhecida) return;
+    setName(atual => atual || clienteConhecida.nome || "");
+    setPhone(atual => atual || clienteConhecida.telefone || "");
+  }, [clienteConhecida]);
+
   // Com nome e telefone na mao, a sacola vira um contato que voce pode
   // retomar se ela nao finalizar. Espera ela parar de digitar.
   useEffect(() => {
