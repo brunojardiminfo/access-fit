@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useCart } from "@/store/cart";
 import { calcularSacola, descontoDoCupom, CAMPANHA } from "@/lib/campanha";
 import { formatCurrency } from "@/lib/utils";
+import { registrarSacola, idDaVisita } from "@/lib/carrinhoLead";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -35,6 +36,8 @@ function CheckoutContent() {
   const [skus, setSkus] = useState<Record<string, string>>({});
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const clienteConhecida = useCart(e => e.cliente);
+
   const [city, setCity] = useState("");
   const [nascimento, setNascimento] = useState("");
   const [type, setType] = useState<"compra" | "tryon">("compra");
@@ -84,6 +87,35 @@ function CheckoutContent() {
   }, [previewId, items.length, addItem]);
 
   // O botao so fica cinza com a razao escrita embaixo, nunca sem explicacao
+  // Ela ja se identificou ao montar a sacola: nao faz sentido pedir de novo
+  useEffect(() => {
+    if (!clienteConhecida) return;
+    setName(atual => atual || clienteConhecida.nome || "");
+    setPhone(atual => atual || clienteConhecida.telefone || "");
+  }, [clienteConhecida]);
+
+  // Com nome e telefone na mao, a sacola vira um contato que voce pode
+  // retomar se ela nao finalizar. Espera ela parar de digitar.
+  useEffect(() => {
+    if (!name.trim() || phone.replace(/\D/g, "").length < 10) return;
+    const t = setTimeout(() => {
+      registrarSacola({
+        itens: items.map(i => ({
+          nome: i.name,
+          cor: i.color !== "Padrão" ? i.color : undefined,
+          tamanho: i.size,
+          peca: i.componentName,
+          quantidade: i.quantity,
+          preco: i.price,
+        })),
+        total: items.reduce((s, i) => s + i.price * i.quantity, 0),
+        nome: name.trim(),
+        telefone: phone.trim(),
+      });
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [name, phone, items]);
+
   const faltando = [
     !name.trim() && "seu nome",
     !phone.trim() && "telefone",
@@ -181,6 +213,7 @@ function CheckoutContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: items.map(i => ({ productId: i.productId, quantity: i.quantity, price: i.price, size: i.size, color: i.color, componentName: i.componentName })),
+          sessionId: idDaVisita(),
           total: totalFinal,
           subtotal: total(),
           discount: desconto,
@@ -455,6 +488,14 @@ function CheckoutContent() {
               style={{ display: "block", margin: "0.5rem auto 0", background: "none", border: "none", color: "#9a8060", fontSize: "0.78rem", textDecoration: "underline", cursor: items.length === 0 ? "not-allowed" : "pointer" }}>
               Só quero mostrar esta sacola para alguém
             </button>
+
+            {/* A cliente precisa saber que guardamos os dados dela antes de
+                finalizar — e o que fazemos com eles */}
+            <p style={{ textAlign: "center", fontSize: "0.72rem", color: "#b0a08c", marginTop: "1rem", lineHeight: 1.5 }}>
+              Guardamos seus dados e sua sacola para retomar seu pedido, caso você
+              não consiga finalizar agora. Se preferir que a gente não entre em
+              contato, é só avisar.
+            </p>
           </div>
         </div>
       </div>

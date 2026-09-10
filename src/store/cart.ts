@@ -21,11 +21,33 @@ export type CartItem = {
   quantity: number;
 };
 
+/**
+ * Quem esta comprando. Pedimos nome e telefone na primeira peca que entra no
+ * carrinho, para que toda sacola tenha dono -- inclusive a que nunca vira
+ * pedido, que e justamente a que voce quer retomar.
+ */
+export type Cliente = { nome: string; telefone: string };
+
+/**
+ * Oferecer um "agora nao" no pedido de identificacao. Em false ela so adiciona
+ * depois de preencher; em true, quem nao quiser se identificar segue comprando
+ * e a sacola fica anonima. Uma palavra, caso a barreira se mostre cara demais
+ * em conversao.
+ */
+export const PERMITIR_PULAR = false;
+
 type CartStore = {
   items: CartItem[];
   isOpen: boolean;
   couponCode: string;
   couponDiscount: number | null;
+  /** Nome e telefone de quem esta montando a sacola. */
+  cliente: Cliente | null;
+  /** Peca esperando a identificacao para entrar de fato no carrinho. */
+  pendente: Omit<CartItem, "id"> | null;
+  identificar: (cliente: Cliente) => void;
+  pularIdentificacao: () => void;
+  cancelarPendente: () => void;
   addItem: (item: Omit<CartItem, "id">) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
@@ -46,8 +68,37 @@ export const useCart = create<CartStore>()(
       isOpen: false,
       couponCode: "",
       couponDiscount: null,
+      cliente: null,
+      pendente: null,
+
+      /** Guarda quem e a cliente e solta a peca que estava esperando. */
+      identificar: (cliente) => {
+        const esperando = get().pendente;
+        set({ cliente, pendente: null });
+        if (esperando) {
+          get().addItem(esperando);
+          set({ isOpen: true });
+        }
+      },
+
+      /** So existe com PERMITIR_PULAR: adiciona sem saber quem e. */
+      pularIdentificacao: () => {
+        const esperando = get().pendente;
+        set({ pendente: null, cliente: { nome: "", telefone: "" } });
+        if (esperando) {
+          get().addItem(esperando);
+          set({ isOpen: true });
+        }
+      },
+
+      cancelarPendente: () => set({ pendente: null }),
 
       addItem: (item) => {
+        // Sem saber quem e, a peca fica esperando e o modal aparece
+        if (!get().cliente) {
+          set({ pendente: item });
+          return;
+        }
         const items = get().items;
         const key = `${item.productId}-${item.size}-${item.color}-${item.componentName || ""}`;
         const existing = items.find(
