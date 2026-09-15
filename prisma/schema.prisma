@@ -8,28 +8,31 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  password      String?
-  image         String?
-  role          String    @default("customer")
-  adminRole     String?
-  phone         String?
-  birthDate     DateTime?
-  birthdayCouponYear Int?  // Ano em que recebeu cupom de aniversário
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  name               String?
+  email              String    @unique
+  emailVerified      DateTime?
+  password           String?
+  image              String?
+  role               String    @default("customer")
+  adminRole          String?
+  phone              String?
+  birthDate          DateTime?
+  birthdayCouponYear Int? // Ano em que recebeu cupom de aniversário
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  addresses           Address[]
-  orders              Order[]
-  accounts            Account[]
-  sessions            Session[]
-  referralsGiven      Referral[] @relation("referrer")
-  referralsReceived   Referral[] @relation("referred")
-  sizePreference      UserSizePreference?
-  notificationToken   NotificationToken?
+  addresses         Address[]
+  orders            Order[]
+  accounts          Account[]
+  sessions          Session[]
+  referralsGiven    Referral[]          @relation("referrer")
+  referralsReceived Referral[]          @relation("referred")
+  sizePreference    UserSizePreference?
+  notificationToken NotificationToken?
+  crmNotes          CustomerNote[]
+  crmTags           CustomerTagLink[]
+  crmTasks          CrmTask[]
 }
 
 model Account {
@@ -92,47 +95,47 @@ model Category {
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String?
-  price       Float
-  costPrice   Float?
-  compareAt   Float?
-  images      String   @default("[]")
-  sizes       String   @default("[]")
-  sizeRange   String?  // Para tamanho único: "PM" (P/M), "GGG" (G/GG), etc
-  colors      String   @default("[]")
-  sizeStock    String   @default("{}") // Estoque por tamanho: {"P/M": 2, "G/GG": 1}. "stock" abaixo é sempre a soma.
-  stock        Int      @default(0)
-  restockedAt  DateTime? // Última vez que o estoque subiu. Alimenta o selo "Novidade".
-  sku          String?  @unique
-  supplierCode String?
-  featuredHero Boolean  @default(false)
-  featured     Boolean  @default(false)
-  saleDiscount           Float?
-  onSale                 Boolean  @default(false)
-  isConjunto             Boolean  @default(false)
-  sellComponentsSeparately Boolean @default(false)
-  active                 Boolean  @default(true)
-  categoryId  String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                       String    @id @default(cuid())
+  name                     String
+  slug                     String    @unique
+  description              String?
+  price                    Float
+  costPrice                Float?
+  compareAt                Float?
+  images                   String    @default("[]")
+  sizes                    String    @default("[]")
+  sizeRange                String? // Para tamanho único: "PM" (P/M), "GGG" (G/GG), etc
+  colors                   String    @default("[]")
+  sizeStock                String    @default("{}") // Estoque por tamanho: {"P/M": 2, "G/GG": 1}. "stock" abaixo é sempre a soma.
+  stock                    Int       @default(0)
+  restockedAt              DateTime? // Última vez que o estoque subiu. Alimenta o selo "Novidade".
+  sku                      String?   @unique
+  supplierCode             String?
+  featuredHero             Boolean   @default(false)
+  featured                 Boolean   @default(false)
+  saleDiscount             Float?
+  onSale                   Boolean   @default(false)
+  isConjunto               Boolean   @default(false)
+  sellComponentsSeparately Boolean   @default(false)
+  active                   Boolean   @default(true)
+  categoryId               String
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
 
-  category      Category       @relation(fields: [categoryId], references: [id])
-  orderItems    OrderItem[]
-  conjuntoItems ConjuntoItem[]
-  waitlist      Waitlist[]
-  returnReplacements Return[]  @relation("ReturnReplacement")
+  category           Category       @relation(fields: [categoryId], references: [id])
+  orderItems         OrderItem[]
+  conjuntoItems      ConjuntoItem[]
+  waitlist           Waitlist[]
+  returnReplacements Return[]       @relation("ReturnReplacement")
 }
 
 model ConjuntoItem {
-  id         String  @id @default(cuid())
+  id         String @id @default(cuid())
   conjuntoId String
   name       String
   price      Float
-  quantity   Int     @default(1)
-  stock      Int     @default(0)
+  quantity   Int    @default(1)
+  stock      Int    @default(0)
 
   conjunto Product @relation(fields: [conjuntoId], references: [id], onDelete: Cascade)
 }
@@ -160,14 +163,14 @@ model Campaign {
 }
 
 model Testimonial {
-  id        String   @id @default(cuid())
+  id         String   @id @default(cuid())
   clientName String
-  text      String
-  rating    Int      @default(5)
-  product   String?
-  photo     String?
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
+  text       String
+  rating     Int      @default(5)
+  product    String?
+  photo      String?
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
 }
 
 model Goal {
@@ -177,6 +180,7 @@ model Goal {
   target    Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
   @@unique([month, year])
 }
 
@@ -214,28 +218,28 @@ model InstagramMetric {
 }
 
 model Coupon {
-  id          String    @id @default(cuid())
-  code        String    @unique
-  discount    Float
-  type        String    @default("percent")
-  maxUses     Int?
-  usedCount   Int       @default(0)
-  active      Boolean   @default(true)
-  expiresAt   DateTime?
-  createdAt   DateTime  @default(now())
+  id        String    @id @default(cuid())
+  code      String    @unique
+  discount  Float
+  type      String    @default("percent")
+  maxUses   Int?
+  usedCount Int       @default(0)
+  active    Boolean   @default(true)
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
 }
 
 model Supplier {
-  id        String    @id @default(cuid())
-  name      String    @unique
+  id        String   @id @default(cuid())
+  name      String   @unique
   contact   String?
   email     String?
   phone     String?
   notes     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  expenses  Expense[]
+  expenses Expense[]
 }
 
 model Expense {
@@ -254,32 +258,32 @@ model Expense {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  supplier  Supplier? @relation(fields: [supplierId], references: [id])
+  supplier Supplier? @relation(fields: [supplierId], references: [id])
 }
 
 model Order {
-  id         String   @id @default(cuid())
-  userId     String
-  addressId  String?
-  status        String    @default("pending")
-  paymentStatus String    @default("paid")
-  paymentMethod String    @default("pix")
-  amountPaid    Float     @default(0)
-  dueDate          DateTime?
-  installmentCount Int       @default(1)
-  total         Float
-  subtotal      Float
-  shipping      Float    @default(0)
-  discount      Float    @default(0)
-  notes         String?
-  couponCode    String?
-  deliveredAt      DateTime?
-  followUpSentAt   DateTime?
-  thanks24hSentAt  DateTime?
-  feedback7dSentAt DateTime?
+  id                String    @id @default(cuid())
+  userId            String
+  addressId         String?
+  status            String    @default("pending")
+  paymentStatus     String    @default("paid")
+  paymentMethod     String    @default("pix")
+  amountPaid        Float     @default(0)
+  dueDate           DateTime?
+  installmentCount  Int       @default(1)
+  total             Float
+  subtotal          Float
+  shipping          Float     @default(0)
+  discount          Float     @default(0)
+  notes             String?
+  couponCode        String?
+  deliveredAt       DateTime?
+  followUpSentAt    DateTime?
+  thanks24hSentAt   DateTime?
+  feedback7dSentAt  DateTime?
   reengage30dSentAt DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   user          User                 @relation(fields: [userId], references: [id])
   address       Address?             @relation(fields: [addressId], references: [id])
@@ -334,13 +338,13 @@ model Installment {
 }
 
 model OrderItem {
-  id        String @id @default(cuid())
-  orderId   String
-  productId String
-  quantity  Int
-  price     Float
-  size      String?
-  color     String?
+  id            String  @id @default(cuid())
+  orderId       String
+  productId     String
+  quantity      Int
+  price         Float
+  size          String?
+  color         String?
   componentName String? // Se é um componente do conjunto, salva o nome
 
   costPrice Float?
@@ -350,25 +354,25 @@ model OrderItem {
 }
 
 model Return {
-  id              String   @id @default(cuid())
-  orderId         String
-  status          String   @default("solicitado") // solicitado | aprovado | rejeitado | recebido | reembolsado
-  reason          String?
-  amount          Float
-  requestedAt     DateTime @default(now())
-  approvedAt      DateTime?
-  returnedAt      DateTime?
-  reimbursedAt    DateTime?
-  notes           String?
-  orderItemIds         String    @default("[]") // JSON com os IDs de OrderItem trocados/devolvidos
-  returnedItemsSnapshot String   @default("[]") // JSON [{productId,size,color,quantity}] no momento da solicitação, usado para restaurar estoque mesmo se o OrderItem for trocado depois
-  stockRestored        Boolean   @default(false) // Estoque dos itens devolvidos já foi restaurado?
-  replacementProductId String?
-  replacementSize      String?
-  replacementColor     String?
-  replacementSentAt    DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                    String    @id @default(cuid())
+  orderId               String
+  status                String    @default("solicitado") // solicitado | aprovado | rejeitado | recebido | reembolsado
+  reason                String?
+  amount                Float
+  requestedAt           DateTime  @default(now())
+  approvedAt            DateTime?
+  returnedAt            DateTime?
+  reimbursedAt          DateTime?
+  notes                 String?
+  orderItemIds          String    @default("[]") // JSON com os IDs de OrderItem trocados/devolvidos
+  returnedItemsSnapshot String    @default("[]") // JSON [{productId,size,color,quantity}] no momento da solicitação, usado para restaurar estoque mesmo se o OrderItem for trocado depois
+  stockRestored         Boolean   @default(false) // Estoque dos itens devolvidos já foi restaurado?
+  replacementProductId  String?
+  replacementSize       String?
+  replacementColor      String?
+  replacementSentAt     DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   order              Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   replacementProduct Product? @relation("ReturnReplacement", fields: [replacementProductId], references: [id])
@@ -377,11 +381,11 @@ model Return {
 model UserSizePreference {
   id            String   @id @default(cuid())
   userId        String   @unique
-  height        Int      // em cm
-  weight        Int      // em kg
-  bustSize      Int?     // em cm (opcional)
-  waistSize     Int?     // em cm (opcional)
-  preferredSize String?  // P, M, G (tamanho preferido recomendado)
+  height        Int // em cm
+  weight        Int // em kg
+  bustSize      Int? // em cm (opcional)
+  waistSize     Int? // em cm (opcional)
+  preferredSize String? // P, M, G (tamanho preferido recomendado)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -416,10 +420,111 @@ model CartLead {
   total       Float     @default(0)
   pecas       Int       @default(0)
   status      String    @default("aberto") // aberto | comprou | contatado | descartado
-  orderId     String?   // pedido que nasceu desta sacola
+  orderId     String? // pedido que nasceu desta sacola
   contactedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   @@index([status, updatedAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CRM
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Uma linha do historico de contato da cliente: uma ligacao, um WhatsApp, uma
+/// visita ou uma anotacao livre. Eventos gerados pelo proprio sistema (pedido,
+/// carrinho, lista de espera) NAO viram nota — a timeline da ficha junta as duas
+/// fontes na hora de exibir, para nao duplicar dado que ja existe em Order.
+model CustomerNote {
+  id         String   @id @default(cuid())
+  userId     String
+  kind       String   @default("nota") // nota | ligacao | whatsapp | visita
+  body       String
+  outcome    String? // respondeu | sem-resposta | virou-venda | nao-quis
+  authorName String?
+  taskKey    String? // tarefa da fila que originou este contato
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+/// Etiqueta de cliente. As automaticas (auto = true) sao recalculadas pela
+/// rotina noturna e nao devem ser editadas na mao; as manuais sao suas.
+model CustomerTag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  color     String   @default("#b8891a")
+  auto      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  links CustomerTagLink[]
+}
+
+model CustomerTagLink {
+  id        String   @id @default(cuid())
+  userId    String
+  tagId     String
+  createdAt DateTime @default(now())
+
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tag  CustomerTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tagId])
+  @@index([tagId])
+}
+
+/// Uma tarefa da fila do dia. A `key` e o que impede a mesma tarefa de nascer
+/// duas vezes: ela descreve o fato que gerou a tarefa (ex.: "cobranca:<orderId>:7d"),
+/// nao o momento da varredura. Rodar a rotina dez vezes no mesmo dia nao cria
+/// dez tarefas.
+model CrmTask {
+  id           String    @id @default(cuid())
+  key          String    @unique
+  userId       String?
+  kind         String
+  title        String
+  detail       String
+  priority     Int       @default(0)
+  valueAtStake Float     @default(0)
+  status       String    @default("aberta") // aberta | feita | adiada | descartada
+  meta         String    @default("{}")
+  dueAt        DateTime  @default(now())
+  snoozedUntil DateTime?
+  doneAt       DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, dueAt])
+  @@index([userId, status])
+}
+
+/// Registro de cada varredura da rotina, para voce saber se ela rodou mesmo.
+model CrmRun {
+  id       String   @id @default(cuid())
+  kind     String // diaria | semanal | mensal
+  criadas  Int      @default(0)
+  fechadas Int      @default(0)
+  notes    String?
+  ranAt    DateTime @default(now())
+
+  @@index([ranAt])
+}
+
+/// Modelo de mensagem por tipo de tarefa. Varios modelos do mesmo tipo sao
+/// sorteados, para a mensagem nao sair identica para todo mundo.
+model MessageTemplate {
+  id        String   @id @default(cuid())
+  kind      String
+  body      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kind, active])
 }
