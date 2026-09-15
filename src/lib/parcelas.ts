@@ -166,3 +166,41 @@ async function renumerar(orderId: string) {
     }
   }
 }
+
+/**
+ * Desfaz o recebimento de uma parcela deixando rastro.
+ *
+ * Apagar o pagamento seria mais simples, mas apagaria a história: um cheque
+ * devolvido ou um Pix estornado aconteceram de verdade, e sumir com eles faz o
+ * caixa do dia mentir. Então em vez de apagar, lança o contrário — um pagamento
+ * negativo, com o motivo escrito.
+ *
+ * O valor estornado é o LÍQUIDO já lançado para aquela parcela, não o valor
+ * atual dela: se a parcela foi recebida em pedaços, ou se alguém já estornou
+ * antes, o que volta é exatamente o que entrou.
+ */
+export async function estornarParcela(installmentId: string, motivo?: string) {
+  const parcela = await prisma.installment.findUnique({
+    where: { id: installmentId },
+    select: { id: true, number: true, orderId: true },
+  });
+  if (!parcela) return null;
+
+  const [lancado, order] = await Promise.all([
+    prisma.payment.aggregate({ where: { installmentId }, _sum: { amount: true } }),
+    prisma.order.findUnique({ where: { id: parcela.orderId }, select: { paymentMethod: true } }),
+  ]);
+
+  const liquido = centavos(lancado._sum.amount || 0);
+  if (liquido < 0.01) return null;
+
+  return prisma.payment.create({
+    data: {
+      orderId: parcela.orderId,
+      installmentId,
+      amount: -liquido,
+      paymentMethod: order?.paymentMethod || "pix",
+      notes: motivo?.trim() || `Estorno da ${parcela.number}ª parcela`,
+    },
+  });
+}

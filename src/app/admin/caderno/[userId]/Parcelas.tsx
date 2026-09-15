@@ -37,6 +37,8 @@ export default function Parcelas({
   const [editando, setEditando] = useState<string | null>(null);
   const [valor, setValor] = useState("");
   const [vence, setVence] = useState("");
+  const [estornando, setEstornando] = useState<string | null>(null);
+  const [motivo, setMotivo] = useState("");
   const [redividindo, setRedividindo] = useState(false);
   const [vezes, setVezes] = useState("2");
   const [primeiro, setPrimeiro] = useState(soData(new Date().toISOString()));
@@ -71,8 +73,19 @@ export default function Parcelas({
     }
   };
 
-  const alternarPaga = (p: Parcela) =>
-    chamar(`/api/admin/parcelas/${p.id}`, { status: p.status === "paid" ? "pending" : "paid" });
+  const receberParcela = (p: Parcela) =>
+    chamar(`/api/admin/parcelas/${p.id}`, { status: "paid" });
+
+  /**
+   * Desfazer pede o motivo: o recebimento não é apagado, vira um estorno no
+   * financeiro, e daqui a três meses ninguém lembra por que aquele valor voltou.
+   */
+  const estornar = async (p: Parcela) => {
+    if (await chamar(`/api/admin/parcelas/${p.id}`, { status: "pending", motivo })) {
+      setEstornando(null);
+      setMotivo("");
+    }
+  };
 
   const salvarEdicao = async (p: Parcela) => {
     const corpo: Record<string, unknown> = {};
@@ -149,7 +162,9 @@ export default function Parcelas({
                       {vencida && " · vencida"}
                     </span>
                     <div style={{ flex: 1 }} />
-                    <button onClick={() => alternarPaga(p)} disabled={ocupado}
+                    <button
+                      onClick={() => (paga ? (setEstornando(p.id), setMotivo("")) : receberParcela(p))}
+                      disabled={ocupado}
                       style={{
                         ...BOTAO,
                         backgroundColor: paga ? "#fff" : "#e8f8e8",
@@ -162,6 +177,25 @@ export default function Parcelas({
                       editar
                     </button>
                   </>
+                )}
+
+                {estornando === p.id && (
+                  <div style={{ flexBasis: "100%", display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap", marginTop: "0.4rem", paddingTop: "0.4rem", borderTop: "1px dashed rgba(140,100,20,0.2)" }}>
+                    <span style={{ fontSize: "0.72rem", color: "#7a6030" }}>
+                      Vira estorno de {formatCurrency(p.amount)} no financeiro. Motivo:
+                    </span>
+                    <input style={{ ...CAMPO, flex: 1, minWidth: 150 }} value={motivo}
+                      onChange={e => setMotivo(e.target.value)}
+                      placeholder="cheque devolvido, Pix estornado, lancei errado…"
+                      aria-label="Motivo do estorno" />
+                    <button onClick={() => estornar(p)} disabled={ocupado}
+                      style={{ ...BOTAO, backgroundColor: "#c04040", borderColor: "#c04040", color: "#fff" }}>
+                      Estornar
+                    </button>
+                    <button onClick={() => { setEstornando(null); setMotivo(""); }} style={BOTAO}>
+                      Cancelar
+                    </button>
+                  </div>
                 )}
               </div>
             );
