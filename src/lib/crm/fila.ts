@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { parseJson } from "@/lib/utils";
-import { TETO_DIARIO } from "./tarefas";
+import { TETO_DIARIO, varrer } from "./tarefas";
 import { aplicarVariaveis, escolherModelo, linkWhats, modelosPorTipo } from "./mensagens";
 import { DIA } from "./perfil";
 
@@ -58,7 +58,49 @@ type Meta = {
   link?: string | null;
 };
 
-export async function filaDoDia(agora = new Date(), filtro?: string): Promise<FilaDoDia> {
+/**
+ * Quanto tempo a fila pode ficar sem ser varrida antes de abrir a tela mandar
+ * varrer de novo.
+ *
+ * Existe porque o Cron da Vercel no plano Hobby roda uma vez por dia, e um
+ * carrinho abandonado visto só na manhã seguinte já não vale nada. Assim a
+ * rotina da manhã cuida do que precisa de horário certo (aniversário, cobrança,
+ * pós-venda) e abrir a tela cuida do que é urgente.
+ */
+const MINUTOS_ATE_REVARRER = 20;
+
+/**
+ * Varre de novo se a última passada já envelheceu. Nunca derruba a tela: se a
+ * varredura falhar, você continua vendo a fila de antes, que é melhor do que
+ * uma página de erro.
+ */
+async function varrerSePrecisar(agora: Date) {
+  const ultima = await prisma.crmRun.findFirst({
+    orderBy: { ranAt: "desc" },
+    select: { ranAt: true },
+  });
+
+  const idade = ultima ? agora.getTime() - ultima.ranAt.getTime() : Infinity;
+  if (idade < MINUTOS_ATE_REVARRER * 60 * 1000) return;
+
+  try {
+    const r = await varrer(agora);
+    await prisma.crmRun.create({
+      data: { kind: "ao-abrir", criadas: r.criadas, fechadas: r.fechadas },
+    });
+  } catch (erro) {
+    console.error("[fila] varredura ao abrir falhou:", erro);
+  }
+}
+
+export async function filaDoDia(
+  agora = new Date(),
+  filtro?: string,
+  opcoes: { revarrer?: boolean } = {},
+): Promise<FilaDoDia> {
+  // A rotina já varreu antes de pedir a fila; não faz sentido varrer de novo.
+  if (opcoes.revarrer !== false) await varrerSePrecisar(agora);
+
   const inicioDoDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
 
   const [tarefas, modelos, feitasHoje, ultimaRun] = await Promise.all([

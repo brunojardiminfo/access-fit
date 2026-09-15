@@ -171,7 +171,7 @@ export async function rodarRotina(kind: "diaria" | "semanal" | "mensal" = "diari
   }
 
   const varredura = await varrer(agora);
-  const fila = await filaDoDia(agora);
+  const fila = await filaDoDia(agora, undefined, { revarrer: false });
   const resumo = resumoDaManha(fila.porTipo, fila.abertas);
 
   await prisma.crmRun.create({
