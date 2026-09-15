@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { recalcularPeloParcelamento } from "@/lib/parcelas";
+import { estornarParcela, recalcularPeloParcelamento } from "@/lib/parcelas";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -27,8 +27,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         data: { orderId: installment.orderId, installmentId: installment.id, amount: installment.amount, paymentMethod: order?.paymentMethod || "pix" },
       });
     } else if (before?.status === "paid") {
-      const lastPayment = await prisma.payment.findFirst({ where: { installmentId: installment.id }, orderBy: { createdAt: "desc" } });
-      if (lastPayment) await prisma.payment.delete({ where: { id: lastPayment.id } });
+      // Estorno, nao exclusao: o recebimento aconteceu e some do caixa do dia
+      // em que foi desfeito, com o motivo registrado.
+      await estornarParcela(installment.id, body.motivo);
     }
   }
 
