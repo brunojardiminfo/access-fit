@@ -6,11 +6,14 @@ import { rodarRotina } from "@/lib/crm/rotina";
 /**
  * O relógio da loja.
  *
- * Aceita dois chamadores: o Cron da Vercel (que manda `Authorization: Bearer
- * <CRON_SECRET>`) e qualquer automação sua, como o n8n (que manda `x-api-key:
- * <AUTOMATION_API_KEY>`). Os dois caminhos existem de propósito: no plano Hobby
- * da Vercel o Cron só roda uma vez por dia, e o n8n cobre o resto sem depender
- * de plano.
+ * Aceita dois chamadores: o Cron da Vercel (`Authorization: Bearer
+ * <CRON_SECRET>`), que é o caminho em uso, e uma automação externa
+ * (`x-api-key: <AUTOMATION_API_KEY>`), que fica disponível caso um dia haja uma.
+ *
+ * No plano Hobby da Vercel o Cron roda uma vez por dia, e é o suficiente: ele
+ * cuida do que depende de horário (aniversário, cobrança, pós-venda), enquanto
+ * abrir a tela da fila cuida do que é urgente — ver `varrerSePrecisar` em
+ * lib/crm/fila.ts.
  *
  * Sem nenhuma das duas chaves configuradas no ambiente, a rota recusa tudo — o
  * que não pode acontecer é ela ficar aberta por falta de configuração.
