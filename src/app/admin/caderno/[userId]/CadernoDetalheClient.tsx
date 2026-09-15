@@ -2,11 +2,13 @@
 import { useState } from "react";
 import { formatCurrency } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import Parcelas, { type Parcela } from "./Parcelas";
 
 type Item = { id: string; quantity: number; price: number; size: string | null; componentName?: string | null; product?: { name: string } | null };
 type Order = {
   id: string; total: number; amountPaid: number; paymentStatus: string;
-  createdAt: string; notes: string | null; items: Item[];
+  paymentMethod: string; dueDate: string | null;
+  createdAt: string; notes: string | null; items: Item[]; installments: Parcela[];
 };
 type User = { id: string; name: string | null; email: string; phone: string | null };
 
@@ -52,35 +54,46 @@ export default function CadernoDetalheClient({ user, orders }: { user: User; ord
     window.open(`https://wa.me/${ddi}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
-  const handleRegistrarPagamento = async (order: Order) => {
-    const valor = parseFloat(pagamento);
+  /**
+   * Recebe um valor no pedido.
+   *
+   * Com parcelas, o dinheiro entra PELAS parcelas: quita da mais antiga para a
+   * mais nova, e o pedido e recalculado a partir delas. Escrever o amountPaid
+   * direto aqui era o que sumia com o pagamento assim que alguem mexesse numa
+   * parcela na aba Pedidos.
+   */
+  const receber = async (order: Order, valor: number) => {
     if (!valor || valor <= 0) return;
-
-    const newPaid = order.amountPaid + valor;
-    const newStatus = newPaid >= order.total ? "paid" : "partial";
-
     setSaving(true);
-    await fetch(`/api/admin/pedidos/${order.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amountPaid: newPaid, paymentStatus: newStatus }),
-    });
+
+    if (order.installments.length > 0) {
+      await fetch("/api/admin/parcelas/receber", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: order.id, valor, metodo: order.paymentMethod }),
+      });
+    } else {
+      const pago = Math.round((order.amountPaid + valor) * 100) / 100;
+      await fetch(`/api/admin/pedidos/${order.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amountPaid: Math.min(pago, order.total),
+          paymentStatus: pago >= order.total - 0.01 ? "paid" : "partial",
+        }),
+      });
+    }
+
     setSaving(false);
     setEditingId(null);
     setPagamento("");
     router.refresh();
   };
 
-  const handleMarcarPago = async (order: Order) => {
-    setSaving(true);
-    await fetch(`/api/admin/pedidos/${order.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amountPaid: order.total, paymentStatus: "paid" }),
-    });
-    setSaving(false);
-    router.refresh();
-  };
+  const handleRegistrarPagamento = (order: Order) => receber(order, parseFloat(pagamento));
+
+  const handleMarcarPago = (order: Order) =>
+    receber(order, Math.round((order.total - order.amountPaid) * 100) / 100);
 
   const inp = { padding: "0.5rem 0.75rem", border: "1px solid rgba(140,100,20,0.3)", borderRadius: "0.5rem", fontSize: "0.875rem", backgroundColor: "#FAF6EE", outline: "none", width: "100%", boxSizing: "border-box" as const };
 
@@ -157,6 +170,9 @@ export default function CadernoDetalheClient({ user, orders }: { user: User; ord
                   {order.notes && (
                     <p style={{ fontSize: "0.78rem", color: "#9a8060", marginBottom: "0.75rem", fontStyle: "italic" }}>📝 {order.notes}</p>
                   )}
+
+                  <Parcelas orderId={order.id} total={order.total}
+                    amountPaid={order.amountPaid} parcelas={order.installments} />
 
                   <a href={`/admin/pedidos?expand=${order.id}`}
                     style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem", fontWeight: 700, color: "#b8891a", textDecoration: "none", backgroundColor: "#FAF6EE", border: "1px solid rgba(184,137,26,0.3)", borderRadius: "0.5rem", padding: "0.35rem 0.75rem", marginBottom: "0.75rem" }}>
