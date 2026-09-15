@@ -21,6 +21,28 @@ export const TETO_DIARIO = 15;
 const MINUTOS_PARA_ABANDONO = 45;
 const HORAS_LIMITE_CARRINHO = 72;
 const DIAS_TROCA_PARADA = 5;
+
+/**
+ * Janelas do pós-venda: cada etapa só vale por um tempo.
+ *
+ * Sem isso, a primeira varredura ressuscita a loja inteira — todo pedido antigo
+ * que nunca foi marcado como "agradecido" vira tarefa hoje. E agradecer uma
+ * compra de três meses atrás não é atenção, é constrangimento.
+ */
+const JANELA_POS_VENDA: Record<string, { de: number; ate: number }> = {
+  pos24h: { de: 1, ate: 5 },
+  entrega3d: { de: 3, ate: 10 },
+  feedback7d: { de: 7, ate: 21 },
+  reengaja30d: { de: 30, ate: 60 },
+};
+
+/**
+ * Caderno é fiado: o combinado é pagar depois, então cobrar no dia seguinte
+ * seria quebrar o combinado. Só entra na fila quando venceu de verdade — pela
+ * data combinada, pela parcela vencida, ou por este prazo quando não houver
+ * nem uma nem outra.
+ */
+const DIAS_PARA_COBRAR_CADERNO = 30;
 const DIAS_VIP_FRIO = 60;
 const ATRASO_INATIVA = 1.5;
 const DIAS_SEM_CICLO = 120;
@@ -155,30 +177,60 @@ async function carrinhosAbandonados(agora: Date): Promise<TarefaGerada[]> {
 async function cobrancas(agora: Date): Promise<TarefaGerada[]> {
   const pedidos = await prisma.order.findMany({
     where: {
-      status: { not: "cancelled" },
+      // Home Try-On não é dívida: a peça está com ela justamente para provar
+      // antes de decidir. Cobrar aí é cobrar por algo que ela ainda nem comprou.
+      status: { notIn: ["cancelled", "try-on"] },
       paymentStatus: { not: "paid" },
       createdAt: { lte: new Date(agora.getTime() - DIA) },
     },
-    include: { user: { select: { id: true, name: true, phone: true } } },
+    include: {
+      user: { select: { id: true, name: true, phone: true } },
+      installments: { where: { paidAt: null }, orderBy: { dueDate: "asc" } },
+    },
     take: 200,
   });
 
   return pedidos.flatMap(o => {
-    const dias = diasEntre(o.createdAt, agora);
-    const etapa = dias >= 7 ? "7d" : dias >= 3 ? "3d" : "1d";
     const aberto = Math.max(0, o.total - o.amountPaid);
     if (aberto < 0.01) return [];
-    const numero = `#${o.id.slice(-8).toUpperCase()}`;
 
-    return [tarefa({
-      key: `cobranca:${o.id}:${etapa}`,
+    const dias = diasEntre(o.createdAt, agora);
+    const numero = `#${o.id.slice(-8).toUpperCase()}`;
+    const base = {
       userId: o.userId,
       kind: "cobranca",
       title: `Cobrar ${o.user?.name || "cliente"} — ${numero}`,
+      valueAtStake: aberto,
+    };
+    const contato = { nome: o.user?.name, telefone: o.user?.phone, valor: real(aberto) };
+
+    if (o.paymentMethod === "caderno") {
+      const parcelaVencida = o.installments.find(i => i.dueDate <= agora);
+      const venceuEm = parcelaVencida?.dueDate ?? o.dueDate ?? null;
+
+      // Sem data combinada e sem parcela, o prazo do caderno é o único limite.
+      if (!venceuEm && dias < DIAS_PARA_COBRAR_CADERNO) return [];
+      if (venceuEm && venceuEm > agora) return [];
+
+      const atraso = venceuEm ? diasEntre(venceuEm, agora) : dias;
+      return [tarefa({
+        ...base,
+        key: `cobranca:${o.id}:caderno`,
+        detail: venceuEm
+          ? `Caderno: ${real(aberto)} venceu em ${venceuEm.toLocaleDateString("pt-BR")}, ${atraso} dias atrás.`
+          : `Caderno: ${real(aberto)} em aberto há ${dias} dias, sem data combinada.`,
+        priority: PESO.cobranca + Math.min(10, Math.floor(atraso / 15)),
+        meta: { ...contato, orderId: o.id, pedido: numero, etapa: "caderno" },
+      })];
+    }
+
+    const etapa = dias >= 7 ? "7d" : dias >= 3 ? "3d" : "1d";
+    return [tarefa({
+      ...base,
+      key: `cobranca:${o.id}:${etapa}`,
       detail: `${real(aberto)} em aberto há ${dias} dias${etapa === "7d" ? " (último toque)" : ""}.`,
       priority: PESO.cobranca + (etapa === "7d" ? 10 : etapa === "3d" ? 5 : 0),
-      valueAtStake: aberto,
-      meta: { orderId: o.id, pedido: numero, etapa, nome: o.user?.name, telefone: o.user?.phone, valor: real(aberto) },
+      meta: { ...contato, orderId: o.id, pedido: numero, etapa },
     })];
   });
 }
@@ -188,8 +240,13 @@ async function agradecimentos(agora: Date): Promise<TarefaGerada[]> {
   const pedidos = await prisma.order.findMany({
     where: {
       paymentStatus: "paid",
-      status: { not: "cancelled" },
-      createdAt: { lte: new Date(agora.getTime() - DIA) },
+      // Home Try-On fica de fora: agradecer a compra enquanto as peças ainda
+      // estão em prova é agradecer por algo que ainda não aconteceu.
+      status: { notIn: ["cancelled", "try-on"] },
+      createdAt: {
+        lte: new Date(agora.getTime() - JANELA_POS_VENDA.pos24h.de * DIA),
+        gte: new Date(agora.getTime() - JANELA_POS_VENDA.pos24h.ate * DIA),
+      },
       thanks24hSentAt: null,
     },
     include: {
@@ -224,7 +281,10 @@ async function agradecimentos(agora: Date): Promise<TarefaGerada[]> {
  */
 async function posEntrega(agora: Date): Promise<TarefaGerada[]> {
   const pedidos = await prisma.order.findMany({
-    where: { status: "delivered", deliveredAt: { not: null } },
+    where: {
+      status: "delivered",
+      deliveredAt: { not: null, gte: new Date(agora.getTime() - JANELA_POS_VENDA.reengaja30d.ate * DIA) },
+    },
     include: {
       user: { select: { id: true, name: true, phone: true } },
       items: { select: { size: true, color: true, componentName: true, product: { select: { name: true } } } },
@@ -234,16 +294,19 @@ async function posEntrega(agora: Date): Promise<TarefaGerada[]> {
   });
 
   const etapas = [
-    { dias: 3, kind: "entrega3d", marca: "followUpSentAt", titulo: "Confirmar que chegou" },
-    { dias: 7, kind: "feedback7d", marca: "feedback7dSentAt", titulo: "Pedir foto ou opinião" },
-    { dias: 30, kind: "reengaja30d", marca: "reengage30dSentAt", titulo: "Voltar a conversar" },
+    { kind: "entrega3d", marca: "followUpSentAt", titulo: "Confirmar que chegou" },
+    { kind: "feedback7d", marca: "feedback7dSentAt", titulo: "Pedir foto ou opinião" },
+    { kind: "reengaja30d", marca: "reengage30dSentAt", titulo: "Voltar a conversar" },
   ] as const;
 
   const saida: TarefaGerada[] = [];
   for (const o of pedidos) {
     if (!o.deliveredAt) continue;
     const dias = diasEntre(o.deliveredAt, agora);
-    const pendente = etapas.find(e => dias >= e.dias && !o[e.marca]);
+    const pendente = etapas.find(e => {
+      const janela = JANELA_POS_VENDA[e.kind];
+      return dias >= janela.de && dias <= janela.ate && !o[e.marca];
+    });
     if (!pendente) continue;
 
     const pecas = o.items
