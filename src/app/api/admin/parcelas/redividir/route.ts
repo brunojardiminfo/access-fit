@@ -22,6 +22,6 @@ export async function POST(req: Request) {
     primeiroVencimento: data,
     intervaloEmMeses: Number(intervaloEmMeses) || 1,
   });
-  if ("erro" in r) return NextResponse.json({ error: r.erro }, { status: 400 });
+  if (!r.ok) return NextResponse.json({ error: r.erro }, { status: 400 });
   return NextResponse.json(r);
 }

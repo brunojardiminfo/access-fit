@@ -36,6 +36,10 @@ export async function recalcularPeloParcelamento(orderId: string) {
   });
 }
 
+export type ResultadoRedivisao =
+  | { ok: false; erro: string }
+  | { ok: true; saldo: number; vezes: number; mantidas: number };
+
 export type Redivisao = {
   orderId: string;
   vezes: number;
@@ -52,19 +56,21 @@ export type Redivisao = {
  * desconto lançado depois, um item acrescentado), a redivisão corrige a conta
  * em vez de arrastar o erro adiante.
  */
-export async function redividirSaldo({ orderId, vezes, primeiroVencimento, intervaloEmMeses = 1 }: Redivisao) {
+export async function redividirSaldo(
+  { orderId, vezes, primeiroVencimento, intervaloEmMeses = 1 }: Redivisao,
+): Promise<ResultadoRedivisao> {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: { installments: { orderBy: { number: "asc" } } },
   });
-  if (!order) return { erro: "Pedido não encontrado" as const };
-  if (vezes < 1 || vezes > 24) return { erro: "Número de parcelas inválido" as const };
+  if (!order) return { ok: false, erro: "Pedido não encontrado" };
+  if (vezes < 1 || vezes > 24) return { ok: false, erro: "Número de parcelas inválido" };
 
   const pagas = order.installments.filter(p => p.status === "paid");
   const jaPago = centavos(pagas.reduce((s, p) => s + p.amount, 0));
   const saldo = centavos(order.total - jaPago);
 
-  if (saldo < 0.01) return { erro: "Não há saldo em aberto para dividir" as const };
+  if (saldo < 0.01) return { ok: false, erro: "Não há saldo em aberto para dividir" };
 
   const valorBase = centavos(saldo / vezes);
   const ultima = centavos(saldo - valorBase * (vezes - 1));
@@ -89,7 +95,7 @@ export async function redividirSaldo({ orderId, vezes, primeiroVencimento, inter
   });
 
   await recalcularPeloParcelamento(orderId);
-  return { ok: true as const, saldo, vezes, mantidas: pagas.length };
+  return { ok: true, saldo, vezes, mantidas: pagas.length };
 }
 
 /**

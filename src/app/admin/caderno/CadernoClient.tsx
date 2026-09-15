@@ -314,28 +314,43 @@ export default function CadernoClient({ clientsData }: { clientsData: ClientData
 
             const temParcelas = todasParcelas.length > 0;
 
+            // Varios pedidos parcelados viram dezenas de linhas. Agrupadas por
+            // vencimento, viram o que voce combinou com ela: "tanto por mes".
+            const porMes = new Map<string, { data: string; valor: number; pedidos: number; pagas: number; total: number }>();
+            for (const i of todasParcelas) {
+              const chave = String(i.dueDate).slice(0, 10);
+              const g = porMes.get(chave) || { data: chave, valor: 0, pedidos: 0, pagas: 0, total: 0 };
+              g.valor += i.amount;
+              g.pedidos += 1;
+              g.total += 1;
+              if (i.status === "paid") g.pagas += 1;
+              porMes.set(chave, g);
+            }
+            const meses = [...porMes.values()];
+
             return temParcelas ? (
               <div style={{ marginBottom: "2rem" }}>
                 <h3 style={{ fontSize: "0.95rem", fontWeight: 800, color: "#5a4a2a", marginBottom: "1rem", textTransform: "uppercase" }}>📅 Parcelas definidas</h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  {todasParcelas.map(inst => {
-                    const isPaid = inst.status === "paid";
-                    const isOverdue = !isPaid && new Date(inst.dueDate) < new Date();
+                  {meses.map(m => {
+                    const paga = m.pagas === m.total;
+                    const vencida = !paga && new Date(m.data) < new Date();
                     return (
-                      <div key={inst.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem 1rem", borderRadius: "0.625rem", backgroundColor: isPaid ? "#e8f8e8" : isOverdue ? "#fee8e8" : "#fff8e1", border: `1px solid ${isPaid ? "rgba(46,125,50,0.15)" : isOverdue ? "rgba(192,64,64,0.15)" : "rgba(184,137,26,0.15)"}` }}>
+                      <div key={m.data} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", flexWrap: "wrap", padding: "0.75rem 1rem", borderRadius: "0.625rem", backgroundColor: paga ? "#e8f8e8" : vencida ? "#fee8e8" : "#fff8e1", border: `1px solid ${paga ? "rgba(46,125,50,0.15)" : vencida ? "rgba(192,64,64,0.15)" : "rgba(184,137,26,0.15)"}` }}>
                         <div>
-                          <span style={{ fontWeight: 700, fontSize: "0.85rem", color: isPaid ? "#2e7d32" : isOverdue ? "#c04040" : "#b8891a" }}>
-                            {inst.number}ª parcela
+                          <span style={{ fontWeight: 700, fontSize: "0.85rem", color: paga ? "#2e7d32" : vencida ? "#c04040" : "#b8891a" }}>
+                            {new Date(m.data).toLocaleDateString("pt-BR", { timeZone: "UTC" })}
+                            {vencida && " ⚠️"}
                           </span>
-                          <span style={{ fontSize: "0.8rem", color: "#9a8060", marginLeft: "0.75rem" }}>
-                            {new Date(inst.dueDate).toLocaleDateString("pt-BR")}
-                            {isOverdue && " ⚠️"}
+                          <span style={{ fontSize: "0.78rem", color: "#9a8060", marginLeft: "0.75rem" }}>
+                            {m.pedidos === 1 ? "1 pedido" : `${m.pedidos} pedidos`}
+                            {m.pagas > 0 && m.pagas < m.total && ` · ${m.pagas} já paga(s)`}
                           </span>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                          <span style={{ fontWeight: 900, color: "#1a1510" }}>{fmt(inst.amount)}</span>
-                          <span style={{ fontSize: "0.72rem", fontWeight: 700, padding: "0.15rem 0.5rem", borderRadius: "999px", backgroundColor: isPaid ? "#c8f0cc" : isOverdue ? "#fdd" : "#fff3cd", color: isPaid ? "#2e7d32" : isOverdue ? "#c04040" : "#856404" }}>
-                            {isPaid ? "✓ Pago" : isOverdue ? "Vencida" : "Pendente"}
+                          <span style={{ fontWeight: 900, color: "#1a1510" }}>{fmt(m.valor)}</span>
+                          <span style={{ fontSize: "0.72rem", fontWeight: 700, padding: "0.15rem 0.5rem", borderRadius: "999px", backgroundColor: paga ? "#c8f0cc" : vencida ? "#fdd" : "#fff3cd", color: paga ? "#2e7d32" : vencida ? "#c04040" : "#856404" }}>
+                            {paga ? "✓ Pago" : vencida ? "Vencida" : "Pendente"}
                           </span>
                         </div>
                       </div>
@@ -346,14 +361,24 @@ export default function CadernoClient({ clientsData }: { clientsData: ClientData
                   <span style={{ color: "#9a8060" }}>Total parcelado</span>
                   <span style={{ fontWeight: 700, color: "#b8891a" }}>{fmt(todasParcelas.filter(i => i.status !== "paid").reduce((s, i) => s + i.amount, 0))} em aberto</span>
                 </div>
-                <p style={{ fontSize: "0.72rem", color: "#9a8060", marginTop: "0.5rem" }}>
-                  Para alterar as parcelas, edite diretamente em <a href="/admin/pedidos" style={{ color: "#b8891a" }}>Pedidos</a>.
-                </p>
               </div>
-            ) : (
+            ) : null;
+          })()}
+
+          {/* Reparcelar tudo: o combinado e com a pessoa, nao com cada pedido */}
+          {(() => {
+            const jaTemParcelas = pedidos.some(p => (p.installments || []).length > 0);
+            return (
               <>
                 <div style={{ marginBottom: "2rem" }}>
-                  <h3 style={{ fontSize: "0.95rem", fontWeight: 800, color: "#5a4a2a", marginBottom: "1rem", textTransform: "uppercase" }}>Parcelamento</h3>
+                  <h3 style={{ fontSize: "0.95rem", fontWeight: 800, color: "#5a4a2a", marginBottom: "0.4rem", textTransform: "uppercase" }}>
+                    {jaTemParcelas ? "Reparcelar tudo" : "Parcelamento"}
+                  </h3>
+                  <p style={{ fontSize: "0.8rem", color: "#9a8060", marginBottom: "1rem", maxWidth: "62ch" }}>
+                    {jaTemParcelas
+                      ? `Refaz o combinado com ela nos ${pedidos.filter(p => p.saldoPendente > 0.01).length} pedidos em aberto de uma vez. As parcelas já pagas continuam como estão.`
+                      : "Divide tudo o que ela deve no caderno, em todos os pedidos em aberto de uma vez."}
+                  </p>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
                     <div>
                       <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#5a4a2a", marginBottom: "0.4rem" }}>Quantidade de Parcelas</label>
@@ -390,11 +415,13 @@ export default function CadernoClient({ clientsData }: { clientsData: ClientData
               <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
               Enviar resumo
             </button>
-            {pedidos.every(p => !p.installments?.length) && (
-              <button onClick={handleConsolidar} disabled={consolidando} style={{ backgroundColor: "#b8891a", color: "#fff", padding: "1rem 2rem", borderRadius: "0.75rem", border: "none", fontSize: "1rem", fontWeight: 900, cursor: consolidando ? "not-allowed" : "pointer", opacity: consolidando ? 0.6 : 1, flex: 1 }}>
-                {consolidando ? "Consolidando..." : "✅ Consolidar Pagamentos"}
-              </button>
-            )}
+            <button onClick={handleConsolidar} disabled={consolidando} style={{ backgroundColor: "#b8891a", color: "#fff", padding: "1rem 2rem", borderRadius: "0.75rem", border: "none", fontSize: "1rem", fontWeight: 900, cursor: consolidando ? "not-allowed" : "pointer", opacity: consolidando ? 0.6 : 1, flex: 1 }}>
+              {consolidando
+                ? "Refazendo..."
+                : pedidos.some(p => (p.installments || []).length > 0)
+                  ? `Reparcelar tudo em ${numParcelas}×`
+                  : `Parcelar tudo em ${numParcelas}×`}
+            </button>
           </div>
         </div>
       )}
