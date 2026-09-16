@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/firebase-admin";
-import { restoreProductStock, ajustarEstoquePorStatus, consomeEstoque } from "@/lib/stock";
+import { restoreProductStock, ajustarEstoquePorStatus, consomeEstoque, decrementProductStock } from "@/lib/stock";
 import { recalcOrderTotals } from "@/lib/orderTotals";
 
 const STATUS_NOTIFICATION: Record<string, { title: string; body: string }> = {
@@ -90,6 +90,18 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       where: { id },
       data: { total: { increment: addedTotal }, subtotal: { increment: addedTotal } },
     });
+
+    // Peça acrescentada a um pedido que já deu baixa precisa sair do estoque
+    // agora: o ajuste por status, acima, só viu os itens que já estavam aqui.
+    // "Venda Manual" fica de fora — é um marcador de lançamento avulso, sem
+    // estoque próprio.
+    const statusAtual = (body.status ?? previousStatus) as string | undefined;
+    if (consomeEstoque(statusAtual)) {
+      for (const i of body.addItems as any[]) {
+        if (!i.productId || i.productId === vendaManual.id) continue;
+        await decrementProductStock(i.productId, i.quantity, i.size ?? i.description ?? null, i.color ?? null);
+      }
+    }
   }
 
   // Generate installments when dueDate + installmentCount are provided
