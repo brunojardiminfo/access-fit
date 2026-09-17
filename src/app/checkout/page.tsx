@@ -40,9 +40,22 @@ function CheckoutContent() {
 
   const [city, setCity] = useState("");
   const [nascimento, setNascimento] = useState("");
+  const [creditoDisponivel, setCreditoDisponivel] = useState(0);
+  const [usarCredito, setUsarCredito] = useState(false);
   const [type, setType] = useState<"compra" | "tryon">("compra");
   const [payMethod, setPayMethod] = useState("pix");
   const [sent, setSent] = useState(false);
+
+  // Crédito só aparece para quem está logada: sem login a loja identifica a
+  // cliente pelo telefone, e telefone não pode destrancar dinheiro.
+  useEffect(() => {
+    let vivo = true;
+    fetch("/api/usuario/credito")
+      .then(r => r.json())
+      .then(d => { if (vivo) setCreditoDisponivel(Number(d?.saldo) || 0); })
+      .catch(() => null);
+    return () => { vivo = false; };
+  }, []);
   const [showPreview, setShowPreview] = useState(false);
   // Campos Home Try-On
   const [cpf, setCpf] = useState("");
@@ -189,6 +202,9 @@ function CheckoutContent() {
       linhas,
       ``,
       `*Total: ${formatCurrency(totalFinal)}*${cupomLinha}`,
+      ...(usarCredito && creditoDisponivel > 0.005
+        ? [``, `Quero usar meu crédito de ${formatCurrency(creditoDisponivel)} nesta compra.`]
+        : []),
       ``,
       `Tipo: ${tipoTexto}`,
       `Nome: ${name}`,
@@ -223,7 +239,16 @@ function CheckoutContent() {
             rua: street.trim(), numero: number.trim(), complemento: complement.trim() || null,
             bairro: neighborhood.trim(), cidade: city.trim(), estado: state.trim().toUpperCase(), cep: cep.trim(),
           },
-          notes: `${city ? `${city}` : ""}${couponCode ? `${city ? " | " : ""}Cupom: ${couponCode}` : ""}` || null,
+          notes: [
+            city || null,
+            couponCode ? `Cupom: ${couponCode}` : null,
+            // Sinaliza a intenção; quem aplica o crédito é você, ao confirmar a
+            // venda. Consumir aqui gastaria o saldo num pedido que pode nunca
+            // se confirmar.
+            usarCredito && creditoDisponivel > 0.005
+              ? `Quer usar crédito (tem ${formatCurrency(creditoDisponivel)})`
+              : null,
+          ].filter(Boolean).join(" | ") || null,
           couponCode: couponCode || null,
           status: type === "tryon" ? "try-on" : "pending",
           previewId: previewId || null,
@@ -316,6 +341,26 @@ function CheckoutContent() {
                 <span style={{ fontWeight: 700, color: "#1a1510" }}>Total</span>
                 <span style={{ fontWeight: 900, fontSize: "1.25rem", color: "#b8891a" }}>{formatCurrency(totalFinal)}</span>
               </div>
+
+              {creditoDisponivel > 0.005 && type === "compra" && (
+                <label style={{
+                  display: "flex", gap: "0.6rem", alignItems: "flex-start", cursor: "pointer",
+                  marginTop: "0.75rem", padding: "0.7rem 0.8rem", borderRadius: "0.75rem",
+                  backgroundColor: "#f4f0fa", border: "1px solid rgba(138,26,184,0.25)",
+                }}>
+                  <input type="checkbox" checked={usarCredito}
+                    onChange={e => setUsarCredito(e.target.checked)}
+                    style={{ marginTop: "0.15rem", accentColor: "#8a1ab8" }} />
+                  <span>
+                    <span style={{ display: "block", fontWeight: 700, color: "#6a1a90", fontSize: "0.85rem" }}>
+                      Você tem {formatCurrency(creditoDisponivel)} de crédito
+                    </span>
+                    <span style={{ display: "block", color: "#7a6030", fontSize: "0.78rem", marginTop: "0.15rem" }}>
+                      Quero usar nesta compra — a gente confirma o valor no WhatsApp.
+                    </span>
+                  </span>
+                </label>
+              )}
             </div>
           </div>
 
