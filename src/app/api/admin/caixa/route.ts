@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { MOVIMENTA_CAIXA } from "@/lib/credito";
 
 // Receitas recebidas no período
 export async function GET(req: Request) {
@@ -21,7 +22,7 @@ export async function GET(req: Request) {
     _sum: { amount: true },
     where: {
       receivedAt: { gte: startDate, lte: endDate },
-      order: { status: { not: "cancelled" } },
+      order: { status: { not: "cancelled" } }, ...MOVIMENTA_CAIXA,
     },
   });
 

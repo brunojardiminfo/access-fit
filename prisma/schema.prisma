@@ -33,6 +33,7 @@ model User {
   crmNotes          CustomerNote[]
   crmTags           CustomerTagLink[]
   crmTasks          CrmTask[]
+  credits           CustomerCredit[]
 }
 
 model Account {
@@ -527,4 +528,36 @@ model MessageTemplate {
   updatedAt DateTime @updatedAt
 
   @@index([kind, active])
+}
+
+/// Extrato de crédito da cliente — o caderno ao contrário.
+///
+/// O caderno é quanto ela deve para a loja; isto é quanto a loja deve para ela.
+/// Cada linha é um lançamento com sinal: positivo concede, negativo consome. O
+/// saldo é a soma, o que dá uso parcial de graça e guarda o porquê de cada
+/// centavo.
+///
+/// Crédito NÃO é desconto: quando ela usa, o pedido registra o valor cheio e o
+/// crédito entra como forma de pagamento. Senão o faturamento encolheria numa
+/// venda que aconteceu inteira.
+model CustomerCredit {
+  id             String   @id @default(cuid())
+  userId         String
+  /// Positivo concede, negativo consome. O saldo nunca pode ficar negativo.
+  amount         Float
+  /// peca-recebida | devolucao | cortesia | pagamento-maior | acerto
+  /// uso | abatimento-caderno | devolvido-em-dinheiro
+  kind           String
+  note           String?
+  /// Pedido que originou o crédito (a devolução, o pagamento a maior).
+  orderId        String?
+  /// Pedido onde o crédito foi gasto.
+  appliedOrderId String?
+  returnId       String?
+  authorName     String?
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

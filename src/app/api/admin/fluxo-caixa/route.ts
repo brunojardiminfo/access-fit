@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { MOVIMENTA_CAIXA } from "@/lib/credito";
 
 const MARKER = "__saldo_abertura__";
 
@@ -42,7 +43,7 @@ export async function GET(req: Request) {
       const [pagamentosInter, aportesInter] = await Promise.all([
         prisma.payment.aggregate({
           _sum: { amount: true },
-          where: { receivedAt: { gte: aberturaDate, lt: startDate }, order: { status: { not: "cancelled" } } },
+          where: { receivedAt: { gte: aberturaDate, lt: startDate }, order: { status: { not: "cancelled" } }, ...MOVIMENTA_CAIXA },
         }),
         prisma.cashInjection.aggregate({
           _sum: { amount: true },
@@ -56,7 +57,7 @@ export async function GET(req: Request) {
     const [pagamentosAntes, aportesAntes] = await Promise.all([
       prisma.payment.aggregate({
         _sum: { amount: true },
-        where: { receivedAt: { lt: startDate }, order: { status: { not: "cancelled" } } },
+        where: { receivedAt: { lt: startDate }, order: { status: { not: "cancelled" } }, ...MOVIMENTA_CAIXA },
       }),
       prisma.cashInjection.aggregate({
         _sum: { amount: true },
@@ -71,7 +72,7 @@ export async function GET(req: Request) {
     prisma.payment.findMany({
       where: {
         receivedAt: { gte: startDate, lte: endDate },
-        order: { status: { not: "cancelled" } },
+        order: { status: { not: "cancelled" } }, ...MOVIMENTA_CAIXA,
       },
       select: {
         id: true, receivedAt: true, amount: true, paymentMethod: true,

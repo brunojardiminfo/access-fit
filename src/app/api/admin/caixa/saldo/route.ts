@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { MOVIMENTA_CAIXA } from "@/lib/credito";
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -15,7 +16,7 @@ export async function GET(req: Request) {
   const [receitas, todasDespesas, despesasEstoque, aportes, estoque, cadernoAberto] = await Promise.all([
     prisma.payment.aggregate({
       _sum: { amount: true },
-      where: { order: { status: { not: "cancelled" } }, ...(dateFilter ? { receivedAt: dateFilter } : {}) },
+      where: { order: { status: { not: "cancelled" } }, ...MOVIMENTA_CAIXA, ...(dateFilter ? { receivedAt: dateFilter } : {}) },
     }),
     // Todas as despesas (incluindo estoque)
     prisma.expense.aggregate({

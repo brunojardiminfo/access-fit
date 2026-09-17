@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { MOVIMENTA_CAIXA } from "@/lib/credito";
 import { redirect } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
 
@@ -19,7 +20,7 @@ export default async function CaixaPage() {
   const [payments30, expenses30, paymentsMonth, expensesMonth,
     allPaymentsReceived, allExpenses, cadernoAberto, cartaoFuturo] = await Promise.all([
     prisma.payment.findMany({
-      where: { order: { status: { not: "cancelled" } }, receivedAt: { gte: start30 } },
+      where: { order: { status: { not: "cancelled" } }, ...MOVIMENTA_CAIXA, receivedAt: { gte: start30 } },
       select: { amount: true, receivedAt: true },
       orderBy: { receivedAt: "asc" },
     }),
@@ -28,9 +29,9 @@ export default async function CaixaPage() {
       select: { amount: true, date: true },
       orderBy: { date: "asc" },
     }),
-    prisma.payment.aggregate({ _sum: { amount: true }, where: { order: { status: { not: "cancelled" } }, receivedAt: { gte: startMonth } } }),
+    prisma.payment.aggregate({ _sum: { amount: true }, where: { order: { status: { not: "cancelled" } }, ...MOVIMENTA_CAIXA, receivedAt: { gte: startMonth } } }),
     prisma.expense.aggregate({ _sum: { amount: true }, where: { date: { gte: startMonth } } }),
-    prisma.payment.aggregate({ _sum: { amount: true }, where: { order: { status: { not: "cancelled" } } } }),
+    prisma.payment.aggregate({ _sum: { amount: true }, where: { order: { status: { not: "cancelled" } }, ...MOVIMENTA_CAIXA } }),
     prisma.expense.aggregate({ _sum: { amount: true } }),
     prisma.order.findMany({
       where: { paymentStatus: { not: "paid" }, status: { not: "cancelled" } },

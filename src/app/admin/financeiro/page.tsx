@@ -26,6 +26,8 @@ function mesLabel(key: string) {
   return `${["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"][Number(m) - 1]}/${y.slice(2)}`;
 }
 
+type Passivo = { total: number; clientes: number };
+
 type Expense = {
   id: string; date: string; description: string; amount: number;
   category: string; supplier?: { id: string; name: string } | null;
@@ -83,6 +85,19 @@ export default function FinanceiroPage() {
     }
     setLoading(false);
   }, [from, to]);
+
+  const [passivo, setPassivo] = useState<Passivo | null>(null);
+
+  // Quanto a loja deve em créditos. Não é despesa nem venda: é dívida com as
+  // clientes, e fica ao lado do resto para não virar surpresa.
+  useEffect(() => {
+    let vivo = true;
+    fetch("/api/admin/creditos")
+      .then(r => r.json())
+      .then(d => { if (vivo) setPassivo(d); })
+      .catch(() => null);
+    return () => { vivo = false; };
+  }, []);
 
   useEffect(() => { load(); }, [load]);
 
@@ -169,6 +184,14 @@ export default function FinanceiroPage() {
           { emoji: "🛍️", label: "Vendeu", value: fmt(vendas), sub: `${qtdPedidos} pedido${qtdPedidos === 1 ? "" : "s"}`, cor: "#1a8a2a" },
           { emoji: "📤", label: "Gastou", value: fmt(despesasTotal), sub: "Despesas lançadas", cor: "#c04040" },
           { emoji: "⚖️", label: "Sobrou", value: fmt(saldoPeriodo), sub: "Vendas menos gastos", cor: saldoPeriodo >= 0 ? "#1a8a2a" : "#c04040" },
+          {
+            emoji: "🎟️", label: "Créditos a usar",
+            value: passivo ? fmt(passivo.total) : "—",
+            sub: passivo
+              ? `${passivo.clientes} cliente${passivo.clientes === 1 ? "" : "s"} com saldo`
+              : "Carregando",
+            cor: "#8a1ab8",
+          },
           {
             emoji: "📈", label: "Lucro nas peças",
             value: hideProfit ? "•••" : lucro ? fmt(lucro.lucro) : "—",
