@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { MOVIMENTA_CAIXA } from "@/lib/credito";
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -25,7 +26,7 @@ export async function GET(req: Request) {
           _sum: { amount: true },
           where: {
             receivedAt: { gte: inicio, lte: fim },
-            order: { status: { not: "cancelled" } },
+            order: { status: { not: "cancelled" } }, ...MOVIMENTA_CAIXA,
           },
         }),
         // Despesas do mês

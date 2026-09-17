@@ -4,9 +4,11 @@ import { redirect } from "next/navigation";
 import { formatCurrency, parseJson } from "@/lib/utils";
 import Link from "next/link";
 import { perfilDaCliente } from "@/lib/crm/perfil";
+import { extratoDaCliente, MOTIVOS_DE_ENTRADA } from "@/lib/credito";
 import { ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from "@/lib/orderStatus";
 import Historico from "./Historico";
 import Etiquetas from "./Etiquetas";
+import Credito from "./Credito";
 
 export const dynamic = "force-dynamic";
 
@@ -46,8 +48,9 @@ export default async function ClientePerfilPage({ params }: { params: Promise<{ 
 
   const digitos = (cliente.phone || "").replace(/\D/g, "").slice(-8);
 
-  const [perfil, notas, tarefas, todasTags, devolucoes, indicadas, sacolas, espera] = await Promise.all([
+  const [perfil, credito, notas, tarefas, todasTags, devolucoes, indicadas, sacolas, espera] = await Promise.all([
     perfilDaCliente(id),
+    extratoDaCliente(id),
     prisma.customerNote.findMany({ where: { userId: id }, orderBy: { createdAt: "desc" }, take: 100 }),
     prisma.crmTask.findMany({ where: { userId: id, status: { in: ["aberta", "adiada"] } }, orderBy: { priority: "desc" } }),
     prisma.customerTag.findMany({ orderBy: [{ auto: "desc" }, { name: "asc" }] }),
@@ -64,6 +67,13 @@ export default async function ClientePerfilPage({ params }: { params: Promise<{ 
   const casaTelefone = (t: string | null) => !!digitos && (t || "").replace(/\D/g, "").slice(-8) === digitos;
   const minhasSacolas = sacolas.filter(s => casaTelefone(s.phone));
   const minhaEspera = espera.filter(w => casaTelefone(w.phone));
+
+  // Só o caderno: é o que o abatimento de crédito quita.
+  const dividaNoCaderno = Math.round(
+    cliente.orders
+      .filter(o => o.paymentMethod === "caderno" && o.paymentStatus !== "paid" && o.status !== "cancelled")
+      .reduce((s, o) => s + (o.total - o.amountPaid), 0) * 100,
+  ) / 100;
 
   const tryOn = cliente.orders.filter(o => o.status === "try-on").length;
   const endereco = cliente.addresses[0];
@@ -154,6 +164,9 @@ export default async function ClientePerfilPage({ params }: { params: Promise<{ 
           },
           { emoji: "👗", label: "Home Try-On", value: String(tryOn) },
           { emoji: "🔄", label: "Trocas / devoluções", value: `${perfil.trocas} / ${perfil.devolucoes}` },
+          ...(credito.saldo > 0.005
+            ? [{ emoji: "🎟️", label: "Crédito disponível", value: formatCurrency(credito.saldo) }]
+            : []),
         ].map(k => (
           <div key={k.label} style={{ ...CARTAO, borderColor: k.warn ? "rgba(184,137,26,0.35)" : "rgba(140,100,20,0.1)", padding: "0.875rem 1rem" }}>
             <div style={{ fontSize: "1.1rem", marginBottom: "0.25rem" }}>{k.emoji}</div>
@@ -252,6 +265,18 @@ export default async function ClientePerfilPage({ params }: { params: Promise<{ 
 
         {/* ── Coluna lateral ── */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem", minWidth: 0 }}>
+
+          <Credito
+            userId={cliente.id}
+            saldo={credito.saldo}
+            motivos={[...MOTIVOS_DE_ENTRADA]}
+            dividaNoCaderno={dividaNoCaderno}
+            lancamentos={credito.lancamentos.map(l => ({
+              id: l.id, amount: l.amount, kind: l.kind, rotulo: l.rotulo,
+              note: l.note, authorName: l.authorName,
+              createdAt: l.createdAt.toISOString(),
+            }))}
+          />
 
           <Bloco titulo="O que ela compra">
             {perfil.pecas === 0 ? (
