@@ -33,6 +33,8 @@ export default function NovoPedidoPage() {
   const [orderStatus, setOrderStatus] = useState("delivered");
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [paymentStatus, setPaymentStatus] = useState("paid");
+  const [saldoCredito, setSaldoCredito] = useState(0);
+  const [creditoUsar, setCreditoUsar] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [installments, setInstallments] = useState(1);
@@ -74,6 +76,23 @@ export default function NovoPedidoPage() {
       .catch(() => {});
   }, [selectedCustomer, paymentMethod, date, isNewCustomer, dismissedOrderId]);
 
+  // Saldo de crédito da cliente escolhida, para oferecer o abatimento na venda.
+  useEffect(() => {
+    const id = isNewCustomer ? null : selectedCustomer?.id;
+    let vivo = true;
+    // Sem cliente escolhida o saldo é zerado no retorno da busca, e não no
+    // corpo do efeito: setState síncrono aqui dispara re-render em cascata.
+    (id
+      ? fetch(`/api/admin/creditos?userId=${id}`).then(r => r.json()).catch(() => null)
+      : Promise.resolve(null)
+    ).then(d => {
+      if (!vivo) return;
+      setSaldoCredito(Number(d?.saldo) || 0);
+      if (!d) setCreditoUsar("");
+    });
+    return () => { vivo = false; };
+  }, [selectedCustomer, isNewCustomer]);
+
   useEffect(() => {
     if (!search) { setFiltered([]); return; }
     setFiltered(customers.filter(c => c.name.toLowerCase().includes(search.toLowerCase())).slice(0, 8));
@@ -88,7 +107,12 @@ export default function NovoPedidoPage() {
   );
   const totalFinal = Math.round((subtotal - descontoValor) * 100) / 100;
   const paid = parseFloat(amountPaid) || 0;
-  const saldo = paymentStatus !== "paid" ? totalFinal - paid : 0;
+  // O crédito não é desconto: ele não muda o total do pedido, só reduz o que
+  // ela precisa pagar agora.
+  const creditoPedido = parseFloat((creditoUsar || "").replace(",", ".")) || 0;
+  const creditoAplicado = Math.max(0, Math.min(creditoPedido, saldoCredito, totalFinal));
+  const aReceber = Math.round((totalFinal - creditoAplicado) * 100) / 100;
+  const saldo = paymentStatus !== "paid" ? aReceber - paid : 0;
 
   const addItem = () => {
     setItems(p => [...p, { description: "", price: 0, quantity: 1 }]);
@@ -164,6 +188,13 @@ export default function NovoPedidoPage() {
     if (items.some(i => coresDoProduto(i.product).length > 0 && !i.color)) { setError("Selecione a cor de todos os itens."); return; }
 
     setSaving(true);
+
+    // O dinheiro que ela entregou agora. O crédito entra depois, como um
+    // segundo pagamento, porque precisa do pedido já existindo.
+    const emDinheiro = orderStatus === "try-on"
+      ? 0
+      : (paymentStatus === "paid" ? aReceber : paid);
+
     const res = await fetch("/api/admin/pedidos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -172,12 +203,37 @@ export default function NovoPedidoPage() {
         newCustomer: isNewCustomer ? newCustomer : null,
         items, status: orderStatus,
         paymentMethod: orderStatus === "try-on" ? "pix" : paymentMethod,
-        paymentStatus: orderStatus === "try-on" ? "pending" : paymentStatus,
-        amountPaid: orderStatus === "try-on" ? 0 : (paymentStatus === "paid" ? totalFinal : paid),
+        paymentStatus: orderStatus === "try-on"
+          ? "pending"
+          : emDinheiro >= totalFinal - 0.01 ? "paid" : emDinheiro > 0 ? "partial" : "pending",
+        amountPaid: emDinheiro,
         discount: descontoValor,
         notes, createdAt: date, dueDate: dueDate || null, installments,
       }),
     });
+
+    // Crédito aplicado logo em seguida. Se falhar, o pedido já existe e a tela
+    // avisa em vez de sumir com a venda — refazer o pedido seria pior.
+    if (res.ok && creditoAplicado > 0.005 && selectedCustomer) {
+      const pedido = await res.json().catch(() => null);
+      if (pedido?.id) {
+        const rc = await fetch("/api/admin/creditos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            acao: "usar", userId: selectedCustomer.id,
+            orderId: pedido.id, valor: creditoAplicado,
+          }),
+        });
+        if (!rc.ok) {
+          const d = await rc.json().catch(() => ({}));
+          setSaving(false);
+          setError(`Pedido salvo, mas o crédito não foi aplicado: ${d.error || "erro"}. Aplique pela ficha da cliente.`);
+          return;
+        }
+      }
+    }
+
     setSaving(false);
     if (res.ok) {
       router.push("/admin/pedidos");
@@ -506,6 +562,30 @@ export default function NovoPedidoPage() {
                     <option value="caderno">Caderno</option>
                   </select>
                 </div>
+                {saldoCredito > 0.005 && orderStatus !== "try-on" && (
+                  <div style={{ gridColumn: "1 / -1", backgroundColor: "#f4f0fa", border: "1px solid rgba(138,26,184,0.25)", borderRadius: "0.625rem", padding: "0.75rem 0.875rem" }}>
+                    <label style={{ ...label, color: "#6a1a90" }}>
+                      🎟️ Ela tem {saldoCredito.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} de crédito
+                    </label>
+                    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+                      <input style={{ ...inp, width: 130 }} type="number" min="0" step="0.01" placeholder="0,00"
+                        value={creditoUsar} onChange={e => setCreditoUsar(e.target.value)} aria-label="Crédito a usar" />
+                      <button type="button"
+                        onClick={() => setCreditoUsar(String(Math.min(saldoCredito, totalFinal)))}
+                        style={{ background: "none", border: 0, color: "#8a1ab8", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer" }}>
+                        usar o máximo
+                      </button>
+                      {creditoAplicado > 0.005 && (
+                        <span style={{ fontSize: "0.78rem", color: "#6a1a90" }}>
+                          a receber agora: <strong>{aReceber.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong>
+                        </span>
+                      )}
+                    </div>
+                    <p style={{ fontSize: "0.7rem", color: "#9a8060", marginTop: "0.35rem" }}>
+                      O pedido continua valendo {totalFinal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} — o crédito é forma de pagamento, não desconto.
+                    </p>
+                  </div>
+                )}
                 <div>
                   <label style={label}>Status</label>
                   <select style={inp} value={paymentStatus} onChange={e => { setPaymentStatus(e.target.value); if (e.target.value === "paid") setAmountPaid(""); }}>
@@ -517,7 +597,7 @@ export default function NovoPedidoPage() {
                 {paymentMethod === "link" && paymentStatus !== "paid" && (
                   <div style={{ gridColumn: "1 / -1" }}>
                     <label style={label}>💰 Valor Recebido (com desconto da operadora)</label>
-                    <input style={inp} type="number" min="0" step="0.01" placeholder={`Ex: ${totalFinal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} value={amountPaid}
+                    <input style={inp} type="number" min="0" step="0.01" placeholder={`Ex: ${aReceber.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} value={amountPaid}
                       onChange={e => setAmountPaid(e.target.value)} />
                   </div>
                 )}
