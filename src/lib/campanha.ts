@@ -14,7 +14,9 @@
  * Quem decide se o desconto sai é a fase — no teaser não sai.
  */
 export const CAMPANHA = {
-  ligada: true,
+  // Desligada: o Mês do Consumidor saiu do ar. Para a próxima campanha, troque
+  // nome, datas e regras aqui e volte para `true` — o resto do arquivo serve.
+  ligada: false,
   nome: "Mês do Consumidor",
   // Fuso de Brasília explícito: o servidor roda em UTC, e sem o -03:00 a
   // campanha começaria às 21h do dia anterior
@@ -54,9 +56,9 @@ export function diaDeInicio(): string {
 export const TETO_PROGRESSIVO = 20;
 
 /**
- * Desconto progressivo pela quantidade de peças na sacola: 1 peça 10%,
- * 2 peças 20%, 3 ou mais 30%. Função pura — a mesma conta roda no
- * carrinho e no servidor, para o valor cobrado nunca divergir do exibido.
+ * Desconto progressivo pela quantidade de peças na sacola, lido de `regras`.
+ * Função pura — a mesma conta roda no carrinho e no servidor, para o valor
+ * cobrado nunca divergir do exibido.
  */
 export function descontoProgressivo(qtdPecas: number): number {
   if (qtdPecas < 1) return 0;
