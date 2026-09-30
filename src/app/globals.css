@@ -119,3 +119,84 @@ a, button { -webkit-tap-highlight-color: transparent; transition: opacity 0.15s,
   html, body { font-size: 13px; }
   input, textarea, select { font-size: 16px !important; }
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Movimento
+   ───────────────────────────────────────────────────────────────────────────
+   Tudo em CSS, de propósito: a cliente chega do Instagram, no celular, no 4G,
+   e uma biblioteca de animação somaria peso em toda página para entregar o que
+   o navegador já faz de graça.
+
+   As animações aqui servem para responder "meu clique funcionou?" e "o que eu
+   estou olhando?". Nada que apareça ao rolar a página: impressiona na primeira
+   visita e irrita na quinta, e ela volta.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+@keyframes surgir {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Entrada dos cards da vitrine. O atraso vem do índice, via --atraso, para os
+   cards entrarem em cascata em vez de todos de uma vez. Trava em 8 para uma
+   vitrine grande não deixar a última peça esperando meio segundo. */
+.surgir {
+  animation: surgir 0.4s ease-out both;
+  animation-delay: calc(var(--atraso, 0) * 45ms);
+}
+
+@keyframes pulso-sacola {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.35); }
+  70%  { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+.pulso-sacola { animation: pulso-sacola 0.45s ease-out; }
+
+/* Esqueleto: o contorno do que vem, enquanto a página monta no servidor. Não
+   deixa mais rápido — deixa parecer, que no 4G vale mais. */
+@keyframes respirar {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+.esqueleto {
+  background: linear-gradient(90deg, #F0E8D0 0%, #F7F1E2 50%, #F0E8D0 100%);
+  animation: respirar 1.4s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+/* Foto do produto: aproxima devagar no hover. Só no que tem ponteiro — no
+   celular não existe hover, e o zoom ficaria preso depois do toque. */
+@media (hover: hover) {
+  .foto-zoom { overflow: hidden; }
+  .foto-zoom img { transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1); }
+  .foto-zoom:hover img { transform: scale(1.06); }
+}
+
+/* Troca de foto na galeria: fade em vez de corte seco. */
+@keyframes aparecer { from { opacity: 0; } to { opacity: 1; } }
+.troca-suave { animation: aparecer 0.28s ease-out; }
+
+/* Botão afunda ao ser apertado — é o que dá sensação de aplicativo. */
+button:not(:disabled):active, a[role="button"]:active { transform: scale(0.97); }
+button, a[role="button"] { transition: transform 0.08s ease-out, opacity 0.15s, color 0.15s, background-color 0.15s; }
+
+/* Enjoo de movimento não é preferência de design: quem desligou no sistema
+   operacional não vê nada disso. Vale para tudo, inclusive o que vier depois. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .foto-zoom:hover img { transform: none !important; }
+  button:not(:disabled):active { transform: none !important; }
+}
+
+/* O card sobe no hover. Era feito em JS, no onMouseEnter de cada card; em CSS
+   o navegador resolve sozinho e o card não re-renderiza a cada passada do mouse. */
+.cartao-peca { transition: transform 0.2s ease-out, box-shadow 0.2s ease-out; }
+@media (hover: hover) {
+  .cartao-peca:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+}

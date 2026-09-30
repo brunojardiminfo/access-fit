@@ -191,9 +191,12 @@ export default function ProductPageClient() {
           {/* Galeria */}
           <div>
             <div onClick={() => images[selectedImage] && setLightbox(true)}
+              className="foto-zoom"
               style={{ borderRadius: "1.25rem", overflow: "hidden", backgroundColor: "#F0E8D0", aspectRatio: "3/4", border: "1px solid rgba(140,100,20,0.1)", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", cursor: images[selectedImage] ? "zoom-in" : "default", position: "relative" }}>
               {images[selectedImage] ? (
-                <img src={images[selectedImage]} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                // A key troca o elemento a cada foto, e é isso que faz a
+                // animação de entrada rodar de novo em vez de só na primeira.
+                <img key={selectedImage} className="troca-suave" src={images[selectedImage]} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
               ) : (
                 <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#b8891a", fontSize: "0.875rem", opacity: 0.5 }}>
                   Foto em breve

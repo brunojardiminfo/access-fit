@@ -205,8 +205,8 @@ export default async function ProdutosPage({
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.25rem" }} className="products-grid">
-              {products.map(product => (
-                <ProductCard key={product.id} product={product as any} />
+              {products.map((product, i) => (
+                <ProductCard key={product.id} product={product as any} indice={i} />
               ))}
             </div>
           )}

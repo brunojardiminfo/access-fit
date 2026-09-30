@@ -80,8 +80,8 @@ export default function HomeClient({
           </p>
           {saleProducts.length > 0 ? (
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? "1rem" : "1.25rem" }}>
-              {saleProducts.map(product => (
-                <ProductCard key={product.id} product={product} />
+              {saleProducts.map((product, i) => (
+                <ProductCard key={product.id} product={product} indice={i} />
               ))}
             </div>
           ) : null}
@@ -157,8 +157,8 @@ export default function HomeClient({
             As peças mais procuradas da coleção
           </p>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? "1rem" : "1.25rem" }}>
-            {featuredProducts.map(product => (
-              <ProductCard key={product.id} product={product} />
+            {featuredProducts.map((product, i) => (
+              <ProductCard key={product.id} product={product} indice={i} />
             ))}
           </div>
         </div>
