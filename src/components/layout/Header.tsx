@@ -29,6 +29,24 @@ export default function Header() {
   const [isMobile, setIsMobile] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
+  // A sacola pulsa quando o número muda. É a confirmação de que o clique
+  // funcionou: sem isso o site fica mudo depois de adicionar, e dúvida no meio
+  // da compra custa venda. Guarda o valor anterior num ref para não pulsar na
+  // primeira pintura, quando o carrinho salvo é lido do navegador.
+  const quantidade = count();
+  const anterior = useRef<number | null>(null);
+  const [pulsando, setPulsando] = useState(false);
+
+  useEffect(() => {
+    if (anterior.current !== null && quantidade > anterior.current) {
+      setPulsando(true);
+      const t = setTimeout(() => setPulsando(false), 500);
+      anterior.current = quantidade;
+      return () => clearTimeout(t);
+    }
+    anterior.current = quantidade;
+  }, [quantidade]);
+
   useEffect(() => {
     setMounted(true);
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -163,10 +181,13 @@ export default function Header() {
             {/* Cart */}
             <button onClick={openCart}
               style={{ background: "none", border: "none", cursor: "pointer", padding: "10px", color: "#7a6030", position: "relative", display: "flex", alignItems: "center", borderRadius: "0.5rem" }}>
-              <ShoppingBag size={20} />
-              {mounted && count() > 0 && (
-                <span style={{ position: "absolute", top: 4, right: 4, backgroundColor: "#b8891a", color: "#fff", fontSize: "0.6rem", fontWeight: 900, borderRadius: "999px", minWidth: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
-                  {count()}
+              <span className={pulsando ? "pulso-sacola" : undefined} style={{ display: "flex" }}>
+                <ShoppingBag size={20} />
+              </span>
+              {mounted && quantidade > 0 && (
+                <span className={pulsando ? "pulso-sacola" : undefined}
+                  style={{ position: "absolute", top: 4, right: 4, backgroundColor: "#b8891a", color: "#fff", fontSize: "0.6rem", fontWeight: 900, borderRadius: "999px", minWidth: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
+                  {quantidade}
                 </span>
               )}
             </button>
