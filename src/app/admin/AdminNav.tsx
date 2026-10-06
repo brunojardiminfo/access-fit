@@ -11,6 +11,7 @@ const ALL_LINKS = [
   { href: "/admin",             label: "Início",      emoji: "🏠" },
   { href: "/admin/pedidos",     label: "Pedidos",     emoji: "📦" },
   { href: "/admin/produtos",    label: "Produtos",    emoji: "👗" },
+  { href: "/admin/colecoes",    label: "Coleções",    emoji: "✨" },
   { href: "/admin/caderno",     label: "Caderno",     emoji: "📒" },
   { href: "/admin/fila",        label: "Fila de hoje", emoji: "🎯" },
   { href: "/admin/clientes",    label: "Clientes",    emoji: "👥" },
@@ -113,6 +114,11 @@ export default function AdminNav({ adminRole }: { adminRole?: string | null }) {
         display: "flex",
         boxShadow: "0 -2px 16px rgba(184,137,26,0.1)",
         paddingBottom: "env(safe-area-inset-bottom)",
+        // Os itens somados passam da largura do celular (592px numa tela de
+        // 390), entao sem isto os ultimos ficavam fora da tela e sem jeito de
+        // chegar neles. Com overflow automatico, a barra rola de lado.
+        overflowX: "auto",
+        WebkitOverflowScrolling: "touch",
       }}>
         {links.map(l => (
           <a key={l.href} href={l.href} style={{
