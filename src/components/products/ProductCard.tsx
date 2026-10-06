@@ -16,7 +16,11 @@ type Product = {
   category: { name: string };
 };
 
-export default function ProductCard({ product }: { product: Product }) {
+/**
+ * `indice` só serve para a entrada em cascata da vitrine: cada card espera um
+ * pouquinho mais que o anterior. Opcional — fora da vitrine o card entra direto.
+ */
+export default function ProductCard({ product, indice = 0 }: { product: Product; indice?: number }) {
   const { addItem, openCart } = useCart();
   const images = parseJson<string[]>(product.images, []);
   const sizes  = parseJson<string[]>(product.sizes, []);
@@ -41,12 +45,17 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <Link href={`/produtos/${product.slug}`} style={{ textDecoration: "none", display: "block" }}>
-      <div style={{ borderRadius: "1rem", overflow: "hidden", backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.1)", boxShadow: "0 2px 8px rgba(0,0,0,0.05)", transition: "transform 0.2s, box-shadow 0.2s" }}
-        onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.1)"; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)"; }}>
+      <div className="surgir cartao-peca"
+        style={{
+          borderRadius: "1rem", overflow: "hidden", backgroundColor: "#fff",
+          border: "1px solid rgba(140,100,20,0.1)", boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+          // Trava em 8: numa vitrine grande, a última peça não pode ficar meio
+          // segundo esperando a vez de aparecer.
+          ["--atraso" as string]: Math.min(indice, 8),
+        }}>
 
         {/* Foto */}
-        <div style={{ position: "relative", aspectRatio: "3/4", backgroundColor: "#F0E8D0", overflow: "hidden" }}>
+        <div className="foto-zoom" style={{ position: "relative", aspectRatio: "3/4", backgroundColor: "#F0E8D0", overflow: "hidden" }}>
           {images[0] ? (
             <img src={images[0]} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           ) : (

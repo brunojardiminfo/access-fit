@@ -95,6 +95,37 @@ model Category {
   products Product[]
 }
 
+/// Universo de marca (ESSENCE, POWER...) ou capsula sazonal (SOL DE FLORIPA).
+/// Convive com Category: ver src/lib/colecoes.ts.
+model Collection {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  tagline     String? // "Menos excesso. Mais essencia."
+  description String?
+  image       String?
+  ordem       Int      @default(0) // Ordem de exibicao na loja
+  sazonal     Boolean  @default(false) // Capsula de temporada, nao universo permanente
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products ProductCollection[]
+}
+
+/// Uma peca pode estar em varias colecoes (um universo + uma capsula).
+model ProductCollection {
+  productId    String
+  collectionId String
+  createdAt    DateTime @default(now())
+
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@id([productId, collectionId])
+  @@index([collectionId])
+}
+
 model Product {
   id                       String    @id @default(cuid())
   name                     String
@@ -118,16 +149,18 @@ model Product {
   onSale                   Boolean   @default(false)
   isConjunto               Boolean   @default(false)
   sellComponentsSeparately Boolean   @default(false)
+  papel                    String? // Papel estrategico dentro da colecao. Ver PAPEIS em src/lib/colecoes.ts
   active                   Boolean   @default(true)
   categoryId               String
   createdAt                DateTime  @default(now())
   updatedAt                DateTime  @updatedAt
 
-  category           Category       @relation(fields: [categoryId], references: [id])
+  category           Category            @relation(fields: [categoryId], references: [id])
+  collections        ProductCollection[]
   orderItems         OrderItem[]
   conjuntoItems      ConjuntoItem[]
   waitlist           Waitlist[]
-  returnReplacements Return[]       @relation("ReturnReplacement")
+  returnReplacements Return[]            @relation("ReturnReplacement")
 }
 
 model ConjuntoItem {
