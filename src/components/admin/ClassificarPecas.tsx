@@ -2,17 +2,19 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Search, CheckSquare, Square } from "lucide-react";
+import { Save, Search, CheckSquare, Square, Wand2 } from "lucide-react";
 import { PAPEIS, papelCor } from "@/lib/colecoes";
+import { sugerirParaPeca } from "@/lib/sugestaoColecao";
 
 type Peca = {
   id: string;
   name: string;
   papel: string | null;
   categoria: string;
+  cores: string[];
   colecaoIds: string[];
 };
-type Colecao = { id: string; name: string; sazonal: boolean };
+type Colecao = { id: string; name: string; slug: string; sazonal: boolean };
 
 type Estado = Record<string, { colecaoIds: string[]; papel: string | null }>;
 
@@ -53,6 +55,8 @@ export default function ClassificarPecas({
   const [selecionadas, setSelecionadas] = useState<Set<string>>(new Set());
   const [salvando, setSalvando] = useState(false);
   const [msg, setMsg] = useState("");
+  /** Por que o palpite sugeriu o que sugeriu. Fica na tela para dar o que discordar. */
+  const [motivos, setMotivos] = useState<Record<string, string>>({});
 
   const alteradas = useMemo(
     () =>
@@ -136,6 +140,44 @@ export default function ClassificarPecas({
     });
   };
 
+  const porSlug = useMemo(
+    () => Object.fromEntries(colecoes.map(c => [c.slug, c.id])),
+    [colecoes],
+  );
+
+  /**
+   * Preenche o palpite SÓ nas peças que ainda não estão em coleção nenhuma.
+   * Nunca por cima de curadoria já feita: trabalho manual não é sobrescrito
+   * por heurística. E não grava nada — quem grava é o botão de salvar.
+   */
+  const sugerir = () => {
+    // Calcula fora do setEstado: contar dentro do updater dava número errado,
+    // porque o updater roda depois (e duas vezes em dev), enquanto a mensagem
+    // era montada na hora — e saía sempre zero.
+    const novoEstado: Estado = { ...estado };
+    const novosMotivos: Record<string, string> = {};
+    let aplicadas = 0;
+    let semPalpite = 0;
+
+    for (const p of pecas) {
+      if (novoEstado[p.id].colecaoIds.length > 0) continue; // já classificada à mão
+      const s = sugerirParaPeca({ name: p.name, categoria: p.categoria, cores: p.cores });
+      const colecaoId = s.slug ? porSlug[s.slug] : null;
+      novosMotivos[p.id] = s.motivo;
+      if (!colecaoId) { semPalpite++; continue; }
+      novoEstado[p.id] = { colecaoIds: [colecaoId], papel: novoEstado[p.id].papel ?? s.papel };
+      aplicadas++;
+    }
+
+    setEstado(novoEstado);
+    setMotivos(m => ({ ...m, ...novosMotivos }));
+    setMsg(
+      aplicadas
+        ? `${aplicadas} palpite(s) preenchido(s)${semPalpite ? `, ${semPalpite} sem palpite possível` : ""}. Confira e salve.`
+        : "Nada para palpitar — ou já está tudo classificado.",
+    );
+  };
+
   const salvar = async () => {
     if (!alteradas.length) return;
     setSalvando(true);
@@ -156,6 +198,7 @@ export default function ClassificarPecas({
     const d = await res.json();
     setMsg(`${d.pecas} peça(s) salva(s).`);
     setSelecionadas(new Set());
+    setMotivos({});
     router.refresh();
   };
 
@@ -229,6 +272,10 @@ export default function ClassificarPecas({
           <span style={{ color: "#9a8060", fontSize: "0.82rem" }}>
             {selecionadas.size ? `${selecionadas.size} selecionada(s)` : "nenhuma selecionada"}
           </span>
+          <button onClick={sugerir} title="Preenche um palpite nas peças ainda sem coleção, pela cor, categoria e nome"
+            style={{ marginLeft: "auto", backgroundColor: "transparent", border: "1px solid rgba(140,100,20,0.35)", color: "#b8891a", fontWeight: 700, fontSize: "0.8rem", borderRadius: "0.5rem", padding: "0.4rem 0.75rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <Wand2 size={14} /> Dar um palpite pelas cores
+          </button>
         </div>
         {selecionadas.size > 0 && (
           <div style={{ display: "flex", gap: "0.625rem", flexWrap: "wrap", alignItems: "center", marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid rgba(140,100,20,0.12)" }}>
@@ -280,6 +327,14 @@ export default function ClassificarPecas({
                     <div style={{ display: "flex", alignItems: "baseline", gap: "0.5rem", flexWrap: "wrap" }}>
                       <p style={{ color: "#1a1510", fontWeight: 700, fontSize: "0.9rem" }}>{p.name}</p>
                       <span style={{ color: "#9a8060", fontSize: "0.72rem" }}>{p.categoria}</span>
+                      {p.cores.length > 0 && (
+                        <span style={{ color: "#b8a080", fontSize: "0.72rem" }}>{p.cores.join(", ")}</span>
+                      )}
+                      {motivos[p.id] && (
+                        <span style={{ color: "#b8891a", fontSize: "0.7rem", fontWeight: 700, backgroundColor: "rgba(184,137,26,0.1)", padding: "1px 6px", borderRadius: 999 }}>
+                          palpite: {motivos[p.id]}
+                        </span>
+                      )}
                     </div>
 
                     <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap", marginTop: "0.5rem" }}>

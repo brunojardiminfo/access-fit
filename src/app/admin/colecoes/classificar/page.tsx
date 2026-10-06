@@ -14,6 +14,7 @@ export default async function ClassificarPage() {
         id: true,
         name: true,
         papel: true,
+        colors: true,
         category: { select: { name: true } },
         collections: { select: { collectionId: true } },
       },
@@ -21,16 +22,28 @@ export default async function ClassificarPage() {
     }),
     prisma.collection.findMany({
       where: { active: true },
-      select: { id: true, name: true, sazonal: true },
+      select: { id: true, name: true, slug: true, sazonal: true },
       orderBy: [{ sazonal: "asc" }, { ordem: "asc" }, { name: "asc" }],
     }),
   ]);
+
+  // colors é texto JSON digitado no admin; peça com campo torto não pode
+  // derrubar a tela inteira, então cai em lista vazia e segue.
+  const lerCores = (bruto: string): string[] => {
+    try {
+      const v = JSON.parse(bruto);
+      return Array.isArray(v) ? v.filter(x => typeof x === "string") : [];
+    } catch {
+      return [];
+    }
+  };
 
   const pecas = produtos.map(p => ({
     id: p.id,
     name: p.name,
     papel: p.papel,
     categoria: p.category.name,
+    cores: lerCores(p.colors),
     colecaoIds: p.collections.map(c => c.collectionId),
   }));
 
