@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Search, CheckSquare, Square, Wand2 } from "lucide-react";
+import { Save, Search, CheckSquare, Square, Wand2, Crown } from "lucide-react";
 import { PAPEIS, papelCor } from "@/lib/colecoes";
 import { sugerirParaPeca } from "@/lib/sugestaoColecao";
 
@@ -178,6 +178,61 @@ export default function ClassificarPecas({
     );
   };
 
+  /**
+   * Pede ao servidor quem mais vendeu em cada coleção e marca essas como hero.
+   * Usa a atribuição que está NA TELA, não a salva, para o resultado bater com
+   * o que a pessoa está vendo. Tira o hero antigo antes de pôr o novo, senão
+   * clicar duas vezes deixaria dois heroes na mesma coleção.
+   */
+  const escolherHeroes = async () => {
+    const atribuicoes: Record<string, string[]> = {};
+    for (const p of pecas) {
+      const ids = estado[p.id].colecaoIds;
+      if (ids.length) atribuicoes[p.id] = ids;
+    }
+    if (!Object.keys(atribuicoes).length) {
+      setMsg("Classifique as peças primeiro — sem coleção não há hero.");
+      return;
+    }
+
+    setSalvando(true);
+    setMsg("");
+    const res = await fetch("/api/admin/colecoes/heroes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ atribuicoes }),
+    });
+    setSalvando(false);
+    if (!res.ok) { setMsg((await res.json()).error || "Não deu."); return; }
+
+    const { heroes, semVenda } = await res.json() as {
+      heroes: Record<string, { productId: string; vendas: number; motivo: string }>;
+      semVenda?: string[];
+    };
+
+    const escolhidos = new Set(Object.values(heroes).map(h => h.productId));
+    const novoEstado: Estado = { ...estado };
+    const novosMotivos: Record<string, string> = {};
+
+    for (const p of pecas) {
+      const eHero = escolhidos.has(p.id);
+      const eraHero = novoEstado[p.id].papel === "hero";
+      if (eHero) novoEstado[p.id] = { ...novoEstado[p.id], papel: "hero" };
+      else if (eraHero) novoEstado[p.id] = { ...novoEstado[p.id], papel: null };
+    }
+    for (const h of Object.values(heroes)) novosMotivos[h.productId] = h.motivo;
+
+    setEstado(novoEstado);
+    setMotivos(m => ({ ...m, ...novosMotivos }));
+    const n = Object.keys(heroes).length;
+    const faltando = semVenda?.length ?? 0;
+    setMsg(
+      n
+        ? `${n} hero(s) escolhido(s) pelas vendas${faltando ? `, ${faltando} coleção(ões) sem venda nenhuma` : ""}. Confira e salve.`
+        : "Nenhuma coleção tem venda registrada ainda — escolha os heroes à mão.",
+    );
+  };
+
   const salvar = async () => {
     if (!alteradas.length) return;
     setSalvando(true);
@@ -272,10 +327,17 @@ export default function ClassificarPecas({
           <span style={{ color: "#9a8060", fontSize: "0.82rem" }}>
             {selecionadas.size ? `${selecionadas.size} selecionada(s)` : "nenhuma selecionada"}
           </span>
-          <button onClick={sugerir} title="Preenche um palpite nas peças ainda sem coleção, pela cor, categoria e nome"
-            style={{ marginLeft: "auto", backgroundColor: "transparent", border: "1px solid rgba(140,100,20,0.35)", color: "#b8891a", fontWeight: 700, fontSize: "0.8rem", borderRadius: "0.5rem", padding: "0.4rem 0.75rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.35rem" }}>
-            <Wand2 size={14} /> Dar um palpite pelas cores
-          </button>
+          <div style={{ marginLeft: "auto", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <button onClick={sugerir} title="Preenche um palpite nas peças ainda sem coleção, pela cor, categoria e nome"
+              style={{ backgroundColor: "transparent", border: "1px solid rgba(140,100,20,0.35)", color: "#b8891a", fontWeight: 700, fontSize: "0.8rem", borderRadius: "0.5rem", padding: "0.4rem 0.75rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+              <Wand2 size={14} /> Dar um palpite pelas cores
+            </button>
+            <button onClick={escolherHeroes} disabled={salvando}
+              title="Marca como hero a peça que mais vendeu em cada coleção"
+              style={{ backgroundColor: "transparent", border: "1px solid rgba(140,100,20,0.35)", color: "#b8891a", fontWeight: 700, fontSize: "0.8rem", borderRadius: "0.5rem", padding: "0.4rem 0.75rem", cursor: salvando ? "default" : "pointer", display: "flex", alignItems: "center", gap: "0.35rem", opacity: salvando ? 0.6 : 1 }}>
+              <Crown size={14} /> Escolher heroes pelas vendas
+            </button>
+          </div>
         </div>
         {selecionadas.size > 0 && (
           <div style={{ display: "flex", gap: "0.625rem", flexWrap: "wrap", alignItems: "center", marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid rgba(140,100,20,0.12)" }}>
