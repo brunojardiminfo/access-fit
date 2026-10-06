@@ -1,8 +1,27 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+
+type Navegacao = {
+  categorias: { name: string; slug: string }[];
+  colecoes: { name: string; slug: string }[];
+};
 
 export default function Footer() {
+  // As categorias eram escritas à mão aqui; criar uma no admin não a fazia
+  // aparecer no rodapé. Agora vêm do banco, junto das coleções.
+  const [nav, setNav] = useState<Navegacao>({ categorias: [], colecoes: [] });
+
+  useEffect(() => {
+    let vivo = true;
+    fetch("/api/navegacao")
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (vivo && d) setNav(d); })
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, []);
+
   return (
     <footer style={{ backgroundColor: "#1a1510", borderTop: "1px solid rgba(184,137,26,0.15)", color: "#9a8060" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1rem 1.5rem" }}>
@@ -29,16 +48,13 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Coleção */}
+          {/* Categorias — o que a peça é */}
           <div>
-            <h3 style={{ color: "#b8891a", fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "1rem" }}>Coleção</h3>
+            <h3 style={{ color: "#b8891a", fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "1rem" }}>Categorias</h3>
             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
               {[
                 { label: "Ver tudo", slug: "" },
-                { label: "Leggings", slug: "leggings" },
-                { label: "Tops", slug: "tops" },
-                { label: "Conjuntos", slug: "conjuntos" },
-                { label: "Shorts", slug: "shorts" },
+                ...nav.categorias.map(c => ({ label: c.name, slug: c.slug })),
               ].map(item => (
                 <li key={item.label}>
                   <Link href={item.slug ? `/produtos?categoria=${item.slug}` : "/produtos"}
@@ -51,6 +67,25 @@ export default function Footer() {
               ))}
             </ul>
           </div>
+
+          {/* Coleções — o que a peça conta */}
+          {nav.colecoes.length > 0 && (
+            <div>
+              <h3 style={{ color: "#b8891a", fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "1rem" }}>Coleções</h3>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                {[{ name: "Ver todas", slug: "" }, ...nav.colecoes].map(c => (
+                  <li key={c.slug || "todas"}>
+                    <Link href={c.slug ? `/colecoes/${c.slug}` : "/colecoes"}
+                      style={{ color: "#7a6a4a", fontSize: "0.85rem", textDecoration: "none" }}
+                      onMouseOver={e => (e.currentTarget.style.color = "#b8891a")}
+                      onMouseOut={e => (e.currentTarget.style.color = "#7a6a4a")}>
+                      {c.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Informações */}
           <div>

@@ -8,23 +8,36 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-const navLinks = [
-  { href: "/produtos", label: "Coleção" },
-  { href: "/produtos?categoria=leggings", label: "Leggings" },
-  { href: "/produtos?categoria=tops", label: "Tops" },
-  { href: "/produtos?categoria=conjuntos", label: "Conjuntos" },
-  { href: "/produtos?categoria=shorts", label: "Shorts" },
+/**
+ * O menu antes chamava de "Coleção" o link para /produtos, que é a lista
+ * filtrada por categoria — nunca foi coleção. Agora "Categorias" é o que é, e
+ * "Coleções" leva para os universos de verdade.
+ *
+ * As categorias também eram escritas à mão aqui: criar uma no admin não a
+ * fazia aparecer na loja. Agora vêm do banco.
+ */
+const LINKS_FIXOS = [
+  { href: "/produtos", label: "Categorias" },
   { href: "/sobre", label: "Sobre Nós" },
 ];
 
+type Navegacao = {
+  categorias: { name: string; slug: string }[];
+  colecoes: { name: string; slug: string }[];
+};
+
 export default function Header() {
   const { data: session } = useSession();
+  // As categorias e coleções vêm do banco; o menu nasce com os links fixos e
+  // completa quando a resposta chega. Coleção sem peça não vem, então o link
+  // só aparece quando há o que ver do outro lado.
   const { count, openCart } = useCart();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [nav, setNav] = useState<Navegacao>({ categorias: [], colecoes: [] });
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -54,6 +67,24 @@ export default function Header() {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  useEffect(() => {
+    let vivo = true;
+    fetch("/api/navegacao")
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (vivo && d) setNav(d); })
+      // Menu é enfeite perto do resto: se a busca falhar, os links fixos
+      // continuam de pé e a loja segue navegável.
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, []);
+
+  const navLinks = [
+    LINKS_FIXOS[0],
+    ...(nav.colecoes.length ? [{ href: "/colecoes", label: "Coleções" }] : []),
+    ...nav.categorias.map(c => ({ href: `/produtos?categoria=${c.slug}`, label: c.name })),
+    LINKS_FIXOS[1],
+  ];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,7 +123,10 @@ export default function Header() {
           </Link>
 
           {/* Nav desktop */}
-          <nav style={{ display: "flex", gap: "1.75rem", alignItems: "center" }} className="hide-mobile">
+          {/* Quebra em mais de uma linha em vez de empurrar item para fora da
+              tela. Como as categorias vêm do banco, o menu cresce sozinho
+              quando se cria uma nova — sem isso, a última sumiria calada. */}
+          <nav style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem 1.4rem", alignItems: "center", justifyContent: "flex-end", minWidth: 0 }} className="hide-mobile">
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href}
                 style={{ color: "#7a6030", fontSize: "0.85rem", fontWeight: 600, textDecoration: "none", letterSpacing: "0.02em" }}
