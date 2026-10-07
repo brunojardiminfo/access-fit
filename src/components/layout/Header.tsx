@@ -20,6 +20,9 @@ const LINKS_FIXOS = [
   { href: "/produtos", label: "Categorias" },
   { href: "/sobre", label: "Sobre Nós" },
 ];
+// Uma categoria por link deixava o topo com oito, nove itens e tirava o peso de
+// onde ele importa. As categorias continuam a um clique, no filtro de /produtos
+// e no rodapé — o topo guarda só as três portas de entrada.
 
 type Navegacao = {
   categorias: { name: string; slug: string }[];
@@ -81,8 +84,8 @@ export default function Header() {
 
   const navLinks = [
     LINKS_FIXOS[0],
+    // Coleção sem peça não entra: link que leva a página vazia é pior que link nenhum.
     ...(nav.colecoes.length ? [{ href: "/colecoes", label: "Coleções" }] : []),
-    ...nav.categorias.map(c => ({ href: `/produtos?categoria=${c.slug}`, label: c.name })),
     LINKS_FIXOS[1],
   ];
 
