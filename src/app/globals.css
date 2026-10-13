@@ -63,6 +63,18 @@ select option { background-color: #fff; color: var(--text-main); }
   animation: shimmer 4s linear infinite;
 }
 
+/* A peça da frente do hero respira. A animação mexe só no translateY de um
+   filho, e nunca no transform do cartão — o cartão já carrega a posição dele
+   na pilha, e animar os dois no mesmo lugar faria um apagar o outro. */
+@keyframes respirar-vitrine {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+.heroFrente > * { animation: respirar-vitrine 5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .heroFrente > * { animation: none; }
+}
+
 a, button { -webkit-tap-highlight-color: transparent; transition: opacity 0.15s, color 0.15s, background-color 0.15s; }
 
 /* Admin navigation */
