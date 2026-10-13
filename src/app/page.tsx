@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { avisoDoLancamentoAtivo } from "@/lib/lancamento";
 import HomeClient from "./HomeClient";
 import { saleWhere } from "@/lib/saleHelper";
 
@@ -46,6 +47,7 @@ export default async function HomePage() {
 
   return (
     <HomeClient
+      mostrarAviso={avisoDoLancamentoAtivo()}
       newArrivals={newArrivals}
       heroProducts={displayHeroProducts}
       featuredProducts={displayFeaturedProducts}
