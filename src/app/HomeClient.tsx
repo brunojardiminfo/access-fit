@@ -5,10 +5,12 @@ import Image from "next/image";
 import { useMobileView } from "@/hooks/useMediaQuery";
 import ProductCard from "@/components/products/ProductCard";
 import HeroCarousel from "./components/HeroCarousel";
+import AvisoLancamento from "./components/AvisoLancamento";
 
 interface HomeClientProps {
   newArrivals: any[];
   heroProducts: any[];
+  mostrarAviso?: boolean;
   featuredProducts: any[];
   saleProducts: any[];
   categories: any[];
@@ -18,6 +20,7 @@ interface HomeClientProps {
 export default function HomeClient({
   newArrivals,
   heroProducts,
+  mostrarAviso = false,
   featuredProducts,
   saleProducts,
   categories,
@@ -28,6 +31,8 @@ export default function HomeClient({
   return (
     <div style={{ backgroundColor: "#FAF6EE" }}>
       {/* HERO */}
+      {mostrarAviso && <AvisoLancamento />}
+
       <section style={{ background: "linear-gradient(160deg, #1a1510 0%, #2d2010 60%, #1a1510 100%)", padding: isMobile ? "1.5rem 1rem" : "4rem 1.5rem 4rem", position: "relative", overflow: "hidden", minHeight: isMobile ? "auto" : "85vh", display: "flex", alignItems: "center" }}>
         {/* Glow */}
         <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(184,137,26,0.12) 0%, transparent 65%)", pointerEvents: "none" }} />

@@ -12,6 +12,25 @@ type Produto = {
 
 const INTERVALO = 4500;
 
+/**
+ * Quantos vizinhos ficam visíveis atrás da peça da frente. Mais que dois não
+ * aparece e ainda custa desfoque — e desfoque em imagem grande é o que pesa
+ * numa vitrine como esta.
+ */
+const VIZINHOS = 2;
+
+/**
+ * Distância da peça i até a peça da frente, pelo caminho mais curto do laço.
+ * Sem isto, ao virar do último para o primeiro a pilha inteira atravessaria a
+ * tela de volta em vez de continuar girando para o mesmo lado.
+ */
+function distancia(i: number, atual: number, total: number) {
+  let d = i - atual;
+  if (d > total / 2) d -= total;
+  if (d < -total / 2) d += total;
+  return d;
+}
+
 export default function HeroCarousel({ produtos, isMobile }: { produtos: Produto[]; isMobile: boolean }) {
   const [atual, setAtual] = useState(0);
   const [pausado, setPausado] = useState(false);
@@ -46,16 +65,47 @@ export default function HeroCarousel({ produtos, isMobile }: { produtos: Produto
       }}
       style={{ position: "relative", width: "100%" }}
     >
-      {/* Palco */}
-      <div style={{ position: "relative", borderRadius: "1.25rem", overflow: "hidden", backgroundColor: "#2a2010", border: "1px solid rgba(184,137,26,0.2)", aspectRatio: isMobile ? "1/1.05" : "1/1.15", boxShadow: "0 18px 50px rgba(0,0,0,0.35)" }}>
-        <div style={{ display: "flex", height: "100%", transform: `translateX(-${atual * 100}%)`, transition: "transform 0.6s cubic-bezier(0.4,0,0.2,1)" }}>
-          {produtos.map(p => {
+      {/* Brilho atrás da pilha, para a vitrine não flutuar sobre o nada */}
+      <div aria-hidden style={{ position: "absolute", left: "50%", top: "48%", transform: "translate(-50%,-50%)", width: "86%", aspectRatio: "1/1", borderRadius: "50%", background: "radial-gradient(circle, rgba(184,137,26,0.22) 0%, transparent 68%)", pointerEvents: "none", filter: "blur(30px)" }} />
+
+      {/* Palco: as peças ficam empilhadas, não enfileiradas. A da frente é a
+          que vende; as de trás dão profundidade de vitrine. */}
+      <div style={{ position: "relative", aspectRatio: isMobile ? "1/1.05" : "1/1.15", perspective: 1200 }}>
+          {produtos.map((p, i) => {
+            const d = distancia(i, atual, total);
+            const longe = Math.abs(d) > VIZINHOS;
+            const frente = d === 0;
             const imgs = parseJson<string[]>(p.images, []);
             const criado = typeof p.createdAt === "string" ? new Date(p.createdAt) : p.createdAt;
             const sale = getSaleInfo({ price: p.price, createdAt: criado, onSale: p.onSale, saleDiscount: p.saleDiscount });
             const preco = sale ? sale.salePrice : p.price;
             return (
-              <Link key={p.id} href={`/produtos/${p.slug}`} style={{ position: "relative", flex: "0 0 100%", height: "100%", textDecoration: "none", display: "block" }}>
+              <Link
+                key={p.id}
+                href={`/produtos/${p.slug}`}
+                // Só a peça da frente recebe clique e foco: as de trás estão
+                // sobrepostas e roubariam o toque de quem mira na da frente.
+                aria-hidden={!frente}
+                tabIndex={frente ? 0 : -1}
+                className={frente ? "heroFrente" : undefined}
+                style={{
+                  position: "absolute", inset: 0, textDecoration: "none", display: "block",
+                  borderRadius: "1.25rem", overflow: "hidden", backgroundColor: "#2a2010",
+                  border: "1px solid rgba(184,137,26,0.2)",
+                  boxShadow: frente ? "0 24px 60px rgba(0,0,0,0.45)" : "0 14px 36px rgba(0,0,0,0.35)",
+                  // Deslocamento pequeno de propósito: as vizinhas espiam por
+                  // trás da peça da frente, não deslizam para o lado. Com um
+                  // deslocamento grande elas saíam da coluna da vitrine e
+                  // apareciam como fantasmas por cima do texto do hero.
+                  transform: `translateX(${d * (isMobile ? 6 : 8)}%) scale(${1 - Math.abs(d) * 0.1}) rotate(${d * 2.4}deg)`,
+                  opacity: longe ? 0 : (frente ? 1 : 0.3),
+                  filter: frente ? "blur(0px)" : "blur(4px)",
+                  zIndex: 10 - Math.abs(d),
+                  pointerEvents: frente ? "auto" : "none",
+                  visibility: longe ? "hidden" : "visible",
+                  transition: "transform 0.6s cubic-bezier(0.4,0,0.2,1), opacity 0.6s, filter 0.6s, box-shadow 0.6s",
+                }}
+              >
                 {imgs[0] ? (
                   <img src={imgs[0]} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                 ) : (
@@ -79,7 +129,6 @@ export default function HeroCarousel({ produtos, isMobile }: { produtos: Produto
               </Link>
             );
           })}
-        </div>
 
         {/* Setas, só onde há mouse */}
         {!isMobile && total > 1 && ([-1, 1] as const).map(dir => (
