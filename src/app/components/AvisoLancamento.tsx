@@ -1,3 +1,5 @@
+import { DATA_DO_LANCAMENTO } from "@/lib/lancamento";
+
 /**
  * Faixa de aviso do lançamento da Alma de Floripa.
  *
@@ -42,7 +44,7 @@ export default function AvisoLancamento() {
           color: "#14100a", backgroundColor: "#f2b544", fontSize: "0.8rem", fontWeight: 900,
           padding: "0.2rem 0.65rem", borderRadius: "999px", letterSpacing: "0.02em", whiteSpace: "nowrap",
         }}>
-          20.10
+          {DATA_DO_LANCAMENTO}
         </span>
         <a
           href="https://wa.me/5551986596705?text=Oi!%20Quero%20ser%20avisada%20quando%20a%20cole%C3%A7%C3%A3o%20Alma%20de%20Floripa%20chegar."

@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   const body = await req.json();
-  const { userId, newCustomer, items, paymentMethod, paymentStatus, amountPaid, notes, createdAt, dueDate, installments, discount } = body;
+  const { userId, newCustomer, items, paymentMethod, paymentStatus, amountPaid, notes, createdAt, dueDate, installments, discount, couponCode } = body;
 
   let customerId = userId;
 
@@ -70,7 +70,43 @@ export async function POST(req: Request) {
   }
 
   const subtotal = items.reduce((s: number, i: any) => s + i.price * i.quantity, 0);
-  const desconto = Math.min(Math.max(0, Number(discount) || 0), subtotal);
+
+  /**
+   * Cupom na venda feita aqui dentro.
+   *
+   * Antes isto só existia no site: a venda que sai pelo WhatsApp virava pedido
+   * manual sem cupom, e o relatório por cupom — que soma Order.couponCode —
+   * não via nada. Quem tinha cupom de parceria aparecia valendo muito menos do
+   * que vendeu, justamente porque o grosso da venda não passa pelo site.
+   *
+   * O desconto vem do cupom, não do que a tela mandou: aceitar o número do
+   * cliente deixaria o pedido dizer "cupom X" com um valor que não é o de X, e
+   * o relatório da parceira passaria a mentir sem ninguém perceber.
+   *
+   * Cupom inválido é erro, não silêncio. Salvar o pedido ignorando o cupom
+   * esconderia o problema justamente de quem precisa saber dele.
+   */
+  let cupomDoPedido: string | null = null;
+  let descontoDoCupom: number | null = null;
+
+  if (couponCode) {
+    const cupom = await prisma.coupon.findUnique({ where: { code: String(couponCode).toUpperCase() } });
+    if (!cupom) return NextResponse.json({ error: "Cupom não encontrado." }, { status: 400 });
+    if (!cupom.active) return NextResponse.json({ error: `O cupom ${cupom.code} está desativado.` }, { status: 400 });
+    if (cupom.expiresAt && new Date() > cupom.expiresAt)
+      return NextResponse.json({ error: `O cupom ${cupom.code} está vencido.` }, { status: 400 });
+    if (cupom.maxUses && cupom.usedCount >= cupom.maxUses)
+      return NextResponse.json({ error: `O cupom ${cupom.code} já atingiu o limite de usos.` }, { status: 400 });
+
+    cupomDoPedido = cupom.code;
+    descontoDoCupom = cupom.type === "fixed" || cupom.type === "valor"
+      ? Math.min(cupom.discount, subtotal)
+      : Math.round(((subtotal * cupom.discount) / 100) * 100) / 100;
+  }
+
+  const desconto = descontoDoCupom !== null
+    ? Math.min(descontoDoCupom, subtotal)
+    : Math.min(Math.max(0, Number(discount) || 0), subtotal);
   const totalComDesconto = Math.round((subtotal - desconto) * 100) / 100;
   const paid = parseFloat(amountPaid) || 0;
 
@@ -97,6 +133,7 @@ export async function POST(req: Request) {
         subtotal,
         shipping: 0,
         discount: desconto,
+        couponCode: cupomDoPedido,
         notes: notes || null,
         dueDate: dueDate ? new Date(dueDate) : null,
         installmentCount: installments || 1,
@@ -130,6 +167,16 @@ export async function POST(req: Request) {
     // Peca de conjunto nao tem contador proprio: quem sai do estoque e o
     // conjunto, ja debitado acima. Baixar os dois tirava um conjunto inteiro
     // a mais a cada peca vendida.
+
+    // O uso do cupom conta igual ao do site. Sem isto, um cupom com limite de
+    // usos nunca se esgotaria pela venda feita aqui dentro — e o limite que a
+    // parceira combinou deixaria de valer para o canal onde mais se vende.
+    if (cupomDoPedido) {
+      await prisma.coupon.update({
+        where: { code: cupomDoPedido },
+        data: { usedCount: { increment: 1 } },
+      });
+    }
 
     return NextResponse.json(order);
   } catch (e: any) {
