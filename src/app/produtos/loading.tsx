@@ -5,7 +5,7 @@
  * rápido; deixa parecer — e no 4G, vindo do Instagram, parecer é o que segura
  * a cliente em vez de ela voltar.
  *
- * Copia a mesma grade da vitrine (.products-grid) para as peças nascerem no
+ * Copia a mesma grade da vitrine (.grade-vitrine) para as peças nascerem no
  * lugar onde o contorno já estava, sem a página pular.
  */
 export default function CarregandoVitrine() {
@@ -21,7 +21,7 @@ export default function CarregandoVitrine() {
           ))}
         </div>
 
-        <div className="products-grid" style={{ display: "grid", gap: "1rem" }}>
+        <div className="grade-vitrine">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} style={{ borderRadius: "1rem", overflow: "hidden", backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.1)" }}>
               <div className="esqueleto" style={{ aspectRatio: "3/4", borderRadius: 0 }} />

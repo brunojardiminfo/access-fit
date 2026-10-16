@@ -84,7 +84,7 @@ export default async function ColecaoPage({ params }: { params: Promise<{ slug: 
             <Link href="/produtos" style={{ color: "#b8891a", fontWeight: 700, textDecoration: "none" }}>Ver todas as peças →</Link>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.25rem" }} className="products-grid">
+          <div className="grade-vitrine">
             {pecas.map((p, i) => (
               <ProductCard key={p.id} product={p as any} indice={i} />
             ))}

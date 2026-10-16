@@ -96,17 +96,50 @@ a, button { -webkit-tap-highlight-color: transparent; transition: opacity 0.15s,
 .cat-card:hover { transform: translateY(-3px) !important; box-shadow: 0 8px 24px rgba(0,0,0,0.1) !important; }
 
 /* Products grid responsive */
-.products-grid {
-  grid-template-columns: repeat(4, 1fr) !important;
+/* A vitrine tem uma regra só: .grade-vitrine, mais abaixo. A classe
+   .products-grid que ficava aqui dava UMA peça por linha no celular enquanto a
+   home dava duas — a mesma loja mostrava a mesma coisa de dois jeitos. */
+
+/* ────────────────────────────────────────────────────────────────────────
+   LAYOUT EM CSS, NÃO EM JAVASCRIPT
+
+   O site decidia a versão de celular com useMobileView(), que começa falso e
+   só vira verdadeiro depois que o JS roda. O servidor, que não sabe a largura
+   da tela, mandava sempre o layout de desktop: no celular a primeira pintura
+   saía com o hero em duas colunas e a vitrine com colunas desiguais, e só
+   depois se ajustava. Em conexão lenta é isso que a cliente vê.
+
+   Media query não espera JS. O que está aqui embaixo o navegador aplica na
+   primeira pintura, em qualquer aparelho.
+   ──────────────────────────────────────────────────────────────────────── */
+
+/* Vitrine: duas peças por linha no celular, quatro no computador. */
+.grade-vitrine {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
 }
-@media (max-width: 1100px) {
-  .products-grid { grid-template-columns: repeat(3, 1fr) !important; }
-}
-@media (max-width: 768px) {
-  .products-grid { grid-template-columns: repeat(2, 1fr) !important; }
-}
-@media (max-width: 480px) {
-  .products-grid { grid-template-columns: 1fr !important; }
+@media (max-width: 1100px) { .grade-vitrine { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 767px)  { .grade-vitrine { grid-template-columns: repeat(2, 1fr); gap: 1rem; } }
+
+/* Peças do mesmo tamanho: o cartão estica até a altura da linha e o preço
+   desce para o rodapé dele. Sem isto, nome de duas linhas ou uma lista de
+   cores mais longa faziam um cartão ficar mais alto que o vizinho. */
+.cartao-peca { height: 100%; display: flex; flex-direction: column; }
+.cartao-peca > a, a > .cartao-peca { height: 100%; }
+.corpo-cartao { flex: 1; display: flex; flex-direction: column; }
+.rodape-cartao { margin-top: auto; }
+
+/* Hero: uma coluna no celular. Era a pior quebra — o carrossel das peças
+   ficava cortado para fora da tela antes do JS rodar. */
+.hero-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+.hero-secao { min-height: 85vh; padding: 4rem 1.5rem; }
+.hero-botoes { display: flex; gap: 0.875rem; flex-wrap: wrap; }
+@media (max-width: 767px) {
+  .hero-grade { grid-template-columns: 1fr; gap: 2rem; }
+  .hero-secao { min-height: auto; padding: 1.5rem 1rem; }
+  .hero-botoes { flex-direction: column; gap: 0.5rem; }
+  .hero-botoes > * { width: 100%; justify-content: center; }
 }
 
 /* Mobile improvements */
