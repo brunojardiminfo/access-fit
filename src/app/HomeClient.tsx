@@ -33,11 +33,15 @@ export default function HomeClient({
       {/* HERO */}
       {mostrarAviso && <AvisoLancamento />}
 
-      <section style={{ background: "linear-gradient(160deg, #1a1510 0%, #2d2010 60%, #1a1510 100%)", padding: isMobile ? "1.5rem 1rem" : "4rem 1.5rem 4rem", position: "relative", overflow: "hidden", minHeight: isMobile ? "auto" : "85vh", display: "flex", alignItems: "center" }}>
+      {/* A altura, o respiro e o número de colunas vêm do CSS (.hero-secao e
+          .hero-grade). Decididos por isMobile, o servidor mandava a versão de
+          desktop e no celular o carrossel das peças saía cortado para fora da
+          tela até o JS corrigir. */}
+      <section className="hero-secao" style={{ background: "linear-gradient(160deg, #1a1510 0%, #2d2010 60%, #1a1510 100%)", position: "relative", overflow: "hidden", display: "flex", alignItems: "center" }}>
         {/* Glow */}
         <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(184,137,26,0.12) 0%, transparent 65%)", pointerEvents: "none" }} />
 
-        <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? "2rem" : "3rem", alignItems: "center", position: "relative" }}>
+        <div className="hero-grade" style={{ maxWidth: 1200, margin: "0 auto", width: "100%", position: "relative" }}>
           {/* Texto */}
           <div>
             <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", border: "1px solid rgba(184,137,26,0.35)", color: "#b8891a", fontSize: isMobile ? "0.65rem" : "0.68rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", padding: "0.4rem 1rem", borderRadius: "999px", marginBottom: "1.75rem", backgroundColor: "rgba(184,137,26,0.08)" }}>
@@ -51,7 +55,7 @@ export default function HomeClient({
             <p style={{ color: "rgba(250,246,238,0.65)", fontSize: isMobile ? "0.9rem" : "clamp(0.9rem, 1.8vw, 1.05rem)", lineHeight: 1.8, marginBottom: "2.5rem", maxWidth: 440 }}>
               Cada peça criada para despertar a força que existe em você. Vista-se com intenção, mova-se com poder.
             </p>
-            <div style={{ display: "flex", gap: isMobile ? "0.5rem" : "0.875rem", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap" }}>
+            <div className="hero-botoes">
               <Link href="/produtos" style={{ backgroundColor: "#b8891a", color: "#fff", fontWeight: 900, padding: isMobile ? "0.75rem 1.5rem" : "0.95rem 2.25rem", borderRadius: "0.875rem", textDecoration: "none", fontSize: isMobile ? "0.85rem" : "0.95rem", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", boxShadow: "0 4px 20px rgba(184,137,26,0.4)", width: isMobile ? "100%" : "auto" }}>
                 Ver Coleção <ArrowRight size={16} />
               </Link>
@@ -84,7 +88,7 @@ export default function HomeClient({
               : "Fique atento para nossas promoções exclusivas"}
           </p>
           {saleProducts.length > 0 ? (
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? "1rem" : "1.25rem" }}>
+            <div className="grade-vitrine">
               {saleProducts.map((product, i) => (
                 <ProductCard key={product.id} product={product} indice={i} />
               ))}
@@ -161,7 +165,7 @@ export default function HomeClient({
           <p style={{ textAlign: "center", color: "#9a8060", marginBottom: isMobile ? "1.5rem" : "2.5rem", fontSize: isMobile ? "0.8rem" : "1rem" }}>
             As peças mais procuradas da coleção
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? "1rem" : "1.25rem" }}>
+          <div className="grade-vitrine">
             {featuredProducts.map((product, i) => (
               <ProductCard key={product.id} product={product} indice={i} />
             ))}

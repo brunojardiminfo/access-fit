@@ -204,7 +204,7 @@ export default async function ProdutosPage({
               <Link href="/produtos" style={{ color: "#b8891a", fontWeight: 700, textDecoration: "none" }}>Ver toda a coleção →</Link>
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.25rem" }} className="products-grid">
+            <div className="grade-vitrine">
               {products.map((product, i) => (
                 <ProductCard key={product.id} product={product as any} indice={i} />
               ))}

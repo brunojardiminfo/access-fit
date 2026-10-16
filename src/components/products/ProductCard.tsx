@@ -44,7 +44,7 @@ export default function ProductCard({ product, indice = 0 }: { product: Product;
   };
 
   return (
-    <Link href={`/produtos/${product.slug}`} style={{ textDecoration: "none", display: "block" }}>
+    <Link href={`/produtos/${product.slug}`} style={{ textDecoration: "none", display: "block", height: "100%" }}>
       <div className="surgir cartao-peca"
         style={{
           borderRadius: "1rem", overflow: "hidden", backgroundColor: "#fff",
@@ -95,8 +95,10 @@ export default function ProductCard({ product, indice = 0 }: { product: Product;
           )}
         </div>
 
-        {/* Info */}
-        <div style={{ padding: "0.75rem" }}>
+        {/* Info. O corpo estica e o preço desce para o rodapé: assim todos os
+            cartões da linha terminam na mesma altura, mesmo com nome de duas
+            linhas ou lista de cores mais longa. */}
+        <div className="corpo-cartao" style={{ padding: "0.75rem" }}>
           <p style={{ fontSize: "0.65rem", color: "#b8891a", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.25rem" }}>
             {product.category.name}
           </p>
@@ -119,7 +121,9 @@ export default function ProductCard({ product, indice = 0 }: { product: Product;
             </p>
           )}
 
-          <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", marginBottom: "0.6rem", flexWrap: "wrap" }}>
+          {/* Preço e botão descem juntos para o pé do cartão, alinhados entre
+              as peças da mesma linha. */}
+          <div className="rodape-cartao" style={{ display: "flex", alignItems: "center", gap: "0.3rem", marginBottom: "0.6rem", flexWrap: "wrap" }}>
             <span style={{ fontSize: "1rem", fontWeight: 900, color: saleInfo ? "#e74c3c" : "#b8891a" }}>{formatCurrency(finalPrice)}</span>
             {(product.compareAt || saleInfo) && (
               <span style={{ fontSize: "0.7rem", color: "#b8a080", textDecoration: "line-through" }}>
