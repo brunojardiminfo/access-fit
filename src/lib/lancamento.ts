@@ -4,17 +4,28 @@
  * Fica aqui, e não dentro do componente da faixa, porque é informação do
  * negócio e não de interface: quando a data mudar, é este arquivo que se abre.
  *
- * O instante é absoluto, em UTC, porque o servidor roda em UTC e a loja vive no
- * horário de Brasília. 2026-10-21T03:00Z é a meia-noite do dia 21 em Porto
- * Alegre — ou seja, o fim do dia 20.
+ * UMA FONTE SÓ. A primeira versão guardava o instante do corte aqui e o texto
+ * "20.10" escrito à mão dentro da faixa. Mudar a data e esquecer o rótulo (ou
+ * o contrário) era questão de tempo — e o estrago seria a loja anunciar um dia
+ * e sumir no outro. Agora as duas coisas saem daqui.
  */
-export const LANCAMENTO_ALMA_DE_FLORIPA = Date.parse("2026-10-21T03:00:00Z");
+const DIA = 25, MES = 10, ANO = 2026;
+
+/** Como a data aparece para a cliente: "25.10". */
+export const DATA_DO_LANCAMENTO = `${String(DIA).padStart(2, "0")}.${String(MES).padStart(2, "0")}`;
+
+/**
+ * Até quando a faixa fica no ar: a virada do dia seguinte em Porto Alegre.
+ * O instante é absoluto porque o servidor roda em UTC e a loja vive no horário
+ * de Brasília (UTC−3) — meia-noite em POA é 03:00Z.
+ */
+export const FIM_DO_AVISO = Date.UTC(ANO, MES - 1, DIA + 1, 3, 0, 0);
 
 /**
  * A faixa some sozinha depois da data. Aviso de contagem regressiva esquecido
- * no ar é pior que aviso nenhum: no dia 21 ele passa a anunciar uma data que
- * já passou, e quem chega na loja conclui que ninguém cuida dela.
+ * no ar é pior que aviso nenhum: no dia seguinte ele passa a anunciar uma data
+ * que já passou, e quem chega na loja conclui que ninguém cuida dela.
  */
 export function avisoDoLancamentoAtivo(agora: number = Date.now()): boolean {
-  return agora < LANCAMENTO_ALMA_DE_FLORIPA;
+  return agora < FIM_DO_AVISO;
 }

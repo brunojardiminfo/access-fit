@@ -14,6 +14,8 @@ const inp = {
 };
 const label = { fontSize: "0.75rem", color: "#9a8060", fontWeight: 700, display: "block", marginBottom: "0.3rem" };
 
+type Cupom = { code: string; discount: number; type: string };
+
 export default function NovoPedidoPage() {
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -27,6 +29,8 @@ export default function NovoPedidoPage() {
   const [items, setItems] = useState<Item[]>([{ description: "", price: 0, quantity: 1 }]);
   const [desconto, setDesconto] = useState("");
   const [descontoTipo, setDescontoTipo] = useState<"reais" | "percent">("reais");
+  const [cupons, setCupons] = useState<Cupom[]>([]);
+  const [cupomEscolhido, setCupomEscolhido] = useState("");
   const [productSearch, setProductSearch] = useState<string[]>([""]);
   const [productResults, setProductResults] = useState<Product[][]>([[]]);
   const [showProductDropdown, setShowProductDropdown] = useState<boolean[]>([false]);
@@ -98,10 +102,42 @@ export default function NovoPedidoPage() {
     setFiltered(customers.filter(c => c.name.toLowerCase().includes(search.toLowerCase())).slice(0, 8));
   }, [search, customers]);
 
+  // Cupons que dá para usar hoje. A venda que sai daqui é a maior parte do
+  // movimento; sem este campo ela nunca entrava no relatório da parceira.
+  useEffect(() => {
+    let vivo = true;
+    fetch("/api/admin/cupons")
+      .then(r => (r.ok ? r.json() : []))
+      .then((lista: unknown) => {
+        if (!vivo || !Array.isArray(lista)) return;
+        const agora = Date.now();
+        setCupons(
+          lista
+            .filter(c => c?.active
+              && (!c.expiresAt || Date.parse(c.expiresAt) > agora)
+              && (!c.maxUses || (c.usedCount ?? 0) < c.maxUses))
+            .map(c => ({ code: c.code, discount: Number(c.discount), type: String(c.type) })),
+        );
+      })
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, []);
+
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+  const cupomAtivo = cupons.find(c => c.code === cupomEscolhido) || null;
   const descontoBruto = parseFloat(desconto.replace(",", ".")) || 0;
   // Percentual vira reais aqui: o pedido sempre guarda o valor do desconto
-  const descontoValor = Math.min(
+  // Com cupom, o desconto é o do cupom e o campo manual sai de cena. Dois
+  // descontos ao mesmo tempo fariam o pedido dizer "cupom X" com um valor que
+  // não é o de X, e o relatório da parceira passaria a mentir.
+  const descontoValor = cupomAtivo
+    ? Math.min(
+        cupomAtivo.type === "fixed" || cupomAtivo.type === "valor"
+          ? cupomAtivo.discount
+          : (subtotal * cupomAtivo.discount) / 100,
+        subtotal,
+      )
+    : Math.min(
     descontoTipo === "percent" ? (subtotal * descontoBruto) / 100 : descontoBruto,
     subtotal
   );
@@ -208,6 +244,7 @@ export default function NovoPedidoPage() {
           : emDinheiro >= totalFinal - 0.01 ? "paid" : emDinheiro > 0 ? "partial" : "pending",
         amountPaid: emDinheiro,
         discount: descontoValor,
+        couponCode: cupomEscolhido || null,
         notes, createdAt: date, dueDate: dueDate || null, installments,
       }),
     });
@@ -489,14 +526,38 @@ export default function NovoPedidoPage() {
           <button onClick={addItem} style={{ marginTop: "0.75rem", padding: "0.4rem 0.875rem", backgroundColor: "#EDE4CC", border: "none", borderRadius: "0.5rem", cursor: "pointer", fontSize: "0.8rem", fontWeight: 700, color: "#6a4a10" }}>
             + Adicionar item
           </button>
+          {cupons.length > 0 && (
+            <div style={{ marginTop: "0.75rem", display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "0.8rem", color: "#9a8060", fontWeight: 700 }}>Cupom</span>
+              <select value={cupomEscolhido} onChange={e => setCupomEscolhido(e.target.value)}
+                aria-label="Cupom de desconto"
+                style={{ ...inp, width: "auto", minWidth: 190, padding: "0.35rem 0.6rem", fontSize: "0.85rem" }}>
+                <option value="">Sem cupom</option>
+                {cupons.map(c => (
+                  <option key={c.code} value={c.code}>
+                    {c.code} — {c.type === "fixed" || c.type === "valor"
+                      ? c.discount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                      : `${c.discount}%`}
+                  </option>
+                ))}
+              </select>
+              {cupomAtivo && (
+                <span style={{ fontSize: "0.72rem", color: "#1a8a2a", fontWeight: 700 }}>
+                  entra no relatório de {cupomAtivo.code}
+                </span>
+              )}
+            </div>
+          )}
           <div style={{ marginTop: "0.75rem", display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "0.8rem", color: "#9a8060", fontWeight: 700 }}>Desconto</span>
-            <input value={desconto} onChange={e => setDesconto(e.target.value)} placeholder="0,00" inputMode="decimal"
-              style={{ ...inp, width: 90, padding: "0.35rem 0.6rem", fontSize: "0.85rem" }} />
+            <span style={{ fontSize: "0.8rem", color: cupomAtivo ? "#c0b090" : "#9a8060", fontWeight: 700 }}>Desconto</span>
+            <input value={cupomAtivo ? "" : desconto} onChange={e => setDesconto(e.target.value)} placeholder="0,00" inputMode="decimal"
+              disabled={!!cupomAtivo}
+              title={cupomAtivo ? "O desconto vem do cupom escolhido" : undefined}
+              style={{ ...inp, width: 90, padding: "0.35rem 0.6rem", fontSize: "0.85rem", opacity: cupomAtivo ? 0.5 : 1 }} />
             <div style={{ display: "flex", gap: "2px" }}>
               {(["reais", "percent"] as const).map(t => (
-                <button key={t} type="button" onClick={() => setDescontoTipo(t)}
-                  style={{ fontSize: "0.75rem", fontWeight: 800, padding: "0.35rem 0.6rem", border: "1px solid rgba(140,100,20,0.2)", borderRadius: "0.4rem", cursor: "pointer", backgroundColor: descontoTipo === t ? "#b8891a" : "#fff", color: descontoTipo === t ? "#fff" : "#9a8060" }}>
+                <button key={t} type="button" onClick={() => setDescontoTipo(t)} disabled={!!cupomAtivo}
+                  style={{ fontSize: "0.75rem", fontWeight: 800, padding: "0.35rem 0.6rem", border: "1px solid rgba(140,100,20,0.2)", borderRadius: "0.4rem", cursor: cupomAtivo ? "default" : "pointer", backgroundColor: descontoTipo === t && !cupomAtivo ? "#b8891a" : "#fff", color: descontoTipo === t && !cupomAtivo ? "#fff" : "#9a8060", opacity: cupomAtivo ? 0.5 : 1 }}>
                   {t === "reais" ? "R$" : "%"}
                 </button>
               ))}
