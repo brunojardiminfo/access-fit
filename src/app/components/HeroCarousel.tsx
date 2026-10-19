@@ -113,14 +113,14 @@ export default function HeroCarousel({ produtos, isMobile }: { produtos: Produto
                 )}
 
                 {sale && (
-                  <span style={{ position: "absolute", top: 14, left: 14, backgroundColor: "#e74c3c", color: "#fff", fontSize: "0.62rem", fontWeight: 900, letterSpacing: "0.08em", padding: "0.28rem 0.7rem", borderRadius: "999px" }}>
+                  <span style={{ position: "absolute", top: 14, left: 14, backgroundColor: "#e74c3c", color: "var(--text-main)", fontSize: "0.62rem", fontWeight: 900, letterSpacing: "0.08em", padding: "0.28rem 0.7rem", borderRadius: "999px" }}>
                     SALE −{sale.discount}%
                   </span>
                 )}
 
                 {/* Nome e preço, sobre um véu para não brigar com a foto */}
                 <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: isMobile ? "2.5rem 1rem 1rem" : "3.5rem 1.25rem 1.25rem", background: "linear-gradient(to top, rgba(20,15,10,0.92) 0%, rgba(20,15,10,0.55) 55%, transparent 100%)" }}>
-                  <p style={{ color: "#FAF6EE", fontSize: isMobile ? "0.95rem" : "1.05rem", fontWeight: 800, margin: 0, lineHeight: 1.25 }}>{p.name}</p>
+                  <p style={{ color: "var(--text-main)", fontSize: isMobile ? "0.95rem" : "1.05rem", fontWeight: 800, margin: 0, lineHeight: 1.25 }}>{p.name}</p>
                   <p style={{ margin: "0.2rem 0 0", display: "flex", alignItems: "center", gap: "0.45rem" }}>
                     <span style={{ color: sale ? "#ff8b7a" : "#e0b64a", fontSize: isMobile ? "1rem" : "1.15rem", fontWeight: 900 }}>{formatCurrency(preco)}</span>
                     {sale && <span style={{ color: "rgba(250,246,238,0.5)", fontSize: "0.8rem", textDecoration: "line-through" }}>{formatCurrency(p.price)}</span>}
@@ -134,7 +134,7 @@ export default function HeroCarousel({ produtos, isMobile }: { produtos: Produto
         {!isMobile && total > 1 && ([-1, 1] as const).map(dir => (
           <button key={dir} onClick={() => vai(atual + dir)}
             aria-label={dir === -1 ? "Peça anterior" : "Próxima peça"}
-            style={{ position: "absolute", top: "50%", transform: "translateY(-50%)", [dir === -1 ? "left" : "right"]: 12, width: 38, height: 38, borderRadius: "50%", border: "none", cursor: "pointer", backgroundColor: "rgba(26,21,16,0.55)", color: "#FAF6EE", fontSize: "1.1rem", fontWeight: 700, backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" } as React.CSSProperties}>
+            style={{ position: "absolute", top: "50%", transform: "translateY(-50%)", [dir === -1 ? "left" : "right"]: 12, width: 38, height: 38, borderRadius: "50%", border: "none", cursor: "pointer", backgroundColor: "rgba(26,21,16,0.55)", color: "var(--text-main)", fontSize: "1.1rem", fontWeight: 700, backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" } as React.CSSProperties}>
             {dir === -1 ? "‹" : "›"}
           </button>
         ))}
@@ -145,7 +145,7 @@ export default function HeroCarousel({ produtos, isMobile }: { produtos: Produto
         <div style={{ display: "flex", justifyContent: "center", gap: "0.4rem", marginTop: "0.875rem" }}>
           {produtos.map((p, i) => (
             <button key={p.id} onClick={() => vai(i)} aria-label={`Ver ${p.name}`}
-              style={{ width: i === atual ? 22 : 7, height: 7, borderRadius: "999px", border: "none", padding: 0, cursor: "pointer", backgroundColor: i === atual ? "#b8891a" : "rgba(250,246,238,0.28)", transition: "width 0.3s, background-color 0.3s" }} />
+              style={{ width: i === atual ? 22 : 7, height: 7, borderRadius: "999px", border: "none", padding: 0, cursor: "pointer", backgroundColor: i === atual ? "var(--gold)" : "rgba(250,246,238,0.28)", transition: "width 0.3s, background-color 0.3s" }} />
           ))}
         </div>
       )}

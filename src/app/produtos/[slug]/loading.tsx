@@ -4,8 +4,8 @@
  */
 export default function CarregandoProduto() {
   return (
-    <div style={{ backgroundColor: "#FAF6EE", minHeight: "100vh" }}>
-      <div style={{ backgroundColor: "#fff", borderBottom: "1px solid rgba(140,100,20,0.1)", padding: "0.875rem 2rem" }}>
+    <div style={{ backgroundColor: "var(--bg)", minHeight: "100vh" }}>
+      <div style={{ backgroundColor: "var(--bg-card)", borderBottom: "1px solid var(--border)", padding: "0.875rem 2rem" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div className="esqueleto" style={{ width: 210, height: 11 }} />
         </div>

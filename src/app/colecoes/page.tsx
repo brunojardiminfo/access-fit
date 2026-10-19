@@ -24,20 +24,20 @@ export default async function ColecoesPage() {
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "3rem 1.5rem 4rem" }}>
       <header style={{ textAlign: "center", marginBottom: "3rem" }}>
-        <p style={{ color: "#b8891a", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>
+        <p style={{ color: "var(--gold)", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase" }}>
           Access Fit
         </p>
-        <h1 style={{ color: "#1a1510", fontSize: "clamp(1.8rem, 5vw, 2.6rem)", fontWeight: 900, letterSpacing: "-0.03em", marginTop: "0.5rem" }}>
+        <h1 style={{ color: "var(--text-main)", fontSize: "clamp(1.8rem, 5vw, 2.6rem)", fontWeight: 900, letterSpacing: "-0.03em", marginTop: "0.5rem" }}>
           Coleções
         </h1>
-        <p style={{ color: "#7a6a4a", fontSize: "0.95rem", marginTop: "0.75rem", maxWidth: "46ch", marginInline: "auto", lineHeight: 1.6 }}>
+        <p style={{ color: "var(--text-sub)", fontSize: "0.95rem", marginTop: "0.75rem", maxWidth: "46ch", marginInline: "auto", lineHeight: 1.6 }}>
           Cada uma tem um propósito. Escolha pelo que você quer sentir no treino,
           não só pelo tipo da peça.
         </p>
       </header>
 
       {colecoes.length === 0 ? (
-        <p style={{ textAlign: "center", color: "#9a8060", padding: "3rem 0" }}>
+        <p style={{ textAlign: "center", color: "var(--text-muted)", padding: "3rem 0" }}>
           Em breve.
         </p>
       ) : (
@@ -46,9 +46,9 @@ export default async function ColecoesPage() {
             <Link key={c.slug} href={`/colecoes/${c.slug}`} className="surgir cartao-peca"
               style={{ textDecoration: "none", ["--atraso" as string]: Math.min(i, 8) }}>
               <article style={{
-                backgroundColor: "#fff",
-                border: "1px solid rgba(140,100,20,0.16)",
-                borderTop: `3px solid ${c.sazonal ? "#8a4a6a" : "#b8891a"}`,
+                backgroundColor: "var(--bg-card)",
+                border: "1px solid var(--border)",
+                borderTop: `3px solid ${c.sazonal ? "#8a4a6a" : "var(--gold)"}`,
                 borderRadius: "0.75rem",
                 padding: "1.75rem 1.5rem",
                 height: "100%",
@@ -59,16 +59,16 @@ export default async function ColecoesPage() {
                     Cápsula de temporada
                   </span>
                 )}
-                <h2 style={{ color: "#1a1510", fontSize: "1.3rem", fontWeight: 900, letterSpacing: "0.02em" }}>
+                <h2 style={{ color: "var(--text-main)", fontSize: "1.3rem", fontWeight: 900, letterSpacing: "0.02em" }}>
                   {c.name}
                 </h2>
                 {c.tagline && (
-                  <p style={{ color: "#b8891a", fontSize: "0.9rem", fontStyle: "italic" }}>{c.tagline}</p>
+                  <p style={{ color: "var(--gold)", fontSize: "0.9rem", fontStyle: "italic" }}>{c.tagline}</p>
                 )}
                 {c.description && (
-                  <p style={{ color: "#7a6a4a", fontSize: "0.85rem", lineHeight: 1.6 }}>{c.description}</p>
+                  <p style={{ color: "var(--text-sub)", fontSize: "0.85rem", lineHeight: 1.6 }}>{c.description}</p>
                 )}
-                <span style={{ color: "#9a8060", fontSize: "0.75rem", marginTop: "auto", paddingTop: "0.75rem" }}>
+                <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginTop: "auto", paddingTop: "0.75rem" }}>
                   {c._count.products} peça{c._count.products !== 1 ? "s" : ""} →
                 </span>
               </article>

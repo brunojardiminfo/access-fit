@@ -101,10 +101,10 @@ export default function Header() {
     <>
       <header style={{
         position: "sticky", top: 0, zIndex: 50,
-        backgroundColor: "rgba(250,246,238,0.97)",
+        backgroundColor: "rgba(22,17,11,0.94)",
         backdropFilter: "blur(10px)",
-        borderBottom: "1px solid rgba(140,100,20,0.15)",
-        boxShadow: "0 1px 12px rgba(140,100,20,0.06)",
+        borderBottom: "1px solid var(--border)",
+        boxShadow: "0 1px 12px var(--border)",
       }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: isMobile ? "0 1rem" : "0 1.25rem", height: isMobile ? 64 : 72, display: "flex", alignItems: "center", justifyContent: "space-between", gap: isMobile ? "0.5rem" : "1rem" }}>
 
@@ -132,9 +132,9 @@ export default function Header() {
           <nav style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem 1.4rem", alignItems: "center", justifyContent: "flex-end", minWidth: 0 }} className="hide-mobile">
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href}
-                style={{ color: "#7a6030", fontSize: "0.85rem", fontWeight: 600, textDecoration: "none", letterSpacing: "0.02em" }}
-                onMouseOver={e => (e.currentTarget.style.color = "#b8891a")}
-                onMouseOut={e => (e.currentTarget.style.color = "#7a6030")}>
+                style={{ color: "var(--text-sub)", fontSize: "0.85rem", fontWeight: 600, textDecoration: "none", letterSpacing: "0.02em" }}
+                onMouseOver={e => (e.currentTarget.style.color = "var(--gold)")}
+                onMouseOut={e => (e.currentTarget.style.color = "var(--text-sub)")}>
                 {link.label}
               </Link>
             ))}
@@ -153,12 +153,12 @@ export default function Header() {
                   onChange={e => setSearchQuery(e.target.value)}
                   onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
                   placeholder="Buscar..."
-                  style={{ width: isMobile ? 140 : 180, padding: "0.4rem 0.75rem", border: "1px solid rgba(184,137,26,0.35)", borderRadius: "999px", fontSize: "0.82rem", backgroundColor: "#FAF6EE", outline: "none", color: "#1a1510" }}
+                  style={{ width: isMobile ? 140 : 180, padding: "0.4rem 0.75rem", border: "1px solid rgba(184,137,26,0.35)", borderRadius: "999px", fontSize: "0.82rem", backgroundColor: "var(--bg)", outline: "none", color: "var(--text-main)" }}
                 />
               )}
               <button type={searchOpen ? "submit" : "button"}
                 onClick={() => { setSearchOpen(true); setTimeout(() => searchRef.current?.focus(), 50); }}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: "10px", color: "#7a6030", display: "flex", alignItems: "center", borderRadius: "0.5rem" }}>
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "10px", color: "var(--text-sub)", display: "flex", alignItems: "center", borderRadius: "0.5rem" }}>
                 <Search size={20} />
               </button>
             </form>
@@ -166,18 +166,18 @@ export default function Header() {
             {/* User dropdown */}
             <div style={{ position: "relative" }}>
               <button onClick={() => setUserOpen(!userOpen)}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: "10px", color: "#7a6030", display: "flex", alignItems: "center", borderRadius: "0.5rem" }}>
+                style={{ background: "none", border: "none", cursor: "pointer", padding: "10px", color: "var(--text-sub)", display: "flex", alignItems: "center", borderRadius: "0.5rem" }}>
                 <User size={20} />
               </button>
               {userOpen && (
                 <>
                   <div style={{ position: "fixed", inset: 0, zIndex: 40 }} onClick={() => setUserOpen(false)} />
-                  <div style={{ position: "absolute", right: isMobile ? -10 : 0, top: "calc(100% + 8px)", width: isMobile ? "90vw" : 200, maxWidth: 200, backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.15)", borderRadius: "0.875rem", overflow: "hidden", zIndex: 50, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}>
+                  <div style={{ position: "absolute", right: isMobile ? -10 : 0, top: "calc(100% + 8px)", width: isMobile ? "90vw" : 200, maxWidth: 200, backgroundColor: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "0.875rem", overflow: "hidden", zIndex: 50, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}>
                     {session ? (
                       <>
-                        <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid rgba(140,100,20,0.1)", backgroundColor: "#FAF6EE" }}>
-                          <p style={{ color: "#9a8060", fontSize: "0.7rem" }}>Olá,</p>
-                          <p style={{ color: "#b8891a", fontSize: "0.9rem", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)", backgroundColor: "var(--bg)" }}>
+                          <p style={{ color: "var(--text-muted)", fontSize: "0.7rem" }}>Olá,</p>
+                          <p style={{ color: "var(--gold)", fontSize: "0.9rem", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {session.user?.name}
                           </p>
                         </div>
@@ -188,24 +188,24 @@ export default function Header() {
                         ].map(item => (
                           <Link key={item.href} href={item.href} onClick={() => setUserOpen(false)}
                             style={{ display: "block", padding: "0.65rem 1rem", color: "#3a2a10", fontSize: "0.875rem", textDecoration: "none" }}
-                            onMouseOver={e => { (e.currentTarget as HTMLElement).style.backgroundColor = "#FAF6EE"; (e.currentTarget as HTMLElement).style.color = "#b8891a"; }}
+                            onMouseOver={e => { (e.currentTarget as HTMLElement).style.backgroundColor = "#FAF6EE"; (e.currentTarget as HTMLElement).style.color = "var(--gold)"; }}
                             onMouseOut={e => { (e.currentTarget as HTMLElement).style.backgroundColor = ""; (e.currentTarget as HTMLElement).style.color = "#3a2a10"; }}>
                             {item.label}
                           </Link>
                         ))}
                         <button onClick={() => { signOut(); setUserOpen(false); }}
-                          style={{ width: "100%", textAlign: "left", padding: "0.65rem 1rem", background: "none", border: "none", borderTop: "1px solid rgba(140,100,20,0.1)", color: "#c04040", fontSize: "0.875rem", cursor: "pointer" }}>
+                          style={{ width: "100%", textAlign: "left", padding: "0.65rem 1rem", background: "none", border: "none", borderTop: "1px solid var(--border)", color: "#ff8a7a", fontSize: "0.875rem", cursor: "pointer" }}>
                           Sair
                         </button>
                       </>
                     ) : (
                       <>
                         <Link href="/login" onClick={() => setUserOpen(false)}
-                          style={{ display: "block", padding: "0.875rem 1rem", color: "#b8891a", fontWeight: 700, fontSize: "0.9rem", textDecoration: "none" }}>
+                          style={{ display: "block", padding: "0.875rem 1rem", color: "var(--gold)", fontWeight: 700, fontSize: "0.9rem", textDecoration: "none" }}>
                           Entrar
                         </Link>
                         <Link href="/cadastro" onClick={() => setUserOpen(false)}
-                          style={{ display: "block", padding: "0.875rem 1rem", color: "#7a6030", fontSize: "0.875rem", textDecoration: "none", borderTop: "1px solid rgba(140,100,20,0.1)" }}>
+                          style={{ display: "block", padding: "0.875rem 1rem", color: "var(--text-sub)", fontSize: "0.875rem", textDecoration: "none", borderTop: "1px solid var(--border)" }}>
                           Criar conta
                         </Link>
                       </>
@@ -217,13 +217,13 @@ export default function Header() {
 
             {/* Cart */}
             <button onClick={openCart}
-              style={{ background: "none", border: "none", cursor: "pointer", padding: "10px", color: "#7a6030", position: "relative", display: "flex", alignItems: "center", borderRadius: "0.5rem" }}>
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "10px", color: "var(--text-sub)", position: "relative", display: "flex", alignItems: "center", borderRadius: "0.5rem" }}>
               <span className={pulsando ? "pulso-sacola" : undefined} style={{ display: "flex" }}>
                 <ShoppingBag size={20} />
               </span>
               {mounted && quantidade > 0 && (
                 <span className={pulsando ? "pulso-sacola" : undefined}
-                  style={{ position: "absolute", top: 4, right: 4, backgroundColor: "#b8891a", color: "#fff", fontSize: "0.6rem", fontWeight: 900, borderRadius: "999px", minWidth: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
+                  style={{ position: "absolute", top: 4, right: 4, backgroundColor: "var(--gold)", color: "#16110b", fontSize: "0.6rem", fontWeight: 900, borderRadius: "999px", minWidth: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
                   {quantidade}
                 </span>
               )}
@@ -231,7 +231,7 @@ export default function Header() {
 
             {/* Hamburger */}
             <button onClick={() => setMenuOpen(!menuOpen)}
-              style={{ background: "none", border: "none", cursor: "pointer", padding: "10px", color: "#7a6030", display: "none", alignItems: "center", borderRadius: "0.5rem" }}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "10px", color: "var(--text-sub)", display: "none", alignItems: "center", borderRadius: "0.5rem" }}
               className="show-mobile">
               {menuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
@@ -240,21 +240,21 @@ export default function Header() {
 
         {/* Mobile nav */}
         {menuOpen && (
-          <div style={{ backgroundColor: "#F5EFE2", borderTop: "1px solid rgba(140,100,20,0.1)", padding: "0.5rem 1rem 1rem" }}>
-            <form onSubmit={handleSearch} style={{ display: "flex", gap: "0.5rem", padding: "0.5rem 0 0.75rem", borderBottom: "1px solid rgba(140,100,20,0.08)" }}>
+          <div style={{ backgroundColor: "#F5EFE2", borderTop: "1px solid var(--border)", padding: "0.5rem 1rem 1rem" }}>
+            <form onSubmit={handleSearch} style={{ display: "flex", gap: "0.5rem", padding: "0.5rem 0 0.75rem", borderBottom: "1px solid var(--border)" }}>
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Buscar produto..."
-                style={{ flex: 1, padding: "0.5rem 0.875rem", border: "1px solid rgba(184,137,26,0.3)", borderRadius: "999px", fontSize: "0.875rem", backgroundColor: "#fff", outline: "none" }}
+                style={{ flex: 1, padding: "0.5rem 0.875rem", border: "1px solid rgba(184,137,26,0.3)", borderRadius: "999px", fontSize: "0.875rem", backgroundColor: "var(--bg-card)", outline: "none" }}
               />
-              <button type="submit" style={{ backgroundColor: "#b8891a", color: "#fff", border: "none", borderRadius: "999px", padding: "0.5rem 1rem", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer" }}>
+              <button type="submit" style={{ backgroundColor: "var(--gold)", color: "#16110b", border: "none", borderRadius: "999px", padding: "0.5rem 1rem", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer" }}>
                 Buscar
               </button>
             </form>
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}
-                style={{ display: "block", padding: "0.75rem 0.5rem", color: "#5a4020", fontSize: "0.95rem", fontWeight: 600, textDecoration: "none", borderBottom: "1px solid rgba(140,100,20,0.06)" }}>
+                style={{ display: "block", padding: "0.75rem 0.5rem", color: "#5a4020", fontSize: "0.95rem", fontWeight: 600, textDecoration: "none", borderBottom: "1px solid var(--border)" }}>
                 {link.label}
               </Link>
             ))}

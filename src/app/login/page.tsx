@@ -38,10 +38,10 @@ export default function LoginPage() {
               ACCESS FIT
             </span>
           </Link>
-          <p style={{ color: "#b8891a", fontSize: "0.75rem", fontStyle: "italic", marginTop: "0.25rem" }}>
+          <p style={{ color: "var(--gold)", fontSize: "0.75rem", fontStyle: "italic", marginTop: "0.25rem" }}>
             Desbloqueie sua energia infinita
           </p>
-          <h1 style={{ color: "#f5f5f5", fontSize: "1.25rem", fontWeight: 700, marginTop: "1rem" }}>
+          <h1 style={{ color: "var(--bg-soft)", fontSize: "1.25rem", fontWeight: 700, marginTop: "1rem" }}>
             Entrar na sua conta
           </h1>
         </div>
@@ -57,7 +57,7 @@ export default function LoginPage() {
 
             {/* Email */}
             <div style={{ marginBottom: "1.25rem" }}>
-              <label style={{ display: "block", color: "#a8a8a8", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.5rem" }}>
+              <label style={{ display: "block", color: "var(--text-muted)", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.5rem" }}>
                 E-mail
               </label>
               <input
@@ -66,7 +66,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="seu@email.com"
-                style={{ width: "100%", padding: "0.75rem 1rem", backgroundColor: "#080808", border: "1px solid #7a540e", borderRadius: "0.75rem", color: "#f5f5f5", fontSize: "1rem", outline: "none", boxSizing: "border-box" }}
+                style={{ width: "100%", padding: "0.75rem 1rem", backgroundColor: "#080808", border: "1px solid #7a540e", borderRadius: "0.75rem", color: "var(--bg-soft)", fontSize: "1rem", outline: "none", boxSizing: "border-box" }}
                 onFocus={(e) => { e.target.style.borderColor = "#c9a227"; e.target.style.boxShadow = "0 0 0 2px rgba(201,162,39,0.2)"; }}
                 onBlur={(e) => { e.target.style.borderColor = "#7a540e"; e.target.style.boxShadow = "none"; }}
               />
@@ -74,7 +74,7 @@ export default function LoginPage() {
 
             {/* Senha */}
             <div style={{ marginBottom: "1.5rem" }}>
-              <label style={{ display: "block", color: "#a8a8a8", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.5rem" }}>
+              <label style={{ display: "block", color: "var(--text-muted)", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.5rem" }}>
                 Senha
               </label>
               <div style={{ position: "relative" }}>
@@ -84,14 +84,14 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="Sua senha"
-                  style={{ width: "100%", padding: "0.75rem 2.75rem 0.75rem 1rem", backgroundColor: "#080808", border: "1px solid #7a540e", borderRadius: "0.75rem", color: "#f5f5f5", fontSize: "1rem", outline: "none", boxSizing: "border-box" }}
+                  style={{ width: "100%", padding: "0.75rem 2.75rem 0.75rem 1rem", backgroundColor: "#080808", border: "1px solid #7a540e", borderRadius: "0.75rem", color: "var(--bg-soft)", fontSize: "1rem", outline: "none", boxSizing: "border-box" }}
                   onFocus={(e) => { e.target.style.borderColor = "#c9a227"; e.target.style.boxShadow = "0 0 0 2px rgba(201,162,39,0.2)"; }}
                   onBlur={(e) => { e.target.style.borderColor = "#7a540e"; e.target.style.boxShadow = "none"; }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#505050", cursor: "pointer", padding: "0" }}
+                  style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: "0" }}
                 >
                   {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -110,7 +110,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p style={{ textAlign: "center", color: "#505050", fontSize: "0.875rem", marginTop: "1.5rem" }}>
+          <p style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "0.875rem", marginTop: "1.5rem" }}>
             Não tem conta?{" "}
             <Link href="/cadastro" style={{ color: "#c9a227", fontWeight: 600, textDecoration: "none" }}>
               Criar conta

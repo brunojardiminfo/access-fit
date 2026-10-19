@@ -34,7 +34,7 @@ export default function AvisoLancamento() {
         <span style={{ color: "#ffd87a", fontSize: "0.68rem", fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase" }}>
           ✦ Lançamento
         </span>
-        <strong style={{ color: "#FAF6EE", fontSize: "0.95rem", fontWeight: 800, letterSpacing: "0.01em" }}>
+        <strong style={{ color: "var(--text-main)", fontSize: "0.95rem", fontWeight: 800, letterSpacing: "0.01em" }}>
           Alma de Floripa
         </strong>
         <span style={{ color: "rgba(250,246,238,0.72)", fontSize: "0.85rem" }}>

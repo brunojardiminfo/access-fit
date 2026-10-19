@@ -10,7 +10,7 @@
  */
 export default function CarregandoVitrine() {
   return (
-    <div style={{ backgroundColor: "#FAF6EE", minHeight: "100vh", padding: "2rem 1.25rem" }}>
+    <div style={{ backgroundColor: "var(--bg)", minHeight: "100vh", padding: "2rem 1.25rem" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
         <div className="esqueleto" style={{ width: 180, height: 28, marginBottom: "0.6rem" }} />
         <div className="esqueleto" style={{ width: 120, height: 14, marginBottom: "1.75rem" }} />
@@ -23,7 +23,7 @@ export default function CarregandoVitrine() {
 
         <div className="grade-vitrine">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} style={{ borderRadius: "1rem", overflow: "hidden", backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.1)" }}>
+            <div key={i} style={{ borderRadius: "1rem", overflow: "hidden", backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}>
               <div className="esqueleto" style={{ aspectRatio: "3/4", borderRadius: 0 }} />
               <div style={{ padding: "0.75rem", display: "flex", flexDirection: "column", gap: "0.45rem" }}>
                 <div className="esqueleto" style={{ width: "40%", height: 9 }} />

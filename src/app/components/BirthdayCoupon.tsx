@@ -63,13 +63,13 @@ export default function BirthdayCoupon() {
         style={{
           padding: "1.5rem",
           backgroundColor: "#fff8e1",
-          border: "2px solid #b8891a",
+          border: "2px solid var(--gold)",
           borderRadius: "8px",
           textAlign: "center",
           marginBottom: "1.5rem",
         }}
       >
-        <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "#1a1510", margin: "0 0 0.5rem 0" }}>
+        <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text-main)", margin: "0 0 0.5rem 0" }}>
           🎂 {cupom.msg}
         </p>
         <div
@@ -81,14 +81,14 @@ export default function BirthdayCoupon() {
             marginBottom: "1rem",
           }}
         >
-          <p style={{ fontSize: "0.85rem", color: "#7a6a4a", margin: "0 0 0.5rem 0" }}>
+          <p style={{ fontSize: "0.85rem", color: "var(--text-sub)", margin: "0 0 0.5rem 0" }}>
             Código do cupom:
           </p>
           <p
             style={{
               fontSize: "1.5rem",
               fontWeight: 900,
-              color: "#b8891a",
+              color: "var(--gold)",
               margin: 0,
               fontFamily: "monospace",
             }}
@@ -96,7 +96,7 @@ export default function BirthdayCoupon() {
             {cupom.codigo}
           </p>
         </div>
-        <p style={{ fontSize: "0.9rem", color: "#5a4a2a", margin: 0 }}>
+        <p style={{ fontSize: "0.9rem", color: "var(--text-sub)", margin: 0 }}>
           {cupom.desconto}% de desconto válido apenas este mês! 🎉
         </p>
       </div>

@@ -60,22 +60,22 @@ export default function IdentificacaoModal() {
 
   const campo: React.CSSProperties = {
     width: "100%", padding: "0.85rem 1rem", borderRadius: "0.75rem",
-    border: "1px solid rgba(140,100,20,0.25)", fontSize: "1rem",
-    backgroundColor: "#fff", color: "#1a1510", marginBottom: "0.75rem",
+    border: "1px solid var(--border)", fontSize: "1rem",
+    backgroundColor: "var(--bg-card)", color: "var(--text-main)", marginBottom: "0.75rem",
   };
 
   return (
     <div
       onClick={e => { if (e.target === e.currentTarget) cancelar(); }}
       style={{ position: "fixed", inset: 0, backgroundColor: "rgba(26,21,16,0.6)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1.25rem" }}>
-      <div style={{ backgroundColor: "#FAF6EE", borderRadius: "1.25rem", padding: "1.75rem 1.5rem", width: "100%", maxWidth: 400, boxShadow: "0 20px 60px rgba(0,0,0,0.35)" }}>
-        <p style={{ fontSize: "0.7rem", fontWeight: 800, color: "#b8891a", textTransform: "uppercase", letterSpacing: "0.14em", margin: 0 }}>
+      <div style={{ backgroundColor: "var(--bg)", borderRadius: "1.25rem", padding: "1.75rem 1.5rem", width: "100%", maxWidth: 400, boxShadow: "0 20px 60px rgba(0,0,0,0.35)" }}>
+        <p style={{ fontSize: "0.7rem", fontWeight: 800, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.14em", margin: 0 }}>
           Quase lá
         </p>
-        <h2 style={{ fontSize: "1.3rem", fontWeight: 900, color: "#1a1510", margin: "0.3rem 0 0.4rem" }}>
+        <h2 style={{ fontSize: "1.3rem", fontWeight: 900, color: "var(--text-main)", margin: "0.3rem 0 0.4rem" }}>
           Pra quem estamos separando?
         </h2>
-        <p style={{ fontSize: "0.85rem", color: "#9a8060", margin: "0 0 1.25rem", lineHeight: 1.5 }}>
+        <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: "0 0 1.25rem", lineHeight: 1.5 }}>
           Guardamos sua sacola com seu nome. Assim, se você não finalizar agora,
           a gente te ajuda a terminar depois.
         </p>
@@ -87,16 +87,16 @@ export default function IdentificacaoModal() {
           placeholder="(51) 99999-9999" inputMode="tel" style={campo}
           onKeyDown={e => { if (e.key === "Enter") confirmar(); }} />
 
-        {erro && <p style={{ color: "#c04040", fontSize: "0.8rem", fontWeight: 700, margin: "0 0 0.75rem" }}>{erro}</p>}
+        {erro && <p style={{ color: "#ff8a7a", fontSize: "0.8rem", fontWeight: 700, margin: "0 0 0.75rem" }}>{erro}</p>}
 
         <button onClick={confirmar}
-          style={{ width: "100%", padding: "1rem", backgroundColor: "#1a1510", color: "#FAF6EE", fontWeight: 900, fontSize: "1rem", border: "none", borderRadius: "0.875rem", cursor: "pointer", letterSpacing: "0.03em" }}>
+          style={{ width: "100%", padding: "1rem", backgroundColor: "var(--gold)", color: "#16110b", fontWeight: 900, fontSize: "1rem", border: "none", borderRadius: "0.875rem", cursor: "pointer", letterSpacing: "0.03em" }}>
           Adicionar à sacola
         </button>
 
         {PERMITIR_PULAR && (
           <button onClick={pular}
-            style={{ display: "block", width: "100%", marginTop: "0.625rem", background: "none", border: "none", color: "#9a8060", fontSize: "0.82rem", textDecoration: "underline", cursor: "pointer" }}>
+            style={{ display: "block", width: "100%", marginTop: "0.625rem", background: "none", border: "none", color: "var(--text-muted)", fontSize: "0.82rem", textDecoration: "underline", cursor: "pointer" }}>
             Agora não, quero só olhar
           </button>
         )}

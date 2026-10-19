@@ -57,7 +57,7 @@ export default function RecommendedProducts({ productSlug }: Props) {
 
   return (
     <div style={{ marginTop: "2rem", padding: "0 1rem" }}>
-      <h3 style={{ fontSize: "0.75rem", fontWeight: 800, color: "#b8891a", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1.25rem" }}>
+      <h3 style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--gold)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1.25rem" }}>
         {titulo}
       </h3>
 
@@ -80,7 +80,7 @@ export default function RecommendedProducts({ productSlug }: Props) {
                 textDecoration: "none",
                 borderRadius: "0.75rem",
                 overflow: "hidden",
-                border: "1px solid rgba(140,100,20,0.15)",
+                border: "1px solid var(--border)",
                 transition: "all 0.2s",
                 cursor: "pointer",
                 display: "flex",
@@ -99,7 +99,7 @@ export default function RecommendedProducts({ productSlug }: Props) {
               {/* Imagem */}
               <div
                 style={{
-                  backgroundColor: "#F0E8D0",
+                  backgroundColor: "var(--bg-soft)",
                   aspectRatio: "3/4",
                   overflow: "hidden",
                   display: "flex",
@@ -119,7 +119,7 @@ export default function RecommendedProducts({ productSlug }: Props) {
                     }}
                   />
                 ) : (
-                  <div style={{ color: "#b8891a", fontSize: "0.7rem", opacity: 0.5 }}>
+                  <div style={{ color: "var(--gold)", fontSize: "0.7rem", opacity: 0.5 }}>
                     Foto em breve
                   </div>
                 )}
@@ -130,7 +130,7 @@ export default function RecommendedProducts({ productSlug }: Props) {
                 <p
                   style={{
                     fontSize: "0.65rem",
-                    color: "#9a8060",
+                    color: "var(--text-muted)",
                     fontWeight: 600,
                     textTransform: "uppercase",
                     margin: "0 0 0.25rem 0",
@@ -142,7 +142,7 @@ export default function RecommendedProducts({ productSlug }: Props) {
                   style={{
                     fontSize: "0.8rem",
                     fontWeight: 700,
-                    color: "#1a1510",
+                    color: "var(--text-main)",
                     margin: 0,
                     lineHeight: 1.2,
                     flex: 1,
@@ -154,13 +154,13 @@ export default function RecommendedProducts({ productSlug }: Props) {
                   style={{
                     fontSize: "0.9rem",
                     fontWeight: 900,
-                    color: saleInfo ? "#e74c3c" : "#b8891a",
+                    color: saleInfo ? "#e74c3c" : "var(--gold)",
                     margin: "0.5rem 0 0 0",
                   }}
                 >
                   {formatCurrency(finalPrice)}
                   {saleInfo && (
-                    <span style={{ fontSize: "0.7rem", color: "#b8a080", textDecoration: "line-through", marginLeft: "0.35rem", fontWeight: 700 }}>
+                    <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", textDecoration: "line-through", marginLeft: "0.35rem", fontWeight: 700 }}>
                       {formatCurrency(produto.price)}
                     </span>
                   )}
@@ -178,8 +178,8 @@ export default function RecommendedProducts({ productSlug }: Props) {
             style={{
               display: "inline-block",
               padding: "0.75rem 1.5rem",
-              backgroundColor: "#b8891a",
-              color: "#fff",
+              backgroundColor: "var(--gold)",
+              color: "#16110b",
               borderRadius: "0.625rem",
               textDecoration: "none",
               fontWeight: 700,
@@ -191,7 +191,7 @@ export default function RecommendedProducts({ productSlug }: Props) {
               (e.currentTarget as HTMLElement).style.transform = "scale(1.05)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = "#b8891a";
+              (e.currentTarget as HTMLElement).style.backgroundColor = "var(--gold)";
               (e.currentTarget as HTMLElement).style.transform = "scale(1)";
             }}
           >

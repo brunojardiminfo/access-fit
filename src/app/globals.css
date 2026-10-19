@@ -1,6 +1,36 @@
 @import "tailwindcss";
 
+/* ────────────────────────────────────────────────────────────────────────
+   A LOJA É ESCURA
+
+   O tom escuro existia só no hero da home; o resto era creme claro, e a loja
+   parecia dois sites colados. Agora o escuro é a regra.
+
+   Os nomes dos tokens são os que o projeto já usava — mudaram os valores, não
+   o vocabulário. Trocar o tom da loja é mexer aqui, não caçar cor espalhada
+   pelos componentes.
+   ──────────────────────────────────────────────────────────────────────── */
 :root {
+  --bg:          #16110b;   /* o chão da loja */
+  --bg-soft:     #1e1710;   /* faixa que precisa se destacar do chão */
+  --bg-card:     #241c12;   /* cartão, caixa, campo */
+  --bg-dark:     #0e0a06;   /* o mais fundo: rodapé, véu sobre foto */
+  --border:      rgba(184, 137, 26, 0.16);
+  --border-gold: rgba(216, 166, 44, 0.38);
+  --text-main:   #FAF6EE;
+  --text-sub:    rgba(250, 246, 238, 0.64);
+  --text-muted:  rgba(250, 246, 238, 0.40);
+  /* O ouro clareia. O #b8891a lia bem sobre creme e some sobre escuro — é a
+     mesma marca, com o contraste que o fundo novo exige. */
+  --gold:        #d8a62c;
+  --gold-light:  #f0c75a;
+  --gold-dark:   #b8891a;
+}
+
+/* O PAINEL DO ADMIN CONTINUA CLARO.
+   É ferramenta de trabalho, usada horas por dia, não vitrine. Escurecer sem
+   ninguém pedir seria trocar o conforto de quem usa pelo gosto da loja. */
+body.area-admin {
   --bg:          #FAF6EE;
   --bg-soft:     #F2EBD9;
   --bg-card:     #FFFFFF;
@@ -31,7 +61,7 @@ html, body {
 ::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 3px; }
 
 input, textarea, select {
-  background-color: #FFFFFF !important;
+  background-color: var(--bg-card) !important;
   color: var(--text-main) !important;
   border: 1px solid var(--border) !important;
   outline: none !important;

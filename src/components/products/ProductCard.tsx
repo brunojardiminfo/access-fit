@@ -47,38 +47,38 @@ export default function ProductCard({ product, indice = 0 }: { product: Product;
     <Link href={`/produtos/${product.slug}`} style={{ textDecoration: "none", display: "block", height: "100%" }}>
       <div className="surgir cartao-peca"
         style={{
-          borderRadius: "1rem", overflow: "hidden", backgroundColor: "#fff",
-          border: "1px solid rgba(140,100,20,0.1)", boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+          borderRadius: "1rem", overflow: "hidden", backgroundColor: "var(--bg-card)",
+          border: "1px solid var(--border)", boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
           // Trava em 8: numa vitrine grande, a última peça não pode ficar meio
           // segundo esperando a vez de aparecer.
           ["--atraso" as string]: Math.min(indice, 8),
         }}>
 
         {/* Foto */}
-        <div className="foto-zoom" style={{ position: "relative", aspectRatio: "3/4", backgroundColor: "#F0E8D0", overflow: "hidden" }}>
+        <div className="foto-zoom" style={{ position: "relative", aspectRatio: "3/4", backgroundColor: "var(--bg-soft)", overflow: "hidden" }}>
           {images[0] ? (
             <img src={images[0]} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           ) : (
             <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect width="40" height="40" rx="20" fill="rgba(184,137,26,0.08)"/><path d="M14 28C14 21 17 15 20 15C23 15 26 21 26 28" stroke="#b8891a" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/><circle cx="20" cy="11" r="3" stroke="#b8891a" strokeWidth="1.5" opacity="0.5"/></svg>
-              <span style={{ color: "#b8891a", fontSize: "0.7rem", fontWeight: 600, opacity: 0.6, textAlign: "center", padding: "0 0.5rem" }}>Foto em breve</span>
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect width="40" height="40" rx="20" fill="rgba(184,137,26,0.08)"/><path d="M14 28C14 21 17 15 20 15C23 15 26 21 26 28" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/><circle cx="20" cy="11" r="3" stroke="var(--gold)" strokeWidth="1.5" opacity="0.5"/></svg>
+              <span style={{ color: "var(--gold)", fontSize: "0.7rem", fontWeight: 600, opacity: 0.6, textAlign: "center", padding: "0 0.5rem" }}>Foto em breve</span>
             </div>
           )}
 
           <div style={{ position: "absolute", top: 6, left: 6, display: "flex", flexDirection: "column", gap: "3px" }}>
             {selo && !outOfStock && (
-              <span style={{ backgroundColor: selo === "novidade" ? "#2f8f52" : "#b8891a", color: "#fff", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>
+              <span style={{ backgroundColor: selo === "novidade" ? "#2f8f52" : "var(--gold)", color: "var(--text-main)", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>
                 {TEXTO_SELO[selo]}
               </span>
             )}
             {saleInfo && !outOfStock && (
-              <span style={{ backgroundColor: "#e74c3c", color: "#fff", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>SALE</span>
+              <span style={{ backgroundColor: "#e74c3c", color: "var(--text-main)", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>SALE</span>
             )}
             {discount && !saleInfo && !outOfStock && (
-              <span style={{ backgroundColor: "#1a1510", color: "#b8891a", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>-{discount}%</span>
+              <span style={{ backgroundColor: "var(--gold)", color: "#16110b", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>-{discount}%</span>
             )}
             {outOfStock && (
-              <span style={{ backgroundColor: "rgba(0,0,0,0.55)", color: "#fff", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>Esgotado</span>
+              <span style={{ backgroundColor: "rgba(0,0,0,0.55)", color: "var(--text-main)", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>Esgotado</span>
             )}
           </div>
 
@@ -89,7 +89,7 @@ export default function ProductCard({ product, indice = 0 }: { product: Product;
                   style={{ width: 11, height: 11, borderRadius: "50%", backgroundColor: c.fundo, border: `1px solid ${c.borda}`, display: "block", flexShrink: 0 }} />
               ))}
               {cores.length > 4 && (
-                <span style={{ fontSize: "0.55rem", fontWeight: 800, color: "#5a4a30", lineHeight: 1 }}>+{cores.length - 4}</span>
+                <span style={{ fontSize: "0.55rem", fontWeight: 800, color: "var(--text-muted)", lineHeight: 1 }}>+{cores.length - 4}</span>
               )}
             </div>
           )}
@@ -99,24 +99,24 @@ export default function ProductCard({ product, indice = 0 }: { product: Product;
             cartões da linha terminam na mesma altura, mesmo com nome de duas
             linhas ou lista de cores mais longa. */}
         <div className="corpo-cartao" style={{ padding: "0.75rem" }}>
-          <p style={{ fontSize: "0.65rem", color: "#b8891a", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.25rem" }}>
+          <p style={{ fontSize: "0.65rem", color: "var(--gold)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.25rem" }}>
             {product.category.name}
           </p>
-          <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#1a1510", lineHeight: 1.3, marginBottom: "0.4rem", overflow: "hidden", display: "-webkit-box", WebkitBoxOrient: "vertical" as const, WebkitLineClamp: 2, minHeight: "2.2em" }}>
+          <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-main)", lineHeight: 1.3, marginBottom: "0.4rem", overflow: "hidden", display: "-webkit-box", WebkitBoxOrient: "vertical" as const, WebkitLineClamp: 2, minHeight: "2.2em" }}>
             {product.name}
           </p>
 
           {sizes.length > 0 && (
             <div style={{ display: "flex", gap: "2px", flexWrap: "wrap", marginBottom: "0.5rem" }}>
               {sizes.slice(0, 4).map(s => (
-                <span key={s} style={{ fontSize: "0.55rem", fontWeight: 700, padding: "1px 4px", borderRadius: "3px", backgroundColor: "#FAF6EE", color: "#9a8060", border: "1px solid rgba(140,100,20,0.15)" }}>{s}</span>
+                <span key={s} style={{ fontSize: "0.55rem", fontWeight: 700, padding: "1px 4px", borderRadius: "3px", backgroundColor: "var(--bg)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>{s}</span>
               ))}
-              {sizes.length > 4 && <span style={{ fontSize: "0.55rem", color: "#b8891a", fontWeight: 700 }}>+{sizes.length - 4}</span>}
+              {sizes.length > 4 && <span style={{ fontSize: "0.55rem", color: "var(--gold)", fontWeight: 700 }}>+{sizes.length - 4}</span>}
             </div>
           )}
 
           {cores.length > 0 && (
-            <p style={{ fontSize: "0.58rem", color: "#9a8060", fontWeight: 600, marginBottom: "0.5rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <p style={{ fontSize: "0.58rem", color: "var(--text-muted)", fontWeight: 600, marginBottom: "0.5rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {cores.length === 1 ? cores[0].nome : `${cores.length} cores: ${cores.map(c => c.nome).join(", ")}`}
             </p>
           )}
@@ -124,16 +124,16 @@ export default function ProductCard({ product, indice = 0 }: { product: Product;
           {/* Preço e botão descem juntos para o pé do cartão, alinhados entre
               as peças da mesma linha. */}
           <div className="rodape-cartao" style={{ display: "flex", alignItems: "center", gap: "0.3rem", marginBottom: "0.6rem", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "1rem", fontWeight: 900, color: saleInfo ? "#e74c3c" : "#b8891a" }}>{formatCurrency(finalPrice)}</span>
+            <span style={{ fontSize: "1rem", fontWeight: 900, color: saleInfo ? "#e74c3c" : "var(--gold)" }}>{formatCurrency(finalPrice)}</span>
             {(product.compareAt || saleInfo) && (
-              <span style={{ fontSize: "0.7rem", color: "#b8a080", textDecoration: "line-through" }}>
+              <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", textDecoration: "line-through" }}>
                 {formatCurrency(product.compareAt || product.price)}
               </span>
             )}
           </div>
 
           <button onClick={handleAddToCart} disabled={outOfStock}
-            style={{ width: "100%", padding: "0.5rem", backgroundColor: outOfStock ? "#e8e0d0" : "#1a1510", color: outOfStock ? "#9a8060" : "#FAF6EE", fontWeight: 800, fontSize: "0.75rem", border: "none", borderRadius: "0.5rem", cursor: outOfStock ? "not-allowed" : "pointer", letterSpacing: "0.03em" }}>
+            style={{ width: "100%", padding: "0.5rem", backgroundColor: outOfStock ? "#e8e0d0" : "var(--bg-soft)", color: outOfStock ? "var(--text-muted)" : "var(--text-main)", fontWeight: 800, fontSize: "0.75rem", border: "none", borderRadius: "0.5rem", cursor: outOfStock ? "not-allowed" : "pointer", letterSpacing: "0.03em" }}>
             {outOfStock ? "Esgotado" : "Ver produto"}
           </button>
         </div>

@@ -11,24 +11,24 @@ export const metadata = {
 
 const StarDecor = () => (
   <svg width="180" height="180" viewBox="0 0 180 180" fill="none" style={{ position: "absolute", opacity: 0.07, pointerEvents: "none" }}>
-    <path d="M90 20 L93 32 L106 35 L93 38 L90 50 L87 38 L74 35 L87 32 Z" fill="#b8891a"/>
-    <path d="M140 60 L142 68 L150 70 L142 72 L140 80 L138 72 L130 70 L138 68 Z" fill="#b8891a"/>
-    <path d="M50 100 L52 108 L60 110 L52 112 L50 120 L48 112 L40 110 L48 108 Z" fill="#b8891a"/>
-    <circle cx="155" cy="120" r="3" fill="#b8891a"/>
-    <circle cx="30" cy="60" r="2" fill="#b8891a"/>
-    <circle cx="120" cy="150" r="2.5" fill="#b8891a"/>
-    <path d="M20 160 Q80 80 160 100" stroke="#b8891a" strokeWidth="1" fill="none"/>
+    <path d="M90 20 L93 32 L106 35 L93 38 L90 50 L87 38 L74 35 L87 32 Z" fill="var(--gold)"/>
+    <path d="M140 60 L142 68 L150 70 L142 72 L140 80 L138 72 L130 70 L138 68 Z" fill="var(--gold)"/>
+    <path d="M50 100 L52 108 L60 110 L52 112 L50 120 L48 112 L40 110 L48 108 Z" fill="var(--gold)"/>
+    <circle cx="155" cy="120" r="3" fill="var(--gold)"/>
+    <circle cx="30" cy="60" r="2" fill="var(--gold)"/>
+    <circle cx="120" cy="150" r="2.5" fill="var(--gold)"/>
+    <path d="M20 160 Q80 80 160 100" stroke="var(--gold)" strokeWidth="1" fill="none"/>
   </svg>
 );
 
 export default function SobrePage() {
   return (
-    <div style={{ backgroundColor: "#FAF6EE", minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "var(--bg)", minHeight: "100vh" }}>
 
       {/* Hero */}
-      <section style={{ position: "relative", overflow: "hidden", backgroundColor: "#1a1510", padding: "5rem 1.5rem" }}>
+      <section style={{ position: "relative", overflow: "hidden", backgroundColor: "var(--bg-dark)", padding: "5rem 1.5rem" }}>
         <div style={{ position: "absolute", inset: 0, opacity: 0.06 }}>
-          <svg width="100%" height="100%"><defs><pattern id="stars" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse"><path d="M40 10 L41.5 16 L48 17.5 L41.5 19 L40 25 L38.5 19 L32 17.5 L38.5 16 Z" fill="#b8891a"/><circle cx="15" cy="40" r="1.5" fill="#b8891a"/><circle cx="65" cy="60" r="1" fill="#b8891a"/><circle cx="70" cy="20" r="1.2" fill="#b8891a"/></pattern></defs><rect width="100%" height="100%" fill="url(#stars)"/></svg>
+          <svg width="100%" height="100%"><defs><pattern id="stars" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse"><path d="M40 10 L41.5 16 L48 17.5 L41.5 19 L40 25 L38.5 19 L32 17.5 L38.5 16 Z" fill="var(--gold)"/><circle cx="15" cy="40" r="1.5" fill="var(--gold)"/><circle cx="65" cy="60" r="1" fill="var(--gold)"/><circle cx="70" cy="20" r="1.2" fill="var(--gold)"/></pattern></defs><rect width="100%" height="100%" fill="url(#stars)"/></svg>
         </div>
         <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center", position: "relative", zIndex: 1 }}>
           <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.5rem" }}>
@@ -36,8 +36,8 @@ export default function SobrePage() {
               <Image src="/logo.png" alt="Access Fit" width={110} height={110} style={{ objectFit: "cover", transform: "scale(1.08)" }} />
             </div>
           </div>
-          <p style={{ fontSize: "0.75rem", color: "#b8891a", fontWeight: 700, letterSpacing: "0.2em", marginBottom: "1rem" }}>ACCESS FIT</p>
-          <h1 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 900, color: "#fff", lineHeight: 1.1, marginBottom: "1.25rem" }}>
+          <p style={{ fontSize: "0.75rem", color: "var(--gold)", fontWeight: 700, letterSpacing: "0.2em", marginBottom: "1rem" }}>ACCESS FIT</p>
+          <h1 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 900, color: "var(--text-main)", lineHeight: 1.1, marginBottom: "1.25rem" }}>
             Moda fitness que cabe<br />
             <span style={{ background: "linear-gradient(135deg, #c9920a, #e0b030)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               no seu estilo de vida
@@ -55,11 +55,11 @@ export default function SobrePage() {
 
           <div className="historia-intro" style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "2.5rem", alignItems: "center", marginBottom: "3rem" }}>
             <div>
-              <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "#b8891a", letterSpacing: "0.15em", marginBottom: "0.75rem" }}>NOSSA HISTÓRIA</p>
-              <h2 className={anton.className} style={{ fontSize: "clamp(2rem, 4.5vw, 3rem)", color: "#1a1510", lineHeight: 0.95, marginBottom: "1.25rem", letterSpacing: "0.01em" }}>
+              <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--gold)", letterSpacing: "0.15em", marginBottom: "0.75rem" }}>NOSSA HISTÓRIA</p>
+              <h2 className={anton.className} style={{ fontSize: "clamp(2rem, 4.5vw, 3rem)", color: "var(--text-main)", lineHeight: 0.95, marginBottom: "1.25rem", letterSpacing: "0.01em" }}>
                 BRUNO &amp; BRUNA
               </h2>
-              <p style={{ color: "#5a4a2a", fontSize: "1rem", lineHeight: 1.8, maxWidth: 480 }}>
+              <p style={{ color: "var(--text-sub)", fontSize: "1rem", lineHeight: 1.8, maxWidth: 480 }}>
                 Juntos há 4 anos, sempre em busca de evolução — os dois nomes por trás de cada peça da Access Fit.
               </p>
             </div>
@@ -106,13 +106,13 @@ export default function SobrePage() {
               <Image src="/sobre/casal.jpg" alt="Bruno e Bruna" fill style={{ objectFit: "cover" }} sizes="150px" />
             </div>
             <div>
-              <p style={{ color: "#5a4a2a", fontSize: "1rem", lineHeight: 1.8, marginBottom: "1rem" }}>
+              <p style={{ color: "var(--text-sub)", fontSize: "1rem", lineHeight: 1.8, marginBottom: "1rem" }}>
                 Decidimos unir a paixão da Bruna por moda fitness e terapias holísticas com a experiência do Bruno em tecnologia e empreendedorismo.
               </p>
-              <p style={{ color: "#5a4a2a", fontSize: "1rem", lineHeight: 1.8, marginBottom: "1.5rem" }}>
-                Nasceu assim a <strong style={{ color: "#1a1510" }}>Access Fit</strong>: roupas de treino que te dão conforto e beleza até nos treinos mais intensos, trazendo a essência das barras de access — uma terapia holística que transforma.
+              <p style={{ color: "var(--text-sub)", fontSize: "1rem", lineHeight: 1.8, marginBottom: "1.5rem" }}>
+                Nasceu assim a <strong style={{ color: "var(--text-main)" }}>Access Fit</strong>: roupas de treino que te dão conforto e beleza até nos treinos mais intensos, trazendo a essência das barras de access — uma terapia holística que transforma.
               </p>
-              <p style={{ fontStyle: "italic", color: "#b8891a", fontWeight: 700, fontSize: "0.95rem" }}>
+              <p style={{ fontStyle: "italic", color: "var(--gold)", fontWeight: 700, fontSize: "0.95rem" }}>
                 Idealizado com muito carinho para todas vocês.
               </p>
             </div>
@@ -127,15 +127,15 @@ export default function SobrePage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3rem", alignItems: "center" }}>
             <div style={{ position: "relative" }}>
               <StarDecor />
-              <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "#b8891a", letterSpacing: "0.15em", marginBottom: "0.75rem" }}>NOSSO DIFERENCIAL</p>
-              <h2 style={{ fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)", fontWeight: 900, color: "#1a1510", lineHeight: 1.15, marginBottom: "1.25rem" }}>
+              <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--gold)", letterSpacing: "0.15em", marginBottom: "0.75rem" }}>NOSSO DIFERENCIAL</p>
+              <h2 style={{ fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)", fontWeight: 900, color: "var(--text-main)", lineHeight: 1.15, marginBottom: "1.25rem" }}>
                 Home<br />Try-On
               </h2>
-              <p style={{ color: "#5a4a2a", fontSize: "1rem", lineHeight: 1.8, marginBottom: "1.5rem" }}>
+              <p style={{ color: "var(--text-sub)", fontSize: "1rem", lineHeight: 1.8, marginBottom: "1.5rem" }}>
                 Acreditamos que a melhor forma de escolher uma peça é experimentá-la com calma, no conforto da sua casa ou onde você preferir.
               </p>
-              <p style={{ color: "#5a4a2a", fontSize: "1rem", lineHeight: 1.8 }}>
-                Por isso criamos o <strong style={{ color: "#1a1510" }}>Home Try-On</strong>: você recebe as peças, experimenta com tranquilidade e paga <strong style={{ color: "#1a1510" }}>somente pelo que ficou</strong>. Sem pressão, sem complicação.
+              <p style={{ color: "var(--text-sub)", fontSize: "1rem", lineHeight: 1.8 }}>
+                Por isso criamos o <strong style={{ color: "var(--text-main)" }}>Home Try-On</strong>: você recebe as peças, experimenta com tranquilidade e paga <strong style={{ color: "var(--text-main)" }}>somente pelo que ficou</strong>. Sem pressão, sem complicação.
               </p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -144,11 +144,11 @@ export default function SobrePage() {
                 { emoji: "👗", title: "Experimente à vontade", desc: "Você tem tempo para provar, combinar e decidir com calma." },
                 { emoji: "✅", title: "Pague só o que ficou", desc: "Gostou? Fica. Não curtiu? Devolve. Simples assim." },
               ].map(item => (
-                <div key={item.title} style={{ backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.1)", borderRadius: "1rem", padding: "1.25rem 1.5rem", display: "flex", gap: "1rem", alignItems: "flex-start", boxShadow: "0 2px 8px rgba(140,100,20,0.05)" }}>
+                <div key={item.title} style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "1rem", padding: "1.25rem 1.5rem", display: "flex", gap: "1rem", alignItems: "flex-start", boxShadow: "0 2px 8px var(--border)" }}>
                   <span style={{ fontSize: "1.5rem", flexShrink: 0 }}>{item.emoji}</span>
                   <div>
-                    <p style={{ fontWeight: 800, color: "#1a1510", marginBottom: "0.25rem" }}>{item.title}</p>
-                    <p style={{ color: "#7a6040", fontSize: "0.875rem", lineHeight: 1.6 }}>{item.desc}</p>
+                    <p style={{ fontWeight: 800, color: "var(--text-main)", marginBottom: "0.25rem" }}>{item.title}</p>
+                    <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", lineHeight: 1.6 }}>{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -158,10 +158,10 @@ export default function SobrePage() {
       </section>
 
       {/* Valores */}
-      <section style={{ backgroundColor: "#fff", padding: "4rem 1.5rem", borderTop: "1px solid rgba(140,100,20,0.1)" }}>
+      <section style={{ backgroundColor: "var(--bg-card)", padding: "4rem 1.5rem", borderTop: "1px solid var(--border)" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto", textAlign: "center" }}>
-          <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "#b8891a", letterSpacing: "0.15em", marginBottom: "0.75rem" }}>NOSSOS VALORES</p>
-          <h2 style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", fontWeight: 900, color: "#1a1510", marginBottom: "3rem" }}>
+          <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--gold)", letterSpacing: "0.15em", marginBottom: "0.75rem" }}>NOSSOS VALORES</p>
+          <h2 style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", fontWeight: 900, color: "var(--text-main)", marginBottom: "3rem" }}>
             O que nos move
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "2rem" }}>
@@ -173,8 +173,8 @@ export default function SobrePage() {
             ].map(v => (
               <div key={v.title} style={{ padding: "0.5rem" }}>
                 <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>{v.emoji}</div>
-                <h3 style={{ fontWeight: 800, color: "#1a1510", fontSize: "1rem", marginBottom: "0.5rem" }}>{v.title}</h3>
-                <p style={{ color: "#7a6040", fontSize: "0.875rem", lineHeight: 1.6 }}>{v.desc}</p>
+                <h3 style={{ fontWeight: 800, color: "var(--text-main)", fontSize: "1rem", marginBottom: "0.5rem" }}>{v.title}</h3>
+                <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", lineHeight: 1.6 }}>{v.desc}</p>
               </div>
             ))}
           </div>
@@ -184,14 +184,14 @@ export default function SobrePage() {
       {/* CTA */}
       <section style={{ padding: "4rem 1.5rem", textAlign: "center" }}>
         <div style={{ maxWidth: 600, margin: "0 auto" }}>
-          <h2 style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", fontWeight: 900, color: "#1a1510", marginBottom: "1rem" }}>
+          <h2 style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", fontWeight: 900, color: "var(--text-main)", marginBottom: "1rem" }}>
             Pronta para experimentar?
           </h2>
-          <p style={{ color: "#7a6040", fontSize: "1rem", lineHeight: 1.7, marginBottom: "2rem" }}>
+          <p style={{ color: "var(--text-muted)", fontSize: "1rem", lineHeight: 1.7, marginBottom: "2rem" }}>
             Conheça nossa coleção e descubra peças feitas para você se sentir incrível — no treino e além dele.
           </p>
           <Link href="/produtos"
-            style={{ display: "inline-block", backgroundColor: "#b8891a", color: "#fff", fontWeight: 800, fontSize: "1rem", padding: "0.875rem 2.5rem", borderRadius: "0.875rem", textDecoration: "none", boxShadow: "0 4px 16px rgba(184,137,26,0.3)" }}>
+            style={{ display: "inline-block", backgroundColor: "var(--gold)", color: "#16110b", fontWeight: 800, fontSize: "1rem", padding: "0.875rem 2.5rem", borderRadius: "0.875rem", textDecoration: "none", boxShadow: "0 4px 16px rgba(184,137,26,0.3)" }}>
             Ver coleção
           </Link>
         </div>
@@ -255,15 +255,15 @@ function FounderBlock({ name, age, role, tag, bio, mainPhoto, sidePhotos, revers
 }) {
   const text = (
     <div>
-      <h3 className={anton.className} style={{ fontSize: "clamp(2.25rem, 4.5vw, 3rem)", color: "#1a1510", lineHeight: 1, marginBottom: "0.35rem", letterSpacing: "0.01em" }}>
+      <h3 className={anton.className} style={{ fontSize: "clamp(2.25rem, 4.5vw, 3rem)", color: "var(--text-main)", lineHeight: 1, marginBottom: "0.35rem", letterSpacing: "0.01em" }}>
         {name}
       </h3>
-      <p style={{ fontSize: "0.9rem", fontWeight: 700, color: "#b8891a", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
+      <p style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--gold)", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
         {age.toUpperCase()} · {role}
       </p>
-      <p style={{ color: "#7a6040", fontWeight: 700, fontSize: "0.85rem", fontStyle: "italic", marginBottom: "1.1rem" }}>{tag}</p>
+      <p style={{ color: "var(--text-muted)", fontWeight: 700, fontSize: "0.85rem", fontStyle: "italic", marginBottom: "1.1rem" }}>{tag}</p>
       {bio.map((p, i) => (
-        <p key={i} style={{ color: "#5a4a2a", fontSize: "0.975rem", lineHeight: 1.8, marginBottom: i < bio.length - 1 ? "0.9rem" : 0 }}>{p}</p>
+        <p key={i} style={{ color: "var(--text-sub)", fontSize: "0.975rem", lineHeight: 1.8, marginBottom: i < bio.length - 1 ? "0.9rem" : 0 }}>{p}</p>
       ))}
     </div>
   );

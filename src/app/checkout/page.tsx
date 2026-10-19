@@ -20,10 +20,10 @@ function parseJson<T>(json: string, fallback: T): T {
 
 const inp = {
   padding: "0.75rem 1rem",
-  border: "1px solid rgba(140,100,20,0.25)",
+  border: "1px solid var(--border)",
   borderRadius: "0.625rem",
   fontSize: "0.95rem",
-  backgroundColor: "#fff",
+  backgroundColor: "var(--bg-card)",
   outline: "none",
   width: "100%",
   boxSizing: "border-box" as const,
@@ -266,10 +266,10 @@ function CheckoutContent() {
 
   if (items.length === 0 && !sent) {
     return (
-      <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "#FAF6EE", padding: "2rem" }}>
-        <p style={{ fontSize: "1.25rem", fontWeight: 700, color: "#1a1510", marginBottom: "0.5rem" }}>Carrinho vazio</p>
-        <p style={{ color: "#9a8060", marginBottom: "1.5rem" }}>Adicione produtos antes de finalizar.</p>
-        <Link href="/produtos" style={{ backgroundColor: "#b8891a", color: "#fff", padding: "0.75rem 2rem", borderRadius: "0.75rem", textDecoration: "none", fontWeight: 700 }}>
+      <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--bg)", padding: "2rem" }}>
+        <p style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text-main)", marginBottom: "0.5rem" }}>Carrinho vazio</p>
+        <p style={{ color: "var(--text-muted)", marginBottom: "1.5rem" }}>Adicione produtos antes de finalizar.</p>
+        <Link href="/produtos" style={{ backgroundColor: "var(--gold)", color: "#16110b", padding: "0.75rem 2rem", borderRadius: "0.75rem", textDecoration: "none", fontWeight: 700 }}>
           Ver coleção
         </Link>
       </div>
@@ -278,68 +278,68 @@ function CheckoutContent() {
 
   if (sent) {
     return (
-      <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "#FAF6EE", padding: "2rem", textAlign: "center" }}>
+      <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--bg)", padding: "2rem", textAlign: "center" }}>
         <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>✅</div>
-        <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "#1a1510", marginBottom: "0.5rem" }}>Pedido enviado!</h2>
-        <p style={{ color: "#5a4a2a", marginBottom: "0.5rem" }}>Sua mensagem foi aberta no WhatsApp.</p>
-        <p style={{ color: "#9a8060", fontSize: "0.875rem", marginBottom: "2rem" }}>Em breve entraremos em contato para confirmar.</p>
-        <Link href="/produtos" style={{ color: "#b8891a", fontWeight: 700, textDecoration: "none" }}>← Continuar comprando</Link>
+        <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--text-main)", marginBottom: "0.5rem" }}>Pedido enviado!</h2>
+        <p style={{ color: "var(--text-sub)", marginBottom: "0.5rem" }}>Sua mensagem foi aberta no WhatsApp.</p>
+        <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", marginBottom: "2rem" }}>Em breve entraremos em contato para confirmar.</p>
+        <Link href="/produtos" style={{ color: "var(--gold)", fontWeight: 700, textDecoration: "none" }}>← Continuar comprando</Link>
       </div>
     );
   }
 
   return (
-    <div style={{ backgroundColor: "#FAF6EE", minHeight: "100vh", padding: "2rem 1.25rem" }}>
+    <div style={{ backgroundColor: "var(--bg)", minHeight: "100vh", padding: "2rem 1.25rem" }}>
       <div style={{ maxWidth: 880, margin: "0 auto" }}>
 
         {/* Header */}
         <div style={{ marginBottom: "2rem" }}>
-          <Link href="/produtos" style={{ color: "#b8891a", fontSize: "0.875rem", textDecoration: "none" }}>← Continuar comprando</Link>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 900, color: "#1a1510", marginTop: "0.3rem" }}>Finalizar Pedido</h1>
+          <Link href="/produtos" style={{ color: "var(--gold)", fontSize: "0.875rem", textDecoration: "none" }}>← Continuar comprando</Link>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 900, color: "var(--text-main)", marginTop: "0.3rem" }}>Finalizar Pedido</h1>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", alignItems: "start" }}>
 
           {/* Resumo do carrinho */}
-          <div style={{ backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.12)", borderRadius: "1rem", padding: "1.5rem" }}>
-            <h2 style={{ fontWeight: 800, color: "#1a1510", marginBottom: "1.25rem", fontSize: "1rem" }}>🛍️ Seus itens</h2>
+          <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "1rem", padding: "1.5rem" }}>
+            <h2 style={{ fontWeight: 800, color: "var(--text-main)", marginBottom: "1.25rem", fontSize: "1rem" }}>🛍️ Seus itens</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.25rem" }}>
               {items.map(item => (
                 <div key={item.id} style={{ display: "flex", gap: "0.875rem", alignItems: "center" }}>
-                  <div style={{ width: 56, height: 56, backgroundColor: "#F0E8D0", borderRadius: "0.5rem", overflow: "hidden", flexShrink: 0 }}>
+                  <div style={{ width: 56, height: 56, backgroundColor: "var(--bg-soft)", borderRadius: "0.5rem", overflow: "hidden", flexShrink: 0 }}>
                     {item.image && <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {skus[item.productId] && (
-                      <p style={{ fontSize: "0.68rem", color: "#b8891a", fontWeight: 700, fontFamily: "monospace" }}>{skus[item.productId]}</p>
+                      <p style={{ fontSize: "0.68rem", color: "var(--gold)", fontWeight: 700, fontFamily: "monospace" }}>{skus[item.productId]}</p>
                     )}
-                    <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "#1a1510", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</p>
-                    <p style={{ fontSize: "0.75rem", color: "#9a8060" }}>{[item.color && item.color !== "Padrão" ? item.color : null, item.size].filter(Boolean).join(" · ")}{item.quantity > 1 ? ` × ${item.quantity}` : ""}</p>
+                    <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--text-main)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</p>
+                    <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{[item.color && item.color !== "Padrão" ? item.color : null, item.size].filter(Boolean).join(" · ")}{item.quantity > 1 ? ` × ${item.quantity}` : ""}</p>
                   </div>
-                  <span style={{ fontWeight: 700, color: "#b8891a", whiteSpace: "nowrap" }}>{formatCurrency(item.price * item.quantity)}</span>
+                  <span style={{ fontWeight: 700, color: "var(--gold)", whiteSpace: "nowrap" }}>{formatCurrency(item.price * item.quantity)}</span>
                 </div>
               ))}
             </div>
-            <div style={{ borderTop: "1px solid rgba(140,100,20,0.1)", paddingTop: "1rem" }}>
+            <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
               {desconto > 0 && (
                 <>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
-                    <span style={{ color: "#5a4a2a", fontSize: "0.875rem" }}>Subtotal</span>
-                    <span style={{ color: "#5a4a2a" }}>{formatCurrency(total())}</span>
+                    <span style={{ color: "var(--text-sub)", fontSize: "0.875rem" }}>Subtotal</span>
+                    <span style={{ color: "var(--text-sub)" }}>{formatCurrency(total())}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
-                    <span style={{ color: "#1a8a2a", fontSize: "0.875rem", fontWeight: 700 }}>
+                    <span style={{ color: "#5fd37a", fontSize: "0.875rem", fontWeight: 700 }}>
                       {campanhaGanha
                         ? `${CAMPANHA.nome} · ${sacola.pecas} peças (-${sacola.progressivo}%)`
                         : `Cupom ${couponCode} (-${couponDiscount}%)`}
                     </span>
-                    <span style={{ color: "#1a8a2a", fontWeight: 700 }}>-{formatCurrency(desconto)}</span>
+                    <span style={{ color: "#5fd37a", fontWeight: 700 }}>-{formatCurrency(desconto)}</span>
                   </div>
                 </>
               )}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontWeight: 700, color: "#1a1510" }}>Total</span>
-                <span style={{ fontWeight: 900, fontSize: "1.25rem", color: "#b8891a" }}>{formatCurrency(totalFinal)}</span>
+                <span style={{ fontWeight: 700, color: "var(--text-main)" }}>Total</span>
+                <span style={{ fontWeight: 900, fontSize: "1.25rem", color: "var(--gold)" }}>{formatCurrency(totalFinal)}</span>
               </div>
 
               {creditoDisponivel > 0.005 && type === "compra" && (
@@ -350,12 +350,12 @@ function CheckoutContent() {
                 }}>
                   <input type="checkbox" checked={usarCredito}
                     onChange={e => setUsarCredito(e.target.checked)}
-                    style={{ marginTop: "0.15rem", accentColor: "#8a1ab8" }} />
+                    style={{ marginTop: "0.15rem", accentColor: "#c79bff" }} />
                   <span>
                     <span style={{ display: "block", fontWeight: 700, color: "#6a1a90", fontSize: "0.85rem" }}>
                       Você tem {formatCurrency(creditoDisponivel)} de crédito
                     </span>
-                    <span style={{ display: "block", color: "#7a6030", fontSize: "0.78rem", marginTop: "0.15rem" }}>
+                    <span style={{ display: "block", color: "var(--text-sub)", fontSize: "0.78rem", marginTop: "0.15rem" }}>
                       Quero usar nesta compra — a gente confirma o valor no WhatsApp.
                     </span>
                   </span>
@@ -368,19 +368,19 @@ function CheckoutContent() {
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
 
             {/* Tipo de pedido */}
-            <div style={{ backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.12)", borderRadius: "1rem", padding: "1.5rem" }}>
-              <h2 style={{ fontWeight: 800, color: "#1a1510", marginBottom: "1rem", fontSize: "1rem" }}>Como prefere receber?</h2>
+            <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "1rem", padding: "1.5rem" }}>
+              <h2 style={{ fontWeight: 800, color: "var(--text-main)", marginBottom: "1rem", fontSize: "1rem" }}>Como prefere receber?</h2>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
                 {[
                   { value: "compra", emoji: "🛍️", title: "Compra normal", desc: "Recebo e fico com as peças" },
                   { value: "tryon", emoji: "👗", title: "Home Try-On", desc: "Experimento em casa e pago só o que ficar · Taxa de R$ 30 se devolver" },
                 ].map(opt => (
                   <button key={opt.value} onClick={() => setType(opt.value as any)}
-                    style={{ display: "flex", gap: "0.875rem", alignItems: "center", padding: "0.875rem 1rem", borderRadius: "0.75rem", border: `2px solid ${type === opt.value ? "#b8891a" : "rgba(140,100,20,0.15)"}`, backgroundColor: type === opt.value ? "#fff8e8" : "#FAF6EE", cursor: "pointer", textAlign: "left" }}>
+                    style={{ display: "flex", gap: "0.875rem", alignItems: "center", padding: "0.875rem 1rem", borderRadius: "0.75rem", border: `2px solid ${type === opt.value ? "var(--gold)" : "var(--border)"}`, backgroundColor: type === opt.value ? "var(--bg-soft)" : "var(--bg)", cursor: "pointer", textAlign: "left" }}>
                     <span style={{ fontSize: "1.5rem" }}>{opt.emoji}</span>
                     <div>
-                      <p style={{ fontWeight: 700, color: type === opt.value ? "#b8891a" : "#1a1510", fontSize: "0.9rem" }}>{opt.title}</p>
-                      <p style={{ fontSize: "0.75rem", color: "#9a8060", marginTop: "0.1rem" }}>{opt.desc}</p>
+                      <p style={{ fontWeight: 700, color: type === opt.value ? "var(--gold)" : "#16110b", fontSize: "0.9rem" }}>{opt.title}</p>
+                      <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.1rem" }}>{opt.desc}</p>
                     </div>
                   </button>
                 ))}
@@ -388,35 +388,35 @@ function CheckoutContent() {
             </div>
 
             {/* Dados */}
-            <div style={{ backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.12)", borderRadius: "1rem", padding: "1.5rem" }}>
-              <h2 style={{ fontWeight: 800, color: "#1a1510", marginBottom: "1rem", fontSize: "1rem" }}>
+            <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "1rem", padding: "1.5rem" }}>
+              <h2 style={{ fontWeight: 800, color: "var(--text-main)", marginBottom: "1rem", fontSize: "1rem" }}>
                 {type === "tryon" ? "📋 Cadastro Home Try-On" : "Seus dados"}
               </h2>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 <div>
-                  <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>Nome completo *</label>
+                  <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-sub)", display: "block", marginBottom: "0.3rem" }}>Nome completo *</label>
                   <input style={inp} placeholder="Seu nome completo" value={name} onChange={e => setName(e.target.value)} />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>WhatsApp *</label>
+                  <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-sub)", display: "block", marginBottom: "0.3rem" }}>WhatsApp *</label>
                   <input style={inp} placeholder="(51) 9..." value={phone} onChange={e => setPhone(e.target.value)} />
                 </div>
                 <div>
-                  <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>Data de nascimento *</label>
+                  <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-sub)", display: "block", marginBottom: "0.3rem" }}>Data de nascimento *</label>
                   <input style={inp} type="date" value={nascimento} onChange={e => setNascimento(e.target.value)}
                     max={new Date().toISOString().split("T")[0]} />
-                  <p style={{ fontSize: "0.72rem", color: "#9a8060", marginTop: "0.25rem" }}>
+                  <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>
                     Guardamos para te mimar no seu aniversário 🎁
                   </p>
                 </div>
 
                 {type === "compra" && (
                   <div>
-                    <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>Forma de pagamento *</label>
+                    <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-sub)", display: "block", marginBottom: "0.3rem" }}>Forma de pagamento *</label>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
                       {Object.entries(PAY_LABELS).map(([val, label]) => (
                         <button key={val} type="button" onClick={() => setPayMethod(val)}
-                          style={{ padding: "0.6rem 0.5rem", borderRadius: "0.625rem", border: `2px solid ${payMethod === val ? "#b8891a" : "rgba(140,100,20,0.15)"}`, backgroundColor: payMethod === val ? "#fff8e8" : "#FAF6EE", cursor: "pointer", fontSize: "0.82rem", fontWeight: 700, color: payMethod === val ? "#b8891a" : "#5a4a2a", textAlign: "center" }}>
+                          style={{ padding: "0.6rem 0.5rem", borderRadius: "0.625rem", border: `2px solid ${payMethod === val ? "var(--gold)" : "var(--border)"}`, backgroundColor: payMethod === val ? "var(--bg-soft)" : "var(--bg)", cursor: "pointer", fontSize: "0.82rem", fontWeight: 700, color: payMethod === val ? "var(--gold)" : "var(--text-sub)", textAlign: "center" }}>
                           {label}
                         </button>
                       ))}
@@ -426,46 +426,46 @@ function CheckoutContent() {
 
                 {type === "tryon" && (
                   <div>
-                    <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>CPF *</label>
+                    <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-sub)", display: "block", marginBottom: "0.3rem" }}>CPF *</label>
                     <input style={inp} placeholder="000.000.000-00" value={cpf} onChange={e => setCpf(e.target.value)} />
                   </div>
                 )}
 
                 {/* Endereço de entrega — vale para compra e para try-on */}
                 <>
-                    <p style={{ fontSize: "0.78rem", fontWeight: 800, color: "#1a1510", marginTop: "0.4rem" }}>
+                    <p style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--text-main)", marginTop: "0.4rem" }}>
                       📍 Endereço de entrega
                     </p>
                     <div>
-                      <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>CEP *</label>
+                      <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-sub)", display: "block", marginBottom: "0.3rem" }}>CEP *</label>
                       <input style={inp} placeholder="00000-000" value={cep} onChange={e => setCep(e.target.value)} />
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "0.5rem" }}>
                       <div>
-                        <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>Rua / Avenida *</label>
+                        <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-sub)", display: "block", marginBottom: "0.3rem" }}>Rua / Avenida *</label>
                         <input style={inp} placeholder="Nome da rua" value={street} onChange={e => setStreet(e.target.value)} />
                       </div>
                       <div style={{ width: 90 }}>
-                        <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>Número *</label>
+                        <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-sub)", display: "block", marginBottom: "0.3rem" }}>Número *</label>
                         <input style={inp} placeholder="Nº" value={number} onChange={e => setNumber(e.target.value)} />
                       </div>
                     </div>
                     <div>
-                      <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>Complemento</label>
+                      <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-sub)", display: "block", marginBottom: "0.3rem" }}>Complemento</label>
                       <input style={inp} placeholder="Apto, bloco..." value={complement} onChange={e => setComplement(e.target.value)} />
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
                       <div>
-                        <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>Bairro *</label>
+                        <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-sub)", display: "block", marginBottom: "0.3rem" }}>Bairro *</label>
                         <input style={inp} placeholder="Bairro" value={neighborhood} onChange={e => setNeighborhood(e.target.value)} />
                       </div>
                       <div>
-                        <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>Estado *</label>
+                        <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-sub)", display: "block", marginBottom: "0.3rem" }}>Estado *</label>
                         <input style={inp} placeholder="RS" value={state} onChange={e => setState(e.target.value)} maxLength={2} />
                       </div>
                     </div>
                     <div>
-                      <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "#7a6030", display: "block", marginBottom: "0.3rem" }}>Cidade *</label>
+                      <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-sub)", display: "block", marginBottom: "0.3rem" }}>Cidade *</label>
                       <input style={inp} placeholder="Sua cidade" value={city} onChange={e => setCity(e.target.value)} />
                     </div>
                 </>
@@ -477,12 +477,12 @@ function CheckoutContent() {
               <div style={{ backgroundColor: "#fff8e1", border: "1px solid rgba(184,137,26,0.3)", borderRadius: "1rem", padding: "1.25rem" }}>
                 <p style={{ fontWeight: 800, color: "#5a3a00", fontSize: "0.9rem", marginBottom: "0.75rem" }}>⚠️ Termos do Home Try-On</p>
                 {/* Aviso taxa */}
-                <div style={{ backgroundColor: "#1a1510", borderRadius: "0.75rem", padding: "0.875rem 1rem", marginBottom: "1rem", display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
+                <div style={{ backgroundColor: "var(--bg-soft)", border: "1px solid var(--border-gold)", borderRadius: "0.75rem", padding: "0.875rem 1rem", marginBottom: "1rem", display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
                   <span style={{ fontSize: "1.25rem", flexShrink: 0 }}>💰</span>
                   <div>
-                    <p style={{ fontWeight: 900, color: "#b8891a", fontSize: "0.9rem", marginBottom: "0.2rem" }}>Taxa de R$ 30,00</p>
+                    <p style={{ fontWeight: 900, color: "var(--gold)", fontSize: "0.9rem", marginBottom: "0.2rem" }}>Taxa de R$ 30,00</p>
                     <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.8rem", lineHeight: 1.5 }}>
-                      Cobrada para cobrir o custo de levar e buscar a peça <strong style={{ color: "#fff" }}>somente se você devolver</strong>. Se ficar com a peça, não há nenhuma taxa adicional.
+                      Cobrada para cobrir o custo de levar e buscar a peça <strong style={{ color: "var(--text-main)" }}>somente se você devolver</strong>. Se ficar com a peça, não há nenhuma taxa adicional.
                     </p>
                   </div>
                 </div>
@@ -495,14 +495,14 @@ function CheckoutContent() {
                     "A Access Fit reserva o direito de cobrar pela peça em caso de não devolução no prazo",
                   ].map((t, i) => (
                     <li key={i} style={{ display: "flex", gap: "0.5rem", fontSize: "0.8rem", color: "#5a3a00", lineHeight: 1.5 }}>
-                      <span style={{ color: "#b8891a", flexShrink: 0 }}>•</span> {t}
+                      <span style={{ color: "var(--gold)", flexShrink: 0 }}>•</span> {t}
                     </li>
                   ))}
                 </ul>
                 <label style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", cursor: "pointer" }}>
                   <input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)}
-                    style={{ width: 18, height: 18, marginTop: 2, accentColor: "#b8891a", flexShrink: 0, cursor: "pointer" }} />
-                  <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#1a1510", lineHeight: 1.5 }}>
+                    style={{ width: 18, height: 18, marginTop: 2, accentColor: "var(--gold)", flexShrink: 0, cursor: "pointer" }} />
+                  <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-main)", lineHeight: 1.5 }}>
                     Li e aceito os termos do Home Try-On e me comprometo a devolver as peças dentro do prazo
                   </span>
                 </label>
@@ -513,24 +513,24 @@ function CheckoutContent() {
             <div>
               <button onClick={handleWhatsApp}
                 disabled={faltando.length > 0}
-                style={{ width: "100%", backgroundColor: faltando.length > 0 ? "#d4b870" : "#25D366", color: "#fff", border: "none", borderRadius: "0.875rem", padding: "1.05rem", fontSize: "1rem", fontWeight: 900, cursor: faltando.length > 0 ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+                style={{ width: "100%", backgroundColor: faltando.length > 0 ? "#d4b870" : "#25D366", color: "var(--text-main)", border: "none", borderRadius: "0.875rem", padding: "1.05rem", fontSize: "1rem", fontWeight: 900, cursor: faltando.length > 0 ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                 Finalizar pedido no WhatsApp
               </button>
             </div>
 
             {faltando.length > 0 ? (
-              <p style={{ textAlign: "center", fontSize: "0.8rem", color: "#c04040", fontWeight: 700, marginTop: "0.75rem" }}>
+              <p style={{ textAlign: "center", fontSize: "0.8rem", color: "#ff8a7a", fontWeight: 700, marginTop: "0.75rem" }}>
                 Para finalizar, preencha: {faltando.join(", ")}
               </p>
             ) : (
-              <p style={{ textAlign: "center", fontSize: "0.78rem", color: "#9a8060", marginTop: "0.75rem" }}>
+              <p style={{ textAlign: "center", fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "0.75rem" }}>
                 Você será levada ao nosso WhatsApp com o pedido pronto para confirmar.
               </p>
             )}
 
             <button onClick={handleCreatePreview} disabled={items.length === 0}
-              style={{ display: "block", margin: "0.5rem auto 0", background: "none", border: "none", color: "#9a8060", fontSize: "0.78rem", textDecoration: "underline", cursor: items.length === 0 ? "not-allowed" : "pointer" }}>
+              style={{ display: "block", margin: "0.5rem auto 0", background: "none", border: "none", color: "var(--text-muted)", fontSize: "0.78rem", textDecoration: "underline", cursor: items.length === 0 ? "not-allowed" : "pointer" }}>
               Só quero mostrar esta sacola para alguém
             </button>
 
@@ -559,8 +559,8 @@ function CheckoutContent() {
 export default function CheckoutPage() {
   return (
     <Suspense fallback={
-      <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#FAF6EE" }}>
-        <div style={{ width: 36, height: 36, border: "3px solid rgba(184,137,26,0.2)", borderTopColor: "#b8891a", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--bg)" }}>
+        <div style={{ width: 36, height: 36, border: "3px solid rgba(184,137,26,0.2)", borderTopColor: "var(--gold)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       </div>
     }>
       <CheckoutContent />

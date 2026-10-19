@@ -53,7 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="pt-BR">
-      <body className={inter.className} style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <body className={`${inter.className}${isAdmin ? " area-admin" : ""}`} style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         <SessionProvider>
           <NotificationSubscriber />
           {!isAdmin && <Header />}
