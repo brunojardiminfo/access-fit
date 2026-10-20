@@ -19,7 +19,7 @@ export default function CancelButton({ orderId }: { orderId: string }) {
 
   return (
     <button onClick={handleCancel} disabled={cancelling}
-      style={{ marginTop: "0.75rem", padding: "0.5rem 1rem", backgroundColor: "#fee8e8", color: "#c04040", border: "1px solid rgba(192,64,64,0.2)", borderRadius: "0.625rem", fontWeight: 700, fontSize: "0.78rem", cursor: "pointer", width: "100%" }}>
+      style={{ marginTop: "0.75rem", padding: "0.5rem 1rem", backgroundColor: "#fee8e8", color: "#ff8a7a", border: "1px solid rgba(192,64,64,0.2)", borderRadius: "0.625rem", fontWeight: 700, fontSize: "0.78rem", cursor: "pointer", width: "100%" }}>
       {cancelling ? "Cancelando..." : "Cancelar pedido"}
     </button>
   );

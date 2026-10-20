@@ -24,7 +24,7 @@ export default function OrderTimeline({
     <div>
       {entries.map((entry, idx) => {
         const isFallback = entry.status === "__created__";
-        const color = isFallback ? { bg: "#fff8e1", color: "#b8891a" } : (ORDER_STATUS_COLOR[entry.status] || { bg: "#f0f0f0", color: "#666" });
+        const color = isFallback ? { bg: "#fff8e1", color: "var(--gold)" } : (ORDER_STATUS_COLOR[entry.status] || { bg: "#f0f0f0", color: "#666" });
         const icon = isFallback ? "🧾" : (ORDER_STATUS_ICON[entry.status] || "•");
         const label = isFallback ? "Pedido criado" : (ORDER_STATUS_LABEL[entry.status] || entry.status);
         const isLast = idx === entries.length - 1;
@@ -42,8 +42,8 @@ export default function OrderTimeline({
               {!isLast && <div style={{ width: 2, flex: 1, backgroundColor: "rgba(184,137,26,0.2)", minHeight: 22 }} />}
             </div>
             <div style={{ paddingBottom: isLast ? "0.25rem" : "1.1rem" }}>
-              <p style={{ fontWeight: 700, color: "#1a1510", fontSize: "0.875rem" }}>{label}</p>
-              <p style={{ fontSize: "0.75rem", color: "#9a8060", marginTop: "0.1rem" }}>{fmtDateTime(entry.createdAt)}</p>
+              <p style={{ fontWeight: 700, color: "var(--text-main)", fontSize: "0.875rem" }}>{label}</p>
+              <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.1rem" }}>{fmtDateTime(entry.createdAt)}</p>
             </div>
           </div>
         );

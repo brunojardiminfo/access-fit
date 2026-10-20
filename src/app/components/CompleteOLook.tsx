@@ -33,8 +33,8 @@ export default function CompleteOLook({ productSlug }: { productSlug: string }) 
   if (pecas.length === 0) return null;
 
   return (
-    <div style={{ marginTop: "1.75rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(140,100,20,0.12)" }}>
-      <p style={{ fontSize: "0.72rem", fontWeight: 800, color: "#9a8060", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "0.75rem" }}>
+    <div style={{ marginTop: "1.75rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border)" }}>
+      <p style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "0.75rem" }}>
         Complete o look
       </p>
 
@@ -47,7 +47,7 @@ export default function CompleteOLook({ productSlug }: { productSlug: string }) 
           return (
             <Link key={p.id} href={`/produtos/${p.slug}`}
               style={{ textDecoration: "none", width: 108, display: "block" }}>
-              <div style={{ position: "relative", width: 108, aspectRatio: "3/4", borderRadius: "0.625rem", overflow: "hidden", backgroundColor: "#F0E8D0", border: "1px solid rgba(140,100,20,0.15)" }}>
+              <div style={{ position: "relative", width: 108, aspectRatio: "3/4", borderRadius: "0.625rem", overflow: "hidden", backgroundColor: "var(--bg-soft)", border: "1px solid var(--border)" }}>
                 {imgs[0] ? (
                   <img src={imgs[0]} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                 ) : (
@@ -56,15 +56,15 @@ export default function CompleteOLook({ productSlug }: { productSlug: string }) 
                   </div>
                 )}
                 {sale && (
-                  <span style={{ position: "absolute", top: 5, left: 5, backgroundColor: "#e74c3c", color: "#fff", fontSize: "0.52rem", fontWeight: 900, padding: "1px 5px", borderRadius: "999px" }}>
+                  <span style={{ position: "absolute", top: 5, left: 5, backgroundColor: "#e74c3c", color: "var(--text-main)", fontSize: "0.52rem", fontWeight: 900, padding: "1px 5px", borderRadius: "999px" }}>
                     −{sale.discount}%
                   </span>
                 )}
               </div>
-              <p style={{ fontSize: "0.68rem", color: "#5a4a2a", fontWeight: 600, margin: "0.4rem 0 0.1rem", lineHeight: 1.25, overflow: "hidden", display: "-webkit-box", WebkitBoxOrient: "vertical" as const, WebkitLineClamp: 2, minHeight: "1.7em" }}>
+              <p style={{ fontSize: "0.68rem", color: "var(--text-sub)", fontWeight: 600, margin: "0.4rem 0 0.1rem", lineHeight: 1.25, overflow: "hidden", display: "-webkit-box", WebkitBoxOrient: "vertical" as const, WebkitLineClamp: 2, minHeight: "1.7em" }}>
                 {p.name}
               </p>
-              <p style={{ fontSize: "0.75rem", fontWeight: 800, color: sale ? "#e74c3c" : "#b8891a", margin: 0 }}>
+              <p style={{ fontSize: "0.75rem", fontWeight: 800, color: sale ? "#e74c3c" : "var(--gold)", margin: 0 }}>
                 {formatCurrency(preco)}
               </p>
             </Link>

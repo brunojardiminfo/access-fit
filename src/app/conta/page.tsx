@@ -12,12 +12,12 @@ const STATUS_LABEL: Record<string, string> = {
   delivered: "Entregue", cancelled: "Cancelado", "try-on": "Home Try-On",
 };
 const STATUS_COLOR: Record<string, { bg: string; color: string }> = {
-  pending:   { bg: "#fff8e1", color: "#b8891a" },
+  pending:   { bg: "#fff8e1", color: "var(--gold)" },
   confirmed: { bg: "#e8f4fd", color: "#1a6a9a" },
-  shipped:   { bg: "#f0e8ff", color: "#6a30b8" },
-  delivered: { bg: "#e8f8e8", color: "#1a8a2a" },
-  cancelled: { bg: "#fee8e8", color: "#c04040" },
-  "try-on":  { bg: "#fce8ff", color: "#8a1ab8" },
+  shipped:   { bg: "#f0e8ff", color: "#b78cff" },
+  delivered: { bg: "#e8f8e8", color: "#5fd37a" },
+  cancelled: { bg: "#fee8e8", color: "#ff8a7a" },
+  "try-on":  { bg: "#fce8ff", color: "#c79bff" },
 };
 
 export default async function ContaPage() {
@@ -39,13 +39,13 @@ export default async function ContaPage() {
   const totalGasto = orders.filter(o => o.status !== "cancelled").reduce((s, o) => s + o.total, 0);
 
   return (
-    <div style={{ backgroundColor: "#FAF6EE", minHeight: "100vh", padding: "2rem 1.25rem" }}>
+    <div style={{ backgroundColor: "var(--bg)", minHeight: "100vh", padding: "2rem 1.25rem" }}>
       <div style={{ maxWidth: 780, margin: "0 auto" }}>
 
         {/* Header */}
         <div style={{ marginBottom: "2rem" }}>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 900, color: "#1a1510" }}>Minha Conta</h1>
-          <p style={{ color: "#9a8060", fontSize: "0.875rem", marginTop: "0.2rem" }}>Olá, {user?.name?.split(" ")[0] || "cliente"}!</p>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 900, color: "var(--text-main)" }}>Minha Conta</h1>
+          <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", marginTop: "0.2rem" }}>Olá, {user?.name?.split(" ")[0] || "cliente"}!</p>
         </div>
 
         {/* Cupom de Aniversário */}
@@ -58,10 +58,10 @@ export default async function ContaPage() {
             { emoji: "💰", label: "Total gasto", value: formatCurrency(totalGasto) },
             { emoji: "✅", label: "Entregues", value: orders.filter(o => o.status === "delivered").length },
           ].map(k => (
-            <div key={k.label} style={{ backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.1)", borderRadius: "0.75rem", padding: "0.875rem", textAlign: "center" }}>
+            <div key={k.label} style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "0.75rem", padding: "0.875rem", textAlign: "center" }}>
               <div style={{ fontSize: "1.1rem", marginBottom: "0.25rem" }}>{k.emoji}</div>
-              <div style={{ fontWeight: 900, fontSize: "0.95rem", color: "#1a1510" }}>{k.value}</div>
-              <div style={{ fontSize: "0.65rem", color: "#9a8060", marginTop: "0.1rem" }}>{k.label}</div>
+              <div style={{ fontWeight: 900, fontSize: "0.95rem", color: "var(--text-main)" }}>{k.value}</div>
+              <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginTop: "0.1rem" }}>{k.label}</div>
             </div>
           ))}
         </div>
@@ -72,35 +72,35 @@ export default async function ContaPage() {
             { emoji: "📦", label: "Meus Pedidos", desc: "Acompanhe seus pedidos", href: "/conta/pedidos" },
             { emoji: "👤", label: "Dados Pessoais", desc: "Nome, e-mail e telefone", href: "/conta/perfil" },
           ].map(m => (
-            <Link key={m.href} href={m.href} style={{ textDecoration: "none", backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.1)", borderRadius: "1rem", padding: "1.25rem", display: "flex", gap: "0.875rem", alignItems: "center" }}>
+            <Link key={m.href} href={m.href} style={{ textDecoration: "none", backgroundColor: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "1rem", padding: "1.25rem", display: "flex", gap: "0.875rem", alignItems: "center" }}>
               <span style={{ fontSize: "1.75rem" }}>{m.emoji}</span>
               <div>
-                <p style={{ fontWeight: 700, color: "#1a1510", fontSize: "0.95rem" }}>{m.label}</p>
-                <p style={{ fontSize: "0.75rem", color: "#9a8060", marginTop: "0.1rem" }}>{m.desc}</p>
+                <p style={{ fontWeight: 700, color: "var(--text-main)", fontSize: "0.95rem" }}>{m.label}</p>
+                <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.1rem" }}>{m.desc}</p>
               </div>
             </Link>
           ))}
         </div>
 
         {/* Pedidos recentes */}
-        <div style={{ backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.1)", borderRadius: "1rem", overflow: "hidden" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 1.25rem", borderBottom: "1px solid rgba(140,100,20,0.08)", backgroundColor: "#FAF6EE" }}>
-            <h2 style={{ fontWeight: 800, color: "#1a1510", fontSize: "0.95rem" }}>Pedidos Recentes</h2>
-            <Link href="/conta/pedidos" style={{ color: "#b8891a", fontSize: "0.8rem", fontWeight: 700, textDecoration: "none" }}>Ver todos →</Link>
+        <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "1rem", overflow: "hidden" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)", backgroundColor: "var(--bg)" }}>
+            <h2 style={{ fontWeight: 800, color: "var(--text-main)", fontSize: "0.95rem" }}>Pedidos Recentes</h2>
+            <Link href="/conta/pedidos" style={{ color: "var(--gold)", fontSize: "0.8rem", fontWeight: 700, textDecoration: "none" }}>Ver todos →</Link>
           </div>
           {orders.length === 0 ? (
             <div style={{ textAlign: "center", padding: "3rem 1rem" }}>
-              <p style={{ color: "#9a8060", marginBottom: "0.75rem" }}>Você ainda não fez nenhum pedido.</p>
-              <Link href="/produtos" style={{ color: "#b8891a", fontWeight: 700, textDecoration: "none", fontSize: "0.875rem" }}>Ver coleção →</Link>
+              <p style={{ color: "var(--text-muted)", marginBottom: "0.75rem" }}>Você ainda não fez nenhum pedido.</p>
+              <Link href="/produtos" style={{ color: "var(--gold)", fontWeight: 700, textDecoration: "none", fontSize: "0.875rem" }}>Ver coleção →</Link>
             </div>
           ) : orders.map(order => {
             const sc = STATUS_COLOR[order.status] || { bg: "#f0f0f0", color: "#666" };
             return (
-              <div key={order.id} style={{ padding: "1rem 1.25rem", borderBottom: "1px solid rgba(140,100,20,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div key={order.id} style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <p style={{ fontSize: "0.72rem", color: "#9a8060" }}>#{order.id.slice(-8).toUpperCase()} · {new Date(order.createdAt).toLocaleDateString("pt-BR")}</p>
-                  <p style={{ fontWeight: 700, color: "#1a1510", marginTop: "0.2rem" }}>{formatCurrency(order.total)}</p>
-                  <p style={{ fontSize: "0.75rem", color: "#9a8060", marginTop: "0.1rem" }}>
+                  <p style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>#{order.id.slice(-8).toUpperCase()} · {new Date(order.createdAt).toLocaleDateString("pt-BR")}</p>
+                  <p style={{ fontWeight: 700, color: "var(--text-main)", marginTop: "0.2rem" }}>{formatCurrency(order.total)}</p>
+                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.1rem" }}>
                     {order.items[0]?.size || order.items[0]?.product.name || "—"}
                     {order.items.length > 1 && ` +${order.items.length - 1}`}
                   </p>
@@ -114,7 +114,7 @@ export default async function ContaPage() {
         </div>
 
         <div style={{ textAlign: "center", marginTop: "2rem" }}>
-          <Link href="/api/auth/signout" style={{ color: "#9a8060", fontSize: "0.8rem", textDecoration: "none" }}>Sair da conta</Link>
+          <Link href="/api/auth/signout" style={{ color: "var(--text-muted)", fontSize: "0.8rem", textDecoration: "none" }}>Sair da conta</Link>
         </div>
       </div>
     </div>

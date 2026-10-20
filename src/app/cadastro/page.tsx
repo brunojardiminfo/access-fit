@@ -11,7 +11,7 @@ const inputStyle = {
   backgroundColor: "#080808",
   border: "1px solid #7a540e",
   borderRadius: "0.75rem",
-  color: "#f5f5f5",
+  color: "var(--bg-soft)",
   fontSize: "1rem",
   outline: "none",
   boxSizing: "border-box" as const,
@@ -61,10 +61,10 @@ export default function CadastroPage() {
               ACCESS FIT
             </span>
           </Link>
-          <p style={{ color: "#b8891a", fontSize: "0.75rem", fontStyle: "italic", marginTop: "0.25rem" }}>
+          <p style={{ color: "var(--gold)", fontSize: "0.75rem", fontStyle: "italic", marginTop: "0.25rem" }}>
             Desbloqueie sua energia infinita
           </p>
-          <h1 style={{ color: "#f5f5f5", fontSize: "1.25rem", fontWeight: 700, marginTop: "1rem" }}>
+          <h1 style={{ color: "var(--bg-soft)", fontSize: "1.25rem", fontWeight: 700, marginTop: "1rem" }}>
             Criar conta
           </h1>
         </div>
@@ -76,7 +76,7 @@ export default function CadastroPage() {
                 {error}
                 {alreadyExists && (
                   <div style={{ marginTop: "0.625rem" }}>
-                    <Link href={`/login?email=${encodeURIComponent(form.email)}`} style={{ display: "inline-block", backgroundColor: "#b8891a", color: "#fff", fontWeight: 700, fontSize: "0.8rem", padding: "0.4rem 1rem", borderRadius: "0.5rem", textDecoration: "none" }}>
+                    <Link href={`/login?email=${encodeURIComponent(form.email)}`} style={{ display: "inline-block", backgroundColor: "var(--gold)", color: "#16110b", fontWeight: 700, fontSize: "0.8rem", padding: "0.4rem 1rem", borderRadius: "0.5rem", textDecoration: "none" }}>
                       Fazer login →
                     </Link>
                   </div>
@@ -85,7 +85,7 @@ export default function CadastroPage() {
                   <div style={{ marginTop: "0.625rem" }}>
                     <a href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}?text=${encodeURIComponent(`Olá! Meu número ${form.phone} já tem pedidos e quero acessar minha conta.`)}`}
                       target="_blank" rel="noopener noreferrer"
-                      style={{ display: "inline-block", backgroundColor: "#25D366", color: "#fff", fontWeight: 700, fontSize: "0.8rem", padding: "0.4rem 1rem", borderRadius: "0.5rem", textDecoration: "none" }}>
+                      style={{ display: "inline-block", backgroundColor: "#25D366", color: "var(--text-main)", fontWeight: 700, fontSize: "0.8rem", padding: "0.4rem 1rem", borderRadius: "0.5rem", textDecoration: "none" }}>
                       📱 Falar com a loja
                     </a>
                   </div>
@@ -101,7 +101,7 @@ export default function CadastroPage() {
               { label: "Senha", key: "password", type: "password", placeholder: "Mínimo 6 caracteres" },
             ].map(({ label, key, type, placeholder }) => (
               <div key={key} style={{ marginBottom: "1.25rem" }}>
-                <label style={{ display: "block", color: "#a8a8a8", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.5rem" }}>
+                <label style={{ display: "block", color: "var(--text-muted)", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.5rem" }}>
                   {label}
                 </label>
                 <input
@@ -127,7 +127,7 @@ export default function CadastroPage() {
             </button>
           </form>
 
-          <p style={{ textAlign: "center", color: "#505050", fontSize: "0.875rem", marginTop: "1.5rem" }}>
+          <p style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "0.875rem", marginTop: "1.5rem" }}>
             Já tem conta?{" "}
             <Link href="/login" style={{ color: "#c9a227", fontWeight: 600, textDecoration: "none" }}>
               Entrar

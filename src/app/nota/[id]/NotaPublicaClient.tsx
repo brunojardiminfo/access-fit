@@ -53,32 +53,32 @@ export default function NotaPublicaClient({ order }: { order: any }) {
       {/* Botão imprimir flutuante */}
       <div className="no-print" style={{ position: "fixed", bottom: "1.5rem", right: "1.5rem", zIndex: 100 }}>
         <button onClick={() => window.print()}
-          style={{ backgroundColor: "#b8891a", color: "#fff", border: "none", borderRadius: "999px", padding: "0.75rem 1.5rem", fontWeight: 700, fontSize: "0.875rem", cursor: "pointer", boxShadow: "0 4px 16px rgba(184,137,26,0.4)" }}>
+          style={{ backgroundColor: "var(--gold)", color: "#16110b", border: "none", borderRadius: "999px", padding: "0.75rem 1.5rem", fontWeight: 700, fontSize: "0.875rem", cursor: "pointer", boxShadow: "0 4px 16px rgba(184,137,26,0.4)" }}>
           🖨️ Salvar PDF
         </button>
       </div>
 
-      <div className="nota-container" style={{ maxWidth: 640, margin: "1rem auto 5rem", backgroundColor: "#fff", borderRadius: "1.25rem", boxShadow: "0 4px 24px rgba(0,0,0,0.08)", padding: "2rem 2.5rem", border: "1px solid #e8dfc8" }}>
+      <div className="nota-container" style={{ maxWidth: 640, margin: "1rem auto 5rem", backgroundColor: "var(--bg-card)", borderRadius: "1.25rem", boxShadow: "0 4px 24px rgba(0,0,0,0.08)", padding: "2rem 2.5rem", border: "1px solid #e8dfc8" }}>
 
         {/* Cabeçalho */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.75rem", paddingBottom: "1.25rem", borderBottom: "2px solid #f0e8d0" }}>
           <div>
-            <h1 style={{ fontSize: "1.6rem", fontWeight: 900, color: "#b8891a", margin: 0 }}>Access Fit</h1>
-            <p style={{ color: "#9a8060", fontSize: "0.78rem", marginTop: "0.2rem" }}>Moda fitness com propósito</p>
+            <h1 style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--gold)", margin: 0 }}>Access Fit</h1>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.78rem", marginTop: "0.2rem" }}>Moda fitness com propósito</p>
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "#9a8060", letterSpacing: "0.08em" }}>NOTA DE PEDIDO</div>
-            <div style={{ fontSize: "1.3rem", fontWeight: 900, color: "#1a1510", marginTop: "0.2rem" }}>#{order.id.slice(-6).toUpperCase()}</div>
-            <div style={{ fontSize: "0.75rem", color: "#9a8060" }}>{createdAt.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}</div>
+            <div style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em" }}>NOTA DE PEDIDO</div>
+            <div style={{ fontSize: "1.3rem", fontWeight: 900, color: "var(--text-main)", marginTop: "0.2rem" }}>#{order.id.slice(-6).toUpperCase()}</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{createdAt.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}</div>
           </div>
         </div>
 
         {/* Cliente */}
         <div style={{ marginBottom: "1.5rem" }}>
-          <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "#9a8060", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>CLIENTE</p>
-          <p style={{ fontWeight: 700, color: "#1a1510", fontSize: "0.95rem", margin: 0 }}>{order.user?.name || "—"}</p>
+          <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>CLIENTE</p>
+          <p style={{ fontWeight: 700, color: "var(--text-main)", fontSize: "0.95rem", margin: 0 }}>{order.user?.name || "—"}</p>
           {order.address && (
-            <p style={{ fontSize: "0.8rem", color: "#7a6030", marginTop: "0.25rem" }}>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-sub)", marginTop: "0.25rem" }}>
               {order.address.street}, {order.address.number}{order.address.complement ? `, ${order.address.complement}` : ""} — {order.address.city}/{order.address.state}
             </p>
           )}
@@ -86,22 +86,22 @@ export default function NotaPublicaClient({ order }: { order: any }) {
 
         {/* Itens */}
         <div style={{ marginBottom: "1.5rem" }}>
-          <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "#9a8060", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>ITENS</p>
+          <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>ITENS</p>
           <div style={{ border: "1px solid #f0e8d0", borderRadius: "0.75rem", overflow: "hidden" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ backgroundColor: "#faf6ee" }}>
+                <tr style={{ backgroundColor: "var(--bg)" }}>
                   {["Produto", "Qtd", "Valor"].map(h => (
-                    <th key={h} style={{ padding: "0.6rem 0.875rem", textAlign: h === "Produto" ? "left" : "right", fontSize: "0.68rem", fontWeight: 700, color: "#9a8060", borderBottom: "1px solid #f0e8d0" }}>{h}</th>
+                    <th key={h} style={{ padding: "0.6rem 0.875rem", textAlign: h === "Produto" ? "left" : "right", fontSize: "0.68rem", fontWeight: 700, color: "var(--text-muted)", borderBottom: "1px solid #f0e8d0" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {order.items.map((item: any, i: number) => (
-                  <tr key={item.id} style={{ borderBottom: i < order.items.length - 1 ? "1px solid #f8f2e8" : "none", backgroundColor: i % 2 === 0 ? "#fff" : "#fdfaf5" }}>
-                    <td style={{ padding: "0.7rem 0.875rem", fontSize: "0.85rem", color: "#1a1510", fontWeight: 500 }}>{itemDisplayName(item)}</td>
-                    <td style={{ padding: "0.7rem 0.875rem", fontSize: "0.85rem", color: "#5a4a2a", textAlign: "right" }}>{item.quantity}</td>
-                    <td style={{ padding: "0.7rem 0.875rem", fontSize: "0.85rem", color: "#1a1510", fontWeight: 700, textAlign: "right" }}>{fmt(item.price * item.quantity)}</td>
+                  <tr key={item.id} style={{ borderBottom: i < order.items.length - 1 ? "1px solid #f8f2e8" : "none", backgroundColor: i % 2 === 0 ? "var(--bg-card)" : "#fdfaf5" }}>
+                    <td style={{ padding: "0.7rem 0.875rem", fontSize: "0.85rem", color: "var(--text-main)", fontWeight: 500 }}>{itemDisplayName(item)}</td>
+                    <td style={{ padding: "0.7rem 0.875rem", fontSize: "0.85rem", color: "var(--text-sub)", textAlign: "right" }}>{item.quantity}</td>
+                    <td style={{ padding: "0.7rem 0.875rem", fontSize: "0.85rem", color: "var(--text-main)", fontWeight: 700, textAlign: "right" }}>{fmt(item.price * item.quantity)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -114,77 +114,77 @@ export default function NotaPublicaClient({ order }: { order: any }) {
           <div style={{ minWidth: 220 }}>
             {order.discount > 0 && (
               <div style={{ display: "flex", justifyContent: "space-between", padding: "0.25rem 0", fontSize: "0.82rem" }}>
-                <span style={{ color: "#9a8060" }}>Desconto</span>
-                <span style={{ color: "#1a8a2a", fontWeight: 600 }}>-{fmt(order.discount)}</span>
+                <span style={{ color: "var(--text-muted)" }}>Desconto</span>
+                <span style={{ color: "#5fd37a", fontWeight: 600 }}>-{fmt(order.discount)}</span>
               </div>
             )}
             {order.shipping > 0 && (
               <div style={{ display: "flex", justifyContent: "space-between", padding: "0.25rem 0", fontSize: "0.82rem" }}>
-                <span style={{ color: "#9a8060" }}>Frete</span>
-                <span style={{ color: "#1a1510" }}>{fmt(order.shipping)}</span>
+                <span style={{ color: "var(--text-muted)" }}>Frete</span>
+                <span style={{ color: "var(--text-main)" }}>{fmt(order.shipping)}</span>
               </div>
             )}
             {order.discount > 0 && (
               <>
                 <div style={{ display: "flex", justifyContent: "space-between", padding: "0.3rem 0", fontSize: "0.85rem" }}>
-                  <span style={{ color: "#9a8060" }}>Subtotal</span>
-                  <span style={{ color: "#1a1510" }}>{fmt(order.subtotal)}</span>
+                  <span style={{ color: "var(--text-muted)" }}>Subtotal</span>
+                  <span style={{ color: "var(--text-main)" }}>{fmt(order.subtotal)}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", padding: "0.3rem 0", fontSize: "0.85rem" }}>
-                  <span style={{ color: "#1a8a2a", fontWeight: 700 }}>Desconto</span>
-                  <span style={{ color: "#1a8a2a", fontWeight: 700 }}>− {fmt(order.discount)}</span>
+                  <span style={{ color: "#5fd37a", fontWeight: 700 }}>Desconto</span>
+                  <span style={{ color: "#5fd37a", fontWeight: 700 }}>− {fmt(order.discount)}</span>
                 </div>
               </>
             )}
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.6rem 0.875rem", marginTop: "0.4rem", backgroundColor: "#b8891a", borderRadius: "0.625rem" }}>
-              <span style={{ color: "#fff", fontWeight: 700 }}>TOTAL</span>
-              <span style={{ color: "#fff", fontWeight: 900, fontSize: "1.05rem" }}>{fmt(order.total)}</span>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "0.6rem 0.875rem", marginTop: "0.4rem", backgroundColor: "var(--gold)", borderRadius: "0.625rem" }}>
+              <span style={{ color: "var(--text-main)", fontWeight: 700 }}>TOTAL</span>
+              <span style={{ color: "var(--text-main)", fontWeight: 900, fontSize: "1.05rem" }}>{fmt(order.total)}</span>
             </div>
           </div>
         </div>
 
         {/* Pagamento */}
         <div style={{ marginBottom: order.notes ? "1.5rem" : 0 }}>
-          <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "#9a8060", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>PAGAMENTO</p>
-          <div style={{ backgroundColor: "#faf6ee", borderRadius: "0.75rem", padding: "1rem 1.25rem" }}>
+          <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>PAGAMENTO</p>
+          <div style={{ backgroundColor: "var(--bg)", borderRadius: "0.75rem", padding: "1rem 1.25rem" }}>
             <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
               <div>
-                <span style={{ fontSize: "0.68rem", color: "#9a8060" }}>Forma</span>
-                <p style={{ fontWeight: 700, color: "#1a1510", fontSize: "0.875rem", margin: "0.1rem 0 0" }}>{METHOD_LABEL[order.paymentMethod] || order.paymentMethod}</p>
+                <span style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>Forma</span>
+                <p style={{ fontWeight: 700, color: "var(--text-main)", fontSize: "0.875rem", margin: "0.1rem 0 0" }}>{METHOD_LABEL[order.paymentMethod] || order.paymentMethod}</p>
               </div>
               <div>
-                <span style={{ fontSize: "0.68rem", color: "#9a8060" }}>Status</span>
-                <p style={{ fontWeight: 700, fontSize: "0.875rem", margin: "0.1rem 0 0", color: order.paymentStatus === "paid" ? "#1a8a2a" : order.paymentStatus === "partial" ? "#b8891a" : "#c04040" }}>
+                <span style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>Status</span>
+                <p style={{ fontWeight: 700, fontSize: "0.875rem", margin: "0.1rem 0 0", color: order.paymentStatus === "paid" ? "#5fd37a" : order.paymentStatus === "partial" ? "var(--gold)" : "#ff8a7a" }}>
                   {PAY_LABEL[order.paymentStatus]}
                 </p>
               </div>
               {valorPago > 0 && (
                 <div>
-                  <span style={{ fontSize: "0.68rem", color: "#9a8060" }}>Pago</span>
-                  <p style={{ fontWeight: 700, color: "#1a8a2a", fontSize: "0.875rem", margin: "0.1rem 0 0" }}>{fmt(valorPago)}</p>
+                  <span style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>Pago</span>
+                  <p style={{ fontWeight: 700, color: "#5fd37a", fontSize: "0.875rem", margin: "0.1rem 0 0" }}>{fmt(valorPago)}</p>
                 </div>
               )}
             </div>
 
             {saldoPendente > 0.01 && (
               <div style={{ marginTop: "0.75rem", padding: "0.5rem 0.875rem", backgroundColor: "#fee8e8", borderRadius: "0.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "0.8rem", color: "#c04040", fontWeight: 700 }}>Saldo a pagar</span>
-                <span style={{ fontSize: "1rem", fontWeight: 900, color: "#c04040" }}>{fmt(saldoPendente)}</span>
+                <span style={{ fontSize: "0.8rem", color: "#ff8a7a", fontWeight: 700 }}>Saldo a pagar</span>
+                <span style={{ fontSize: "1rem", fontWeight: 900, color: "#ff8a7a" }}>{fmt(saldoPendente)}</span>
               </div>
             )}
 
             {order.installments.length > 0 && (
               <div style={{ marginTop: "0.75rem" }}>
-                <p style={{ fontSize: "0.68rem", fontWeight: 700, color: "#9a8060", marginBottom: "0.4rem" }}>PARCELAS</p>
+                <p style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "0.4rem" }}>PARCELAS</p>
                 {order.installments.map((inst: any) => {
                   const isPaid = inst.status === "paid";
                   const isOverdue = !isPaid && new Date(inst.dueDate) < new Date();
                   return (
                     <div key={inst.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.35rem 0.625rem", marginBottom: "0.2rem", borderRadius: "0.4rem", backgroundColor: isPaid ? "#e8f8e8" : isOverdue ? "#fee8e8" : "#fff8e1" }}>
-                      <span style={{ fontSize: "0.78rem", color: "#5a4a2a" }}>{inst.number}ª parcela — {new Date(inst.dueDate).toLocaleDateString("pt-BR")}</span>
+                      <span style={{ fontSize: "0.78rem", color: "var(--text-sub)" }}>{inst.number}ª parcela — {new Date(inst.dueDate).toLocaleDateString("pt-BR")}</span>
                       <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                        <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#1a1510" }}>{fmt(inst.amount)}</span>
-                        <span style={{ fontSize: "0.65rem", fontWeight: 700, color: isPaid ? "#1a8a2a" : isOverdue ? "#c04040" : "#b8891a" }}>
+                        <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-main)" }}>{fmt(inst.amount)}</span>
+                        <span style={{ fontSize: "0.65rem", fontWeight: 700, color: isPaid ? "#5fd37a" : isOverdue ? "#ff8a7a" : "var(--gold)" }}>
                           {isPaid ? "✓ Pago" : isOverdue ? "⚠️ Vencido" : "Pendente"}
                         </span>
                       </div>
@@ -199,14 +199,14 @@ export default function NotaPublicaClient({ order }: { order: any }) {
         {/* Observações */}
         {order.notes && (
           <div style={{ marginTop: "1.5rem", paddingTop: "1.25rem", borderTop: "1px solid #f0e8d0" }}>
-            <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "#9a8060", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>OBSERVAÇÕES</p>
-            <p style={{ fontSize: "0.85rem", color: "#5a4a2a", fontStyle: "italic", margin: 0 }}>{order.notes}</p>
+            <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>OBSERVAÇÕES</p>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-sub)", fontStyle: "italic", margin: 0 }}>{order.notes}</p>
           </div>
         )}
 
         {/* Rodapé */}
         <div style={{ marginTop: "2rem", paddingTop: "1.25rem", borderTop: "2px solid #f0e8d0", textAlign: "center" }}>
-          <p style={{ fontSize: "0.72rem", color: "#b8a080", margin: 0 }}>
+          <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", margin: 0 }}>
             Access Fit • Pedido #{order.id.slice(-6).toUpperCase()} • {createdAt.toLocaleDateString("pt-BR")}
           </p>
         </div>

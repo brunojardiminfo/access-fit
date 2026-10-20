@@ -29,21 +29,25 @@ export default function HomeClient({
   const isMobile = useMobileView();
 
   return (
-    <div style={{ backgroundColor: "#FAF6EE" }}>
+    <div style={{ backgroundColor: "var(--bg)" }}>
       {/* HERO */}
       {mostrarAviso && <AvisoLancamento />}
 
-      <section style={{ background: "linear-gradient(160deg, #1a1510 0%, #2d2010 60%, #1a1510 100%)", padding: isMobile ? "1.5rem 1rem" : "4rem 1.5rem 4rem", position: "relative", overflow: "hidden", minHeight: isMobile ? "auto" : "85vh", display: "flex", alignItems: "center" }}>
+      {/* A altura, o respiro e o número de colunas vêm do CSS (.hero-secao e
+          .hero-grade). Decididos por isMobile, o servidor mandava a versão de
+          desktop e no celular o carrossel das peças saía cortado para fora da
+          tela até o JS corrigir. */}
+      <section className="hero-secao" style={{ background: "linear-gradient(160deg, #1a1510 0%, #2d2010 60%, #1a1510 100%)", position: "relative", overflow: "hidden", display: "flex", alignItems: "center" }}>
         {/* Glow */}
         <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(184,137,26,0.12) 0%, transparent 65%)", pointerEvents: "none" }} />
 
-        <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? "2rem" : "3rem", alignItems: "center", position: "relative" }}>
+        <div className="hero-grade" style={{ maxWidth: 1200, margin: "0 auto", width: "100%", position: "relative" }}>
           {/* Texto */}
           <div>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", border: "1px solid rgba(184,137,26,0.35)", color: "#b8891a", fontSize: isMobile ? "0.65rem" : "0.68rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", padding: "0.4rem 1rem", borderRadius: "999px", marginBottom: "1.75rem", backgroundColor: "rgba(184,137,26,0.08)" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", border: "1px solid rgba(184,137,26,0.35)", color: "var(--gold)", fontSize: isMobile ? "0.65rem" : "0.68rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", padding: "0.4rem 1rem", borderRadius: "999px", marginBottom: "1.75rem", backgroundColor: "rgba(184,137,26,0.08)" }}>
               ✦ Nova Coleção 2026
             </span>
-            <h1 style={{ fontSize: isMobile ? "clamp(1.75rem, 5vw, 2rem)" : "clamp(2.5rem, 5.5vw, 4.5rem)", fontWeight: 900, lineHeight: 1.05, color: "#FAF6EE", marginBottom: "1.5rem" }}>
+            <h1 style={{ fontSize: isMobile ? "clamp(1.75rem, 5vw, 2rem)" : "clamp(2.5rem, 5.5vw, 4.5rem)", fontWeight: 900, lineHeight: 1.05, color: "var(--text-main)", marginBottom: "1.5rem" }}>
               Desbloqueie{" "}
               <span className="gold-shimmer">sua energia</span>
               <br />infinita.
@@ -51,8 +55,8 @@ export default function HomeClient({
             <p style={{ color: "rgba(250,246,238,0.65)", fontSize: isMobile ? "0.9rem" : "clamp(0.9rem, 1.8vw, 1.05rem)", lineHeight: 1.8, marginBottom: "2.5rem", maxWidth: 440 }}>
               Cada peça criada para despertar a força que existe em você. Vista-se com intenção, mova-se com poder.
             </p>
-            <div style={{ display: "flex", gap: isMobile ? "0.5rem" : "0.875rem", flexDirection: isMobile ? "column" : "row", flexWrap: "wrap" }}>
-              <Link href="/produtos" style={{ backgroundColor: "#b8891a", color: "#fff", fontWeight: 900, padding: isMobile ? "0.75rem 1.5rem" : "0.95rem 2.25rem", borderRadius: "0.875rem", textDecoration: "none", fontSize: isMobile ? "0.85rem" : "0.95rem", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", boxShadow: "0 4px 20px rgba(184,137,26,0.4)", width: isMobile ? "100%" : "auto" }}>
+            <div className="hero-botoes">
+              <Link href="/produtos" style={{ backgroundColor: "var(--gold)", color: "#16110b", fontWeight: 900, padding: isMobile ? "0.75rem 1.5rem" : "0.95rem 2.25rem", borderRadius: "0.875rem", textDecoration: "none", fontSize: isMobile ? "0.85rem" : "0.95rem", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", boxShadow: "0 4px 20px rgba(184,137,26,0.4)", width: isMobile ? "100%" : "auto" }}>
                 Ver Coleção <ArrowRight size={16} />
               </Link>
               <a href="https://wa.me/5551986596705?text=Olá! Quero conhecer os produtos da Access Fit" target="_blank" rel="noopener noreferrer"
@@ -71,20 +75,20 @@ export default function HomeClient({
       <section style={{ padding: isMobile ? "2rem 1rem" : "4.5rem 1.5rem", background: "linear-gradient(180deg, #fff5f3 0%, #FAF6EE 100%)", borderTop: "3px solid #e74c3c" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "0.75rem" }}>
-            <span style={{ display: "inline-block", backgroundColor: "#e74c3c", color: "#fff", fontSize: isMobile ? "0.6rem" : "0.7rem", fontWeight: 900, letterSpacing: "0.18em", padding: "0.35rem 1rem", borderRadius: "999px", marginBottom: "0.75rem" }}>
+            <span style={{ display: "inline-block", backgroundColor: "#e74c3c", color: "var(--text-main)", fontSize: isMobile ? "0.6rem" : "0.7rem", fontWeight: 900, letterSpacing: "0.18em", padding: "0.35rem 1rem", borderRadius: "999px", marginBottom: "0.75rem" }}>
               PREÇOS REDUZIDOS
             </span>
             <h2 style={{ fontSize: isMobile ? "1.75rem" : "3rem", fontWeight: 900, color: "#e74c3c", margin: 0, lineHeight: 1 }}>
               🔥 SALE
             </h2>
           </div>
-          <p style={{ textAlign: "center", color: "#9a8060", marginBottom: isMobile ? "1.5rem" : "2.5rem", fontSize: isMobile ? "0.8rem" : "1rem" }}>
+          <p style={{ textAlign: "center", color: "var(--text-muted)", marginBottom: isMobile ? "1.5rem" : "2.5rem", fontSize: isMobile ? "0.8rem" : "1rem" }}>
             {saleProducts.length > 0
               ? `${saleProducts.length} peça${saleProducts.length === 1 ? "" : "s"} com desconto agora — enquanto durar o estoque`
               : "Fique atento para nossas promoções exclusivas"}
           </p>
           {saleProducts.length > 0 ? (
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? "1rem" : "1.25rem" }}>
+            <div className="grade-vitrine">
               {saleProducts.map((product, i) => (
                 <ProductCard key={product.id} product={product} indice={i} />
               ))}
@@ -92,27 +96,27 @@ export default function HomeClient({
           ) : null}
           {saleProducts.length > 0 ? (
             <div style={{ textAlign: "center", marginTop: isMobile ? "1.25rem" : "2rem" }}>
-              <Link href="/produtos?sale=1" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", backgroundColor: "#e74c3c", color: "#fff", fontWeight: 900, padding: isMobile ? "0.75rem 1.5rem" : "0.9rem 2rem", borderRadius: "0.875rem", textDecoration: "none", fontSize: isMobile ? "0.85rem" : "0.95rem", boxShadow: "0 4px 18px rgba(231,76,60,0.35)" }}>
+              <Link href="/produtos?sale=1" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", backgroundColor: "#e74c3c", color: "var(--text-main)", fontWeight: 900, padding: isMobile ? "0.75rem 1.5rem" : "0.9rem 2rem", borderRadius: "0.875rem", textDecoration: "none", fontSize: isMobile ? "0.85rem" : "0.95rem", boxShadow: "0 4px 18px rgba(231,76,60,0.35)" }}>
                 Ver tudo em SALE <ArrowRight size={16} />
               </Link>
             </div>
           ) : (
-            <div style={{ textAlign: "center", padding: "3rem 1rem", backgroundColor: "#fff", borderRadius: "1rem", border: "1px solid rgba(231,76,60,0.2)" }}>
+            <div style={{ textAlign: "center", padding: "3rem 1rem", backgroundColor: "var(--bg-card)", borderRadius: "1rem", border: "1px solid rgba(231,76,60,0.2)" }}>
               <span style={{ fontSize: "3rem", display: "block", marginBottom: "1rem" }}>🎉</span>
-              <p style={{ color: "#9a8060", fontSize: "1rem", fontWeight: 600 }}>Volte em breve para aproveitar ofertas especiais!</p>
+              <p style={{ color: "var(--text-muted)", fontSize: "1rem", fontWeight: 600 }}>Volte em breve para aproveitar ofertas especiais!</p>
             </div>
           )}
         </div>
       </section>
 
       {/* Home Try-On */}
-      <section style={{ padding: isMobile ? "2rem 1rem" : "4.5rem 1.5rem", backgroundColor: "#fff", borderBottom: "1px solid rgba(140,100,20,0.08)" }}>
+      <section style={{ padding: isMobile ? "2rem 1rem" : "4.5rem 1.5rem", backgroundColor: "var(--bg-card)", borderBottom: "1px solid var(--border)" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
-          <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "#b8891a", letterSpacing: "0.15em", marginBottom: "0.75rem" }}>COMO FUNCIONA</p>
-          <h2 style={{ fontSize: isMobile ? "1.4rem" : "2rem", fontWeight: 900, color: "#1a1510", marginBottom: "0.75rem" }}>
+          <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--gold)", letterSpacing: "0.15em", marginBottom: "0.75rem" }}>COMO FUNCIONA</p>
+          <h2 style={{ fontSize: isMobile ? "1.4rem" : "2rem", fontWeight: 900, color: "var(--text-main)", marginBottom: "0.75rem" }}>
             Experimente em casa. Compre só se amar.
           </h2>
-          <p style={{ color: "#5a4a2a", fontSize: isMobile ? "0.85rem" : "1rem", lineHeight: 1.7, maxWidth: 560, margin: "0 auto 2.5rem" }}>
+          <p style={{ color: "var(--text-sub)", fontSize: isMobile ? "0.85rem" : "1rem", lineHeight: 1.7, maxWidth: 560, margin: "0 auto 2.5rem" }}>
             Escolha suas peças, receba em casa, experimente com calma — e leve só o que decidir ficar. Sem risco, sem pressa.
           </p>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? "1rem" : "1.5rem", textAlign: isMobile ? "left" : "center" }}>
@@ -121,29 +125,29 @@ export default function HomeClient({
               { icon: "🏠", title: "Experimente em casa", desc: "No seu tempo, sem fila de provador e sem pressa." },
               { icon: "💛", title: "Fique só com o que amar", desc: "Devolva o resto, sem burocracia." },
             ].map(step => (
-              <div key={step.title} style={{ padding: isMobile ? "1rem" : "1.5rem", backgroundColor: "#FAF6EE", borderRadius: "1rem", border: "1px solid rgba(140,100,20,0.1)" }}>
+              <div key={step.title} style={{ padding: isMobile ? "1rem" : "1.5rem", backgroundColor: "var(--bg)", borderRadius: "1rem", border: "1px solid var(--border)" }}>
                 <div style={{ fontSize: "1.75rem", marginBottom: "0.5rem" }}>{step.icon}</div>
-                <p style={{ fontWeight: 800, color: "#1a1510", fontSize: "0.95rem", marginBottom: "0.25rem" }}>{step.title}</p>
-                <p style={{ color: "#9a8060", fontSize: "0.82rem", lineHeight: 1.5 }}>{step.desc}</p>
+                <p style={{ fontWeight: 800, color: "var(--text-main)", fontSize: "0.95rem", marginBottom: "0.25rem" }}>{step.title}</p>
+                <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", lineHeight: 1.5 }}>{step.desc}</p>
               </div>
             ))}
           </div>
-          <Link href="/sobre" style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", marginTop: "2rem", color: "#b8891a", fontWeight: 700, fontSize: "0.9rem", textDecoration: "none" }}>
+          <Link href="/sobre" style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", marginTop: "2rem", color: "var(--gold)", fontWeight: 700, fontSize: "0.9rem", textDecoration: "none" }}>
             Como funciona o Home Try-On <ArrowRight size={15} />
           </Link>
         </div>
       </section>
 
       {/* Categorias */}
-      <section style={{ padding: isMobile ? "1.5rem 1rem" : "5rem 1.5rem", backgroundColor: "#FAF6EE" }}>
+      <section style={{ padding: isMobile ? "1.5rem 1rem" : "5rem 1.5rem", backgroundColor: "var(--bg)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <h2 style={{ fontSize: isMobile ? "1.25rem" : "2.2rem", fontWeight: 900, color: "#1a1510", marginBottom: isMobile ? "1.5rem" : "2.5rem", textAlign: "center" }}>
+          <h2 style={{ fontSize: isMobile ? "1.25rem" : "2.2rem", fontWeight: 900, color: "var(--text-main)", marginBottom: isMobile ? "1.5rem" : "2.5rem", textAlign: "center" }}>
             Explora por Coleção
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(auto-fit, minmax(85px, 1fr))" : "repeat(auto-fill, minmax(140px, 1fr))", gap: isMobile ? "0.5rem" : "0.875rem" }}>
             {categories.map(cat => (
               <Link key={cat.id} href={`/produtos?categoria=${cat.slug}`}
-                style={{ padding: isMobile ? "0.5rem" : "1rem", backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.1)", borderRadius: "0.625rem", textAlign: "center", textDecoration: "none", color: "#1a1510", fontSize: isMobile ? "0.7rem" : "0.85rem", fontWeight: 700, transition: "all 0.2s", cursor: "pointer" }}>
+                style={{ padding: isMobile ? "0.5rem" : "1rem", backgroundColor: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "0.625rem", textAlign: "center", textDecoration: "none", color: "var(--text-main)", fontSize: isMobile ? "0.7rem" : "0.85rem", fontWeight: 700, transition: "all 0.2s", cursor: "pointer" }}>
                 <span style={{ fontSize: isMobile ? "1.25rem" : "2rem", marginRight: isMobile ? "0.25rem" : "0.5rem", display: "block", marginBottom: "0.25rem" }}>{categoryIcons[cat.name] || "✨"}</span>
                 {cat.name}
               </Link>
@@ -153,15 +157,15 @@ export default function HomeClient({
       </section>
 
       {/* Destaques */}
-      <section style={{ padding: isMobile ? "1.5rem 1rem" : "5rem 1.5rem", backgroundColor: "#fff" }}>
+      <section style={{ padding: isMobile ? "1.5rem 1rem" : "5rem 1.5rem", backgroundColor: "var(--bg-card)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <h2 style={{ fontSize: isMobile ? "1.25rem" : "2.2rem", fontWeight: 900, color: "#1a1510", marginBottom: "0.75rem", textAlign: "center" }}>
+          <h2 style={{ fontSize: isMobile ? "1.25rem" : "2.2rem", fontWeight: 900, color: "var(--text-main)", marginBottom: "0.75rem", textAlign: "center" }}>
             ✨ Destaques
           </h2>
-          <p style={{ textAlign: "center", color: "#9a8060", marginBottom: isMobile ? "1.5rem" : "2.5rem", fontSize: isMobile ? "0.8rem" : "1rem" }}>
+          <p style={{ textAlign: "center", color: "var(--text-muted)", marginBottom: isMobile ? "1.5rem" : "2.5rem", fontSize: isMobile ? "0.8rem" : "1rem" }}>
             As peças mais procuradas da coleção
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? "1rem" : "1.25rem" }}>
+          <div className="grade-vitrine">
             {featuredProducts.map((product, i) => (
               <ProductCard key={product.id} product={product} indice={i} />
             ))}

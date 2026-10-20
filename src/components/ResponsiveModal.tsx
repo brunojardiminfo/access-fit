@@ -39,7 +39,7 @@ export function ResponsiveModal({
     >
       <div
         style={{
-          backgroundColor: "#fff",
+          backgroundColor: "var(--bg-card)",
           borderRadius: isMobile ? "1rem 1rem 0 0" : "1rem",
           padding: isMobile ? "1.5rem 1rem" : "2rem",
           maxWidth: isMobile ? "100%" : "500px",
@@ -60,7 +60,7 @@ export function ResponsiveModal({
         >
           <h3
             style={{
-              color: "#1a1510",
+              color: "var(--text-main)",
               fontWeight: 900,
               fontSize: isMobile ? "1.1rem" : "1.2rem",
               margin: 0,
@@ -76,7 +76,7 @@ export function ResponsiveModal({
                 border: "none",
                 fontSize: "1.5rem",
                 cursor: "pointer",
-                color: "#9a8060",
+                color: "var(--text-muted)",
                 padding: 0,
               }}
             >

@@ -59,16 +59,16 @@ export default function ProductPageClient() {
   }, [params.slug]);
 
   if (loading) return (
-    <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#FAF6EE" }}>
-      <div style={{ width: 36, height: 36, border: "3px solid rgba(184,137,26,0.2)", borderTopColor: "#b8891a", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+    <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--bg)" }}>
+      <div style={{ width: 36, height: 36, border: "3px solid rgba(184,137,26,0.2)", borderTopColor: "var(--gold)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 
   if (notFoundState || !product) return (
-    <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "1rem", backgroundColor: "#FAF6EE" }}>
-      <p style={{ color: "#5a4a2a" }}>Produto não encontrado.</p>
-      <Link href="/produtos" style={{ color: "#b8891a", textDecoration: "none", fontWeight: 700 }}>← Ver todos os produtos</Link>
+    <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "1rem", backgroundColor: "var(--bg)" }}>
+      <p style={{ color: "var(--text-sub)" }}>Produto não encontrado.</p>
+      <Link href="/produtos" style={{ color: "var(--gold)", textDecoration: "none", fontWeight: 700 }}>← Ver todos os produtos</Link>
     </div>
   );
 
@@ -171,17 +171,17 @@ export default function ProductPageClient() {
   };
 
   return (
-    <div style={{ backgroundColor: "#FAF6EE", minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "var(--bg)", minHeight: "100vh" }}>
       {/* Breadcrumb */}
-      <div style={{ backgroundColor: "#fff", borderBottom: "1px solid rgba(140,100,20,0.1)", padding: "0.875rem 2rem" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", fontSize: "0.78rem", color: "#9a8060" }}>
-          <Link href="/" style={{ color: "#b8891a", textDecoration: "none" }}>Início</Link>
+      <div style={{ backgroundColor: "var(--bg-card)", borderBottom: "1px solid var(--border)", padding: "0.875rem 2rem" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", fontSize: "0.78rem", color: "var(--text-muted)" }}>
+          <Link href="/" style={{ color: "var(--gold)", textDecoration: "none" }}>Início</Link>
           <span style={{ margin: "0 0.4rem" }}>›</span>
-          <Link href="/produtos" style={{ color: "#b8891a", textDecoration: "none" }}>Coleção</Link>
+          <Link href="/produtos" style={{ color: "var(--gold)", textDecoration: "none" }}>Coleção</Link>
           <span style={{ margin: "0 0.4rem" }}>›</span>
-          <Link href={`/produtos?categoria=${product.category.slug}`} style={{ color: "#b8891a", textDecoration: "none" }}>{product.category.name}</Link>
+          <Link href={`/produtos?categoria=${product.category.slug}`} style={{ color: "var(--gold)", textDecoration: "none" }}>{product.category.name}</Link>
           <span style={{ margin: "0 0.4rem" }}>›</span>
-          <span style={{ color: "#5a4a2a" }}>{product.name}</span>
+          <span style={{ color: "var(--text-sub)" }}>{product.name}</span>
         </div>
       </div>
 
@@ -192,18 +192,18 @@ export default function ProductPageClient() {
           <div>
             <div onClick={() => images[selectedImage] && setLightbox(true)}
               className="foto-zoom"
-              style={{ borderRadius: "1.25rem", overflow: "hidden", backgroundColor: "#F0E8D0", aspectRatio: "3/4", border: "1px solid rgba(140,100,20,0.1)", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", cursor: images[selectedImage] ? "zoom-in" : "default", position: "relative" }}>
+              style={{ borderRadius: "1.25rem", overflow: "hidden", backgroundColor: "var(--bg-soft)", aspectRatio: "3/4", border: "1px solid var(--border)", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", cursor: images[selectedImage] ? "zoom-in" : "default", position: "relative" }}>
               {images[selectedImage] ? (
                 // A key troca o elemento a cada foto, e é isso que faz a
                 // animação de entrada rodar de novo em vez de só na primeira.
                 <img key={selectedImage} className="troca-suave" src={images[selectedImage]} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
               ) : (
-                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#b8891a", fontSize: "0.875rem", opacity: 0.5 }}>
+                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gold)", fontSize: "0.875rem", opacity: 0.5 }}>
                   Foto em breve
                 </div>
               )}
               {images[selectedImage] && (
-                <div style={{ position: "absolute", bottom: 10, right: 10, backgroundColor: "rgba(0,0,0,0.45)", borderRadius: "0.5rem", padding: "4px 8px", fontSize: "0.65rem", color: "#fff", fontWeight: 700 }}>
+                <div style={{ position: "absolute", bottom: 10, right: 10, backgroundColor: "rgba(0,0,0,0.45)", borderRadius: "0.5rem", padding: "4px 8px", fontSize: "0.65rem", color: "var(--text-main)", fontWeight: 700 }}>
                   🔍 Ampliar
                 </div>
               )}
@@ -212,7 +212,7 @@ export default function ProductPageClient() {
               <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.875rem", flexWrap: "wrap" }}>
                 {images.map((img, i) => (
                   <button key={i} onClick={() => setSelectedImage(i)}
-                    style={{ width: 68, height: 68, borderRadius: "0.625rem", overflow: "hidden", border: `2px solid ${selectedImage === i ? "#b8891a" : "rgba(140,100,20,0.15)"}`, cursor: "pointer", padding: 0, backgroundColor: "#F0E8D0", flexShrink: 0 }}>
+                    style={{ width: 68, height: 68, borderRadius: "0.625rem", overflow: "hidden", border: `2px solid ${selectedImage === i ? "var(--gold)" : "var(--border)"}`, cursor: "pointer", padding: 0, backgroundColor: "var(--bg-soft)", flexShrink: 0 }}>
                     <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                   </button>
                 ))}
@@ -226,13 +226,13 @@ export default function ProductPageClient() {
               style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.92)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
               {/* Fechar */}
               <button onClick={() => setLightbox(false)}
-                style={{ position: "absolute", top: 20, right: 20, background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", width: 44, height: 44, borderRadius: "50%", fontSize: "1.25rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                style={{ position: "absolute", top: 20, right: 20, background: "rgba(255,255,255,0.1)", border: "none", color: "var(--text-main)", width: 44, height: 44, borderRadius: "50%", fontSize: "1.25rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 ✕
               </button>
               {/* Seta esquerda */}
               {images.length > 1 && (
                 <button onClick={e => { e.stopPropagation(); setSelectedImage(i => (i - 1 + images.length) % images.length); }}
-                  style={{ position: "absolute", left: 16, background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", width: 48, height: 48, borderRadius: "50%", fontSize: "1.5rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  style={{ position: "absolute", left: 16, background: "rgba(255,255,255,0.1)", border: "none", color: "var(--text-main)", width: 48, height: 48, borderRadius: "50%", fontSize: "1.5rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   ‹
                 </button>
               )}
@@ -242,7 +242,7 @@ export default function ProductPageClient() {
               {/* Seta direita */}
               {images.length > 1 && (
                 <button onClick={e => { e.stopPropagation(); setSelectedImage(i => (i + 1) % images.length); }}
-                  style={{ position: "absolute", right: 16, background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", width: 48, height: 48, borderRadius: "50%", fontSize: "1.5rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  style={{ position: "absolute", right: 16, background: "rgba(255,255,255,0.1)", border: "none", color: "var(--text-main)", width: 48, height: 48, borderRadius: "50%", fontSize: "1.5rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   ›
                 </button>
               )}
@@ -251,7 +251,7 @@ export default function ProductPageClient() {
                 <div style={{ position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)", display: "flex", gap: "6px" }}>
                   {images.map((_, i) => (
                     <div key={i} onClick={e => { e.stopPropagation(); setSelectedImage(i); }}
-                      style={{ width: i === selectedImage ? 20 : 8, height: 8, borderRadius: "999px", backgroundColor: i === selectedImage ? "#b8891a" : "rgba(255,255,255,0.4)", cursor: "pointer", transition: "width 0.2s" }} />
+                      style={{ width: i === selectedImage ? 20 : 8, height: 8, borderRadius: "999px", backgroundColor: i === selectedImage ? "var(--gold)" : "rgba(255,255,255,0.4)", cursor: "pointer", transition: "width 0.2s" }} />
                   ))}
                 </div>
               )}
@@ -261,36 +261,36 @@ export default function ProductPageClient() {
           {/* Detalhes */}
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
-              <p style={{ fontSize: "0.75rem", color: "#b8891a", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+              <p style={{ fontSize: "0.75rem", color: "var(--gold)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>
                 {product.category.name}
               </p>
               {product.sku && (
-                <span style={{ fontSize: "0.68rem", color: "#9a8060", fontFamily: "monospace", backgroundColor: "#F0E8D0", padding: "0.2rem 0.6rem", borderRadius: "999px", fontWeight: 700 }}>
+                <span style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontFamily: "monospace", backgroundColor: "var(--bg-soft)", padding: "0.2rem 0.6rem", borderRadius: "999px", fontWeight: 700 }}>
                   {product.sku}
                 </span>
               )}
             </div>
-            <h1 style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", fontWeight: 900, color: "#1a1510", marginTop: "0.4rem", lineHeight: 1.2 }}>
+            <h1 style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", fontWeight: 900, color: "var(--text-main)", marginTop: "0.4rem", lineHeight: 1.2 }}>
               {product.name}
             </h1>
 
             <div style={{ display: "flex", alignItems: "center", gap: "0.875rem", marginTop: "1.25rem", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "2rem", fontWeight: 900, color: saleInfo ? "#e74c3c" : "#b8891a" }}>{formatCurrency(finalPrice)}</span>
+              <span style={{ fontSize: "2rem", fontWeight: 900, color: saleInfo ? "#e74c3c" : "var(--gold)" }}>{formatCurrency(finalPrice)}</span>
               {saleInfo ? (
                 <>
-                  <span style={{ fontSize: "1.1rem", color: "#b8a080", textDecoration: "line-through" }}>{formatCurrency(product.compareAt || product.price)}</span>
-                  <span style={{ backgroundColor: "#e74c3c", color: "#fff", fontSize: "0.8rem", fontWeight: 900, padding: "0.2rem 0.7rem", borderRadius: "999px" }}>SALE -{saleInfo.discount}%</span>
+                  <span style={{ fontSize: "1.1rem", color: "var(--text-muted)", textDecoration: "line-through" }}>{formatCurrency(product.compareAt || product.price)}</span>
+                  <span style={{ backgroundColor: "#e74c3c", color: "var(--text-main)", fontSize: "0.8rem", fontWeight: 900, padding: "0.2rem 0.7rem", borderRadius: "999px" }}>SALE -{saleInfo.discount}%</span>
                 </>
               ) : product.compareAt ? (
                 <>
-                  <span style={{ fontSize: "1.1rem", color: "#b8a080", textDecoration: "line-through" }}>{formatCurrency(product.compareAt)}</span>
-                  <span style={{ backgroundColor: "rgba(184,137,26,0.12)", color: "#b8891a", fontSize: "0.8rem", fontWeight: 900, padding: "0.2rem 0.7rem", borderRadius: "999px" }}>-{discount}%</span>
+                  <span style={{ fontSize: "1.1rem", color: "var(--text-muted)", textDecoration: "line-through" }}>{formatCurrency(product.compareAt)}</span>
+                  <span style={{ backgroundColor: "rgba(184,137,26,0.12)", color: "var(--gold)", fontSize: "0.8rem", fontWeight: 900, padding: "0.2rem 0.7rem", borderRadius: "999px" }}>-{discount}%</span>
                 </>
               ) : null}
             </div>
 
             {outOfStock && (
-              <div style={{ marginTop: "0.75rem", padding: "0.6rem 1rem", backgroundColor: "#fee8e8", borderRadius: "0.625rem", fontSize: "0.8rem", color: "#c04040", fontWeight: 700 }}>
+              <div style={{ marginTop: "0.75rem", padding: "0.6rem 1rem", backgroundColor: "#fee8e8", borderRadius: "0.625rem", fontSize: "0.8rem", color: "#ff8a7a", fontWeight: 700 }}>
                 Produto esgotado no momento
               </div>
             )}
@@ -298,9 +298,9 @@ export default function ProductPageClient() {
             {/* Cores */}
             {cores.length > 0 && (
               <div style={{ marginTop: "1.75rem" }}>
-                <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#5a4a2a", marginBottom: "0.625rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-sub)", marginBottom: "0.625rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   {precisaEscolherCor
-                    ? <>Cor: <span style={{ color: "#b8891a" }}>{corAtual || "escolha"}</span></>
+                    ? <>Cor: <span style={{ color: "var(--gold)" }}>{corAtual || "escolha"}</span></>
                     : cores.length === 1 ? "Cor" : `Cores disponíveis (${cores.length})`}
                 </p>
                 <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
@@ -316,20 +316,20 @@ export default function ProductPageClient() {
                           if (selectedSize && quantidadeDe(estoque, c.nome, selectedSize) <= 0) setSelectedSize("");
                         }}
                         disabled={precisaEscolherCor && !disponivel}
-                        style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.35rem 0.7rem 0.35rem 0.4rem", borderRadius: "999px", border: `2px solid ${escolhida ? "#b8891a" : "rgba(140,100,20,0.2)"}`, backgroundColor: escolhida ? "#fdf6e6" : "#fff", cursor: !precisaEscolherCor ? "default" : disponivel ? "pointer" : "not-allowed", opacity: disponivel ? 1 : 0.45, textDecoration: disponivel ? "none" : "line-through" }}>
+                        style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.35rem 0.7rem 0.35rem 0.4rem", borderRadius: "999px", border: `2px solid ${escolhida ? "var(--gold)" : "var(--border)"}`, backgroundColor: escolhida ? "#fdf6e6" : "var(--bg-card)", cursor: !precisaEscolherCor ? "default" : disponivel ? "pointer" : "not-allowed", opacity: disponivel ? 1 : 0.45, textDecoration: disponivel ? "none" : "line-through" }}>
                         <span aria-hidden style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: c.fundo, border: `1px solid ${c.borda}`, display: "block", flexShrink: 0 }} />
-                        <span style={{ fontSize: "0.82rem", fontWeight: escolhida ? 800 : 600, color: "#5a4a2a" }}>{c.nome}</span>
+                        <span style={{ fontSize: "0.82rem", fontWeight: escolhida ? 800 : 600, color: "var(--text-sub)" }}>{c.nome}</span>
                       </button>
                     );
                   })}
                 </div>
                 {faltaEscolherCor && (
-                  <p style={{ fontSize: "0.75rem", color: "#b8891a", fontWeight: 700, marginTop: "0.5rem" }}>
+                  <p style={{ fontSize: "0.75rem", color: "var(--gold)", fontWeight: 700, marginTop: "0.5rem" }}>
                     Escolha a cor para ver os tamanhos disponíveis.
                   </p>
                 )}
                 {!precisaEscolherCor && (
-                  <p style={{ fontSize: "0.72rem", color: "#9a8060", marginTop: "0.5rem" }}>
+                  <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "0.5rem" }}>
                     Combine a cor com a gente no WhatsApp ao finalizar o pedido.
                   </p>
                 )}
@@ -339,22 +339,22 @@ export default function ProductPageClient() {
             {/* Tamanhos */}
             {sizes.length > 0 && (
               <div style={{ marginTop: "1.75rem" }}>
-                <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "#5a4a2a", marginBottom: "0.625rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  Tamanho: <span style={{ color: "#b8891a" }}>{selectedSize}</span>
+                <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-sub)", marginBottom: "0.625rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Tamanho: <span style={{ color: "var(--gold)" }}>{selectedSize}</span>
                 </p>
                 <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                   {tamanhosVisiveis.map(size => {
                     const available = isSizeAvailable(size);
                     return (
                       <button key={size} onClick={() => available && setSelectedSize(size)} disabled={!available}
-                        style={{ position: "relative", padding: "0.55rem 1.1rem", borderRadius: "0.625rem", border: `2px solid ${!available ? "rgba(140,100,20,0.1)" : selectedSize === size ? "#b8891a" : "rgba(140,100,20,0.2)"}`, backgroundColor: !available ? "#f5f5f5" : selectedSize === size ? "#b8891a" : "#fff", color: !available ? "#b8a080" : selectedSize === size ? "#fff" : "#5a4a2a", fontWeight: 700, fontSize: "0.9rem", cursor: available ? "pointer" : "not-allowed", transition: "all 0.15s", textDecoration: !available ? "line-through" : "none" }}>
+                        style={{ position: "relative", padding: "0.55rem 1.1rem", borderRadius: "0.625rem", border: `2px solid ${!available ? "var(--border)" : selectedSize === size ? "var(--gold)" : "var(--border)"}`, backgroundColor: !available ? "var(--bg-soft)" : selectedSize === size ? "var(--gold)" : "var(--bg-card)", color: !available ? "var(--text-muted)" : selectedSize === size ? "var(--text-main)" : "var(--text-sub)", fontWeight: 700, fontSize: "0.9rem", cursor: available ? "pointer" : "not-allowed", transition: "all 0.15s", textDecoration: !available ? "line-through" : "none" }}>
                         {size}
                       </button>
                     );
                   })}
                 </div>
                 {selectedSize && !selectedSizeAvailable && (
-                  <p style={{ fontSize: "0.78rem", color: "#c04040", marginTop: "0.5rem" }}>Esgotado nesse tamanho.</p>
+                  <p style={{ fontSize: "0.78rem", color: "#ff8a7a", marginTop: "0.5rem" }}>Esgotado nesse tamanho.</p>
                 )}
               </div>
             )}
@@ -364,9 +364,9 @@ export default function ProductPageClient() {
 
             {/* Seleção de Componentes */}
             {product.isConjunto && product.sellComponentsSeparately && (
-              <div style={{ marginTop: "1.75rem", padding: "1.25rem", backgroundColor: "#fff", borderRadius: "0.875rem", border: "1px solid rgba(184,137,26,0.2)" }}>
+              <div style={{ marginTop: "1.75rem", padding: "1.25rem", backgroundColor: "var(--bg-card)", borderRadius: "0.875rem", border: "1px solid rgba(184,137,26,0.2)" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-                  <h3 style={{ fontSize: "0.72rem", fontWeight: 800, color: "#b8891a", letterSpacing: "0.1em", textTransform: "uppercase" }}>💰 Escolha o que comprar</h3>
+                  <h3 style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--gold)", letterSpacing: "0.1em", textTransform: "uppercase" }}>💰 Escolha o que comprar</h3>
                   {bundleSavings > 0 && (
                     <div style={{ backgroundColor: "rgba(46,125,50,0.12)", color: "#2e7d32", padding: "0.4rem 0.8rem", borderRadius: "999px", fontSize: "0.75rem", fontWeight: 700 }}>
                       💚 Economize {formatCurrency(bundleSavings)} ({bundleSavingsPercent}%)
@@ -378,13 +378,13 @@ export default function ProductPageClient() {
                   {(() => {
                     const compSoldOut = product.stock === 0;
                     return (
-                      <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem", backgroundColor: compSoldOut ? "#f5f5f5" : selectedComponent === "completo" ? "rgba(184,137,26,0.08)" : "#FAF6EE", borderRadius: "0.625rem", border: `2px solid ${compSoldOut ? "rgba(140,100,20,0.08)" : selectedComponent === "completo" ? "#b8891a" : "rgba(140,100,20,0.1)"}`, cursor: compSoldOut ? "not-allowed" : "pointer", opacity: compSoldOut ? 0.55 : 1 }}>
-                        <input type="radio" name="component" value="completo" checked={selectedComponent === "completo"} onChange={() => !compSoldOut && setSelectedComponent("completo")} disabled={compSoldOut} style={{ width: "1.1rem", height: "1.1rem", accentColor: "#b8891a", cursor: compSoldOut ? "not-allowed" : "pointer" }} />
+                      <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem", backgroundColor: compSoldOut ? "var(--bg-soft)" : selectedComponent === "completo" ? "rgba(184,137,26,0.08)" : "var(--bg)", borderRadius: "0.625rem", border: `2px solid ${compSoldOut ? "var(--border)" : selectedComponent === "completo" ? "var(--gold)" : "var(--border)"}`, cursor: compSoldOut ? "not-allowed" : "pointer", opacity: compSoldOut ? 0.55 : 1 }}>
+                        <input type="radio" name="component" value="completo" checked={selectedComponent === "completo"} onChange={() => !compSoldOut && setSelectedComponent("completo")} disabled={compSoldOut} style={{ width: "1.1rem", height: "1.1rem", accentColor: "var(--gold)", cursor: compSoldOut ? "not-allowed" : "pointer" }} />
                         <div style={{ flex: 1 }}>
-                          <p style={{ fontWeight: 700, color: compSoldOut ? "#9a8060" : "#1a1510", fontSize: "0.9rem", textDecoration: compSoldOut ? "line-through" : "none" }}>Conjunto Completo</p>
-                          <p style={{ fontSize: "0.8rem", color: "#9a8060" }}>{compSoldOut ? "Esgotado" : "Todas as peças juntas"}</p>
+                          <p style={{ fontWeight: 700, color: compSoldOut ? "var(--text-muted)" : "#16110b", fontSize: "0.9rem", textDecoration: compSoldOut ? "line-through" : "none" }}>Conjunto Completo</p>
+                          <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{compSoldOut ? "Esgotado" : "Todas as peças juntas"}</p>
                         </div>
-                        <span style={{ fontSize: "1rem", fontWeight: 900, color: compSoldOut ? "#9a8060" : saleInfo ? "#e74c3c" : "#b8891a" }}>{formatCurrency(finalPrice)}</span>
+                        <span style={{ fontSize: "1rem", fontWeight: 900, color: compSoldOut ? "var(--text-muted)" : saleInfo ? "#e74c3c" : "var(--gold)" }}>{formatCurrency(finalPrice)}</span>
                       </label>
                     );
                   })()}
@@ -393,13 +393,13 @@ export default function ProductPageClient() {
                     const compStock = comp.stock ?? 0;
                     const compSoldOut = compStock < 0; // < 0 = foi vendido e esgotou
                     return (
-                      <label key={comp.id} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem", backgroundColor: compSoldOut ? "#f5f5f5" : selectedComponent === comp.id ? "rgba(184,137,26,0.08)" : "#FAF6EE", borderRadius: "0.625rem", border: `2px solid ${compSoldOut ? "rgba(140,100,20,0.08)" : selectedComponent === comp.id ? "#b8891a" : "rgba(140,100,20,0.1)"}`, cursor: compSoldOut ? "not-allowed" : "pointer", opacity: compSoldOut ? 0.55 : 1 }}>
-                        <input type="radio" name="component" value={comp.id} checked={selectedComponent === comp.id} onChange={() => !compSoldOut && setSelectedComponent(comp.id)} disabled={compSoldOut} style={{ width: "1.1rem", height: "1.1rem", accentColor: "#b8891a", cursor: compSoldOut ? "not-allowed" : "pointer" }} />
+                      <label key={comp.id} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem", backgroundColor: compSoldOut ? "var(--bg-soft)" : selectedComponent === comp.id ? "rgba(184,137,26,0.08)" : "var(--bg)", borderRadius: "0.625rem", border: `2px solid ${compSoldOut ? "var(--border)" : selectedComponent === comp.id ? "var(--gold)" : "var(--border)"}`, cursor: compSoldOut ? "not-allowed" : "pointer", opacity: compSoldOut ? 0.55 : 1 }}>
+                        <input type="radio" name="component" value={comp.id} checked={selectedComponent === comp.id} onChange={() => !compSoldOut && setSelectedComponent(comp.id)} disabled={compSoldOut} style={{ width: "1.1rem", height: "1.1rem", accentColor: "var(--gold)", cursor: compSoldOut ? "not-allowed" : "pointer" }} />
                         <div style={{ flex: 1 }}>
-                          <p style={{ fontWeight: 700, color: compSoldOut ? "#9a8060" : "#1a1510", fontSize: "0.9rem", textDecoration: compSoldOut ? "line-through" : "none" }}>{comp.name}</p>
-                          {compSoldOut && <p style={{ fontSize: "0.75rem", color: "#c04040" }}>Esgotado</p>}
+                          <p style={{ fontWeight: 700, color: compSoldOut ? "var(--text-muted)" : "#16110b", fontSize: "0.9rem", textDecoration: compSoldOut ? "line-through" : "none" }}>{comp.name}</p>
+                          {compSoldOut && <p style={{ fontSize: "0.75rem", color: "#ff8a7a" }}>Esgotado</p>}
                         </div>
-                        <span style={{ fontSize: "1rem", fontWeight: 900, color: compSoldOut ? "#9a8060" : saleInfo ? "#e74c3c" : "#b8891a" }}>{formatCurrency(componentPrice(comp.price))}</span>
+                        <span style={{ fontSize: "1rem", fontWeight: 900, color: compSoldOut ? "var(--text-muted)" : saleInfo ? "#e74c3c" : "var(--gold)" }}>{formatCurrency(componentPrice(comp.price))}</span>
                       </label>
                     );
                   })}
@@ -416,7 +416,7 @@ export default function ProductPageClient() {
               const btnDisabled = outOfStock || selectedCompSoldOut || !selectedSizeAvailable || faltaEscolherCor;
               return (
                 <button onClick={handleAddToCart} disabled={btnDisabled}
-                  style={{ width: "100%", marginTop: "2rem", padding: "1rem 1.5rem", backgroundColor: added ? "#2a6a2a" : btnDisabled ? "#e8e0d0" : "#1a1510", color: added ? "#fff" : btnDisabled ? "#9a8060" : "#FAF6EE", fontWeight: 900, fontSize: "1rem", border: "none", borderRadius: "0.875rem", cursor: btnDisabled ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", transition: "background-color 0.3s", letterSpacing: "0.03em", boxShadow: btnDisabled ? "none" : "0 4px 14px rgba(26,21,16,0.25)" }}>
+                  style={{ width: "100%", marginTop: "2rem", padding: "1rem 1.5rem", backgroundColor: added ? "#2a6a2a" : btnDisabled ? "#e8e0d0" : "var(--bg-soft)", color: added ? "var(--text-main)" : btnDisabled ? "var(--text-muted)" : "var(--text-main)", fontWeight: 900, fontSize: "1rem", border: "none", borderRadius: "0.875rem", cursor: btnDisabled ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", transition: "background-color 0.3s", letterSpacing: "0.03em", boxShadow: btnDisabled ? "none" : "0 4px 14px rgba(26,21,16,0.25)" }}>
                   {added ? "✓ Adicionado ao carrinho!"
                     : faltaEscolherCor ? "Escolha a cor"
                     : btnDisabled ? "Esgotado"
@@ -431,27 +431,27 @@ export default function ProductPageClient() {
             {outOfStock && (
               <div style={{ marginTop: "0.75rem" }}>
                 {!waitSaved ? (!showWaitlist ? (
-                  <button onClick={() => setShowWaitlist(true)} style={{ width: "100%", padding: "0.875rem", backgroundColor: "#FAF6EE", border: "2px solid #b8891a", borderRadius: "0.875rem", color: "#b8891a", fontWeight: 700, fontSize: "0.95rem", cursor: "pointer" }}>
+                  <button onClick={() => setShowWaitlist(true)} style={{ width: "100%", padding: "0.875rem", backgroundColor: "var(--bg)", border: "2px solid var(--gold)", borderRadius: "0.875rem", color: "var(--gold)", fontWeight: 700, fontSize: "0.95rem", cursor: "pointer" }}>
                     🔔 Me avise quando voltar ao estoque
                   </button>
                 ) : (
-                  <div style={{ backgroundColor: "#FAF6EE", border: "1px solid rgba(184,137,26,0.3)", borderRadius: "0.875rem", padding: "1.25rem" }}>
-                    <p style={{ fontWeight: 700, color: "#1a1510", marginBottom: "0.875rem" }}>🔔 Lista de espera</p>
+                  <div style={{ backgroundColor: "var(--bg)", border: "1px solid rgba(184,137,26,0.3)", borderRadius: "0.875rem", padding: "1.25rem" }}>
+                    <p style={{ fontWeight: 700, color: "var(--text-main)", marginBottom: "0.875rem" }}>🔔 Lista de espera</p>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem", marginBottom: "0.875rem" }}>
-                      <input placeholder="Seu nome" value={waitName} onChange={e => setWaitName(e.target.value)} style={{ padding: "0.625rem 0.875rem", border: "1px solid rgba(140,100,20,0.25)", borderRadius: "0.5rem", fontSize: "0.875rem", backgroundColor: "#fff", outline: "none" }} />
-                      <input placeholder="WhatsApp (51) 9..." value={waitPhone} onChange={e => setWaitPhone(e.target.value)} style={{ padding: "0.625rem 0.875rem", border: "1px solid rgba(140,100,20,0.25)", borderRadius: "0.5rem", fontSize: "0.875rem", backgroundColor: "#fff", outline: "none" }} />
+                      <input placeholder="Seu nome" value={waitName} onChange={e => setWaitName(e.target.value)} style={{ padding: "0.625rem 0.875rem", border: "1px solid var(--border)", borderRadius: "0.5rem", fontSize: "0.875rem", backgroundColor: "var(--bg-card)", outline: "none" }} />
+                      <input placeholder="WhatsApp (51) 9..." value={waitPhone} onChange={e => setWaitPhone(e.target.value)} style={{ padding: "0.625rem 0.875rem", border: "1px solid var(--border)", borderRadius: "0.5rem", fontSize: "0.875rem", backgroundColor: "var(--bg-card)", outline: "none" }} />
                     </div>
                     <div style={{ display: "flex", gap: "0.5rem" }}>
                       <button onClick={async () => { if (!waitName || !waitPhone) return; await fetch("/api/lista-espera", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId: product.id, name: waitName, phone: waitPhone }) }); setWaitSaved(true); }}
-                        style={{ flex: 1, backgroundColor: "#b8891a", color: "#fff", border: "none", borderRadius: "0.625rem", padding: "0.625rem", fontWeight: 700, cursor: "pointer" }}>
+                        style={{ flex: 1, backgroundColor: "var(--gold)", color: "#16110b", border: "none", borderRadius: "0.625rem", padding: "0.625rem", fontWeight: 700, cursor: "pointer" }}>
                         Entrar na lista
                       </button>
-                      <button onClick={() => setShowWaitlist(false)} style={{ backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.2)", color: "#9a8060", borderRadius: "0.625rem", padding: "0.625rem 0.875rem", fontWeight: 700, cursor: "pointer" }}>✕</button>
+                      <button onClick={() => setShowWaitlist(false)} style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)", color: "var(--text-muted)", borderRadius: "0.625rem", padding: "0.625rem 0.875rem", fontWeight: 700, cursor: "pointer" }}>✕</button>
                     </div>
                   </div>
                 )) : (
                   <div style={{ backgroundColor: "#e8f8e8", border: "1px solid rgba(26,138,42,0.2)", borderRadius: "0.875rem", padding: "1rem", textAlign: "center" }}>
-                    <p style={{ fontWeight: 700, color: "#1a8a2a" }}>✅ Você está na lista!</p>
+                    <p style={{ fontWeight: 700, color: "#5fd37a" }}>✅ Você está na lista!</p>
                     <p style={{ fontSize: "0.8rem", color: "#5a8a5a", marginTop: "0.25rem" }}>Avisaremos quando chegar.</p>
                   </div>
                 )}
@@ -460,9 +460,9 @@ export default function ProductPageClient() {
 
             {/* Descrição */}
             {product.description && (
-              <div style={{ marginTop: "1.75rem", padding: "1.25rem", backgroundColor: "#fff", borderRadius: "0.875rem", border: "1px solid rgba(140,100,20,0.1)" }}>
-                <h3 style={{ fontSize: "0.72rem", fontWeight: 800, color: "#b8891a", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.625rem" }}>Descrição</h3>
-                <p style={{ color: "#5a4a2a", fontSize: "0.875rem", lineHeight: 1.75 }}>{product.description}</p>
+              <div style={{ marginTop: "1.75rem", padding: "1.25rem", backgroundColor: "var(--bg-card)", borderRadius: "0.875rem", border: "1px solid var(--border)" }}>
+                <h3 style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--gold)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.625rem" }}>Descrição</h3>
+                <p style={{ color: "var(--text-sub)", fontSize: "0.875rem", lineHeight: 1.75 }}>{product.description}</p>
               </div>
             )}
 
@@ -472,10 +472,10 @@ export default function ProductPageClient() {
                 { icon: "🚚", title: "Entrega", desc: "Enviamos para todo o Brasil" },
                 { icon: "🔄", title: "Troca", desc: "Troca em até 7 dias" },
               ].map(item => (
-                <div key={item.title} style={{ padding: "0.875rem", backgroundColor: "#fff", borderRadius: "0.75rem", border: "1px solid rgba(140,100,20,0.1)" }}>
+                <div key={item.title} style={{ padding: "0.875rem", backgroundColor: "var(--bg-card)", borderRadius: "0.75rem", border: "1px solid var(--border)" }}>
                   <div style={{ fontSize: "1.25rem", marginBottom: "0.3rem" }}>{item.icon}</div>
-                  <p style={{ fontSize: "0.75rem", fontWeight: 800, color: "#1a1510" }}>{item.title}</p>
-                  <p style={{ fontSize: "0.72rem", color: "#9a8060", marginTop: "0.1rem" }}>{item.desc}</p>
+                  <p style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-main)" }}>{item.title}</p>
+                  <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "0.1rem" }}>{item.desc}</p>
                 </div>
               ))}
             </div>

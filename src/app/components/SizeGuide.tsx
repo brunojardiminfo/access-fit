@@ -92,9 +92,9 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
         style={{
           width: "100%",
           padding: "1rem",
-          backgroundColor: isOpen ? "#f0e6d2" : "#FAF6EE",
-          border: "2px solid #b8891a",
-          color: "#5a4a2a",
+          backgroundColor: isOpen ? "#f0e6d2" : "var(--bg)",
+          border: "2px solid var(--gold)",
+          color: "var(--text-sub)",
           fontSize: "1rem",
           fontWeight: 700,
           cursor: "pointer",
@@ -110,7 +110,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
           style={{
             marginTop: "1rem",
             padding: "1.5rem",
-            backgroundColor: "#FAF6EE",
+            backgroundColor: "var(--bg)",
             borderRadius: "8px",
             border: "1px solid #e0d4c0",
           }}
@@ -118,7 +118,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
           <form onSubmit={handleGetRecommendation}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
               <div>
-                <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", fontWeight: 600, color: "#5a4a2a" }}>
+                <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", fontWeight: 600, color: "var(--text-sub)" }}>
                   Altura (cm)
                 </label>
                 <input
@@ -138,7 +138,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
                 />
               </div>
               <div>
-                <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", fontWeight: 600, color: "#5a4a2a" }}>
+                <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", fontWeight: 600, color: "var(--text-sub)" }}>
                   Peso (kg)
                 </label>
                 <input
@@ -158,7 +158,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
                 />
               </div>
               <div>
-                <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", fontWeight: 600, color: "#5a4a2a" }}>
+                <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", fontWeight: 600, color: "var(--text-sub)" }}>
                   Busto (cm) - Opcional
                 </label>
                 <input
@@ -177,7 +177,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
                 />
               </div>
               <div>
-                <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", fontWeight: 600, color: "#5a4a2a" }}>
+                <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", fontWeight: 600, color: "var(--text-sub)" }}>
                   Cintura (cm) - Opcional
                 </label>
                 <input
@@ -203,7 +203,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
               style={{
                 width: "100%",
                 padding: "0.75rem",
-                backgroundColor: loading ? "#d4c5b0" : "#b8891a",
+                backgroundColor: loading ? "#d4c5b0" : "var(--gold)",
                 color: "white",
                 border: "none",
                 borderRadius: "4px",
@@ -235,14 +235,14 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
                 </div>
               )}
 
-              <div style={{ marginBottom: "1.5rem", padding: "1.5rem", backgroundColor: "white", borderRadius: "8px", border: "2px solid #b8891a" }}>
-                <p style={{ margin: 0, fontSize: "0.9rem", color: "#7a6a4a", marginBottom: "0.5rem" }}>Tamanho Recomendado:</p>
-                <p style={{ margin: 0, fontSize: "2.5rem", fontWeight: 700, color: "#b8891a" }}>{result.recommendedSize}</p>
+              <div style={{ marginBottom: "1.5rem", padding: "1.5rem", backgroundColor: "white", borderRadius: "8px", border: "2px solid var(--gold)" }}>
+                <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-sub)", marginBottom: "0.5rem" }}>Tamanho Recomendado:</p>
+                <p style={{ margin: 0, fontSize: "2.5rem", fontWeight: 700, color: "var(--gold)" }}>{result.recommendedSize}</p>
               </div>
 
               {result.similarClientsCount > 0 && (
                 <div>
-                  <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "#5a4a2a", marginBottom: "1rem" }}>
+                  <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--text-sub)", marginBottom: "1rem" }}>
                     Baseado em {result.similarClientsCount} clientes com medidas similares:
                   </p>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
@@ -252,26 +252,26 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
                         style={{
                           padding: "1rem",
                           backgroundColor: stat.size === result.recommendedSize ? "#f0e6d2" : "white",
-                          border: `2px solid ${stat.size === result.recommendedSize ? "#b8891a" : "#d4c5b0"}`,
+                          border: `2px solid ${stat.size === result.recommendedSize ? "var(--gold)" : "#d4c5b0"}`,
                           borderRadius: "8px",
                           textAlign: "center",
                         }}
                       >
-                        <p style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#5a4a2a", marginBottom: "0.5rem" }}>
+                        <p style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "var(--text-sub)", marginBottom: "0.5rem" }}>
                           Tamanho {stat.size}
                         </p>
                         <div style={{ width: "100%", height: "8px", backgroundColor: "#e0d4c0", borderRadius: "4px", overflow: "hidden", marginBottom: "0.5rem" }}>
                           <div
                             style={{
                               height: "100%",
-                              backgroundColor: "#b8891a",
+                              backgroundColor: "var(--gold)",
                               width: `${stat.percentage}%`,
                               transition: "width 0.3s ease",
                             }}
                           />
                         </div>
-                        <p style={{ margin: 0, fontSize: "1.2rem", fontWeight: 700, color: "#b8891a" }}>{stat.percentage}%</p>
-                        <p style={{ margin: 0, fontSize: "0.8rem", color: "#7a6a4a", marginTop: "0.25rem" }}>({stat.count} clientes)</p>
+                        <p style={{ margin: 0, fontSize: "1.2rem", fontWeight: 700, color: "var(--gold)" }}>{stat.percentage}%</p>
+                        <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-sub)", marginTop: "0.25rem" }}>({stat.count} clientes)</p>
                       </div>
                     ))}
                   </div>
