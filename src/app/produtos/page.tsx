@@ -75,16 +75,16 @@ export default async function ProdutosPage({
         {/* Categorias */}
         <div style={{ display: "flex", gap: "0.5rem", overflowX: "auto", padding: "0.75rem 1.25rem 0", WebkitOverflowScrolling: "touch" }}>
           <Link href={buildUrl({ categoria: undefined })}
-            style={{ flexShrink: 0, padding: "0.4rem 0.875rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: 700, textDecoration: "none", backgroundColor: !categoria ? "var(--gold)" : "var(--bg-card)", color: !categoria ? "var(--text-main)" : "var(--text-sub)", border: !categoria ? "none" : "1px solid var(--border)" }}>
+            style={{ flexShrink: 0, padding: "0.4rem 0.875rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: 700, textDecoration: "none", backgroundColor: !categoria ? "var(--gold)" : "var(--bg-card)", color: !categoria ? "var(--bg)" : "var(--text-sub)", border: !categoria ? "none" : "1px solid var(--border)" }}>
             Todos
           </Link>
           <Link href={buildUrl({ sale: soSale ? undefined : "1" })}
-            style={{ flexShrink: 0, padding: "0.4rem 0.875rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: 800, textDecoration: "none", whiteSpace: "nowrap", backgroundColor: soSale ? "#e74c3c" : "var(--bg-card)", color: soSale ? "var(--text-main)" : "#e74c3c", border: soSale ? "none" : "1px solid rgba(231,76,60,0.35)" }}>
+            style={{ flexShrink: 0, padding: "0.4rem 0.875rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: 800, textDecoration: "none", whiteSpace: "nowrap", backgroundColor: soSale ? "var(--sale)" : "var(--sale-veu)", color: soSale ? "var(--bg)" : "var(--sale-text)", border: soSale ? "none" : "1px solid rgba(231,76,60,0.35)" }}>
             🔥 SALE
           </Link>
           {categories.map(cat => (
             <Link key={cat.id} href={buildUrl({ categoria: cat.slug })}
-              style={{ flexShrink: 0, padding: "0.4rem 0.875rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: 700, textDecoration: "none", backgroundColor: categoria === cat.slug ? "var(--gold)" : "var(--bg-card)", color: categoria === cat.slug ? "var(--text-main)" : "var(--text-sub)", border: categoria === cat.slug ? "none" : "1px solid var(--border)" }}>
+              style={{ flexShrink: 0, padding: "0.4rem 0.875rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: 700, textDecoration: "none", backgroundColor: categoria === cat.slug ? "var(--gold)" : "var(--bg-card)", color: categoria === cat.slug ? "var(--bg)" : "var(--text-sub)", border: categoria === cat.slug ? "none" : "1px solid var(--border)" }}>
               {cat.name}
             </Link>
           ))}
@@ -94,7 +94,7 @@ export default async function ProdutosPage({
           <div style={{ display: "flex", gap: "0.4rem", overflowX: "auto", padding: "0.5rem 1.25rem 0.75rem", WebkitOverflowScrolling: "touch" }}>
             {tamanho && (
               <Link href={buildUrl({ tamanho: undefined })}
-                style={{ flexShrink: 0, padding: "0.3rem 0.75rem", borderRadius: "999px", fontSize: "0.75rem", fontWeight: 700, textDecoration: "none", backgroundColor: "#fee8e8", color: "#ff8a7a", border: "1px solid rgba(192,64,64,0.2)" }}>
+                style={{ flexShrink: 0, padding: "0.3rem 0.75rem", borderRadius: "999px", fontSize: "0.75rem", fontWeight: 700, textDecoration: "none", backgroundColor: "rgba(255,138,122,0.14)", color: "#ff8a7a", border: "1px solid rgba(255,138,122,0.28)" }}>
                 ✕ {tamanho}
               </Link>
             )}
@@ -149,9 +149,9 @@ export default async function ProdutosPage({
 
             {/* SALE */}
             <Link href={buildUrl({ sale: soSale ? undefined : "1" })}
-              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", padding: "0.875rem 1.25rem", borderBottom: "1px solid var(--border)", textDecoration: "none", backgroundColor: soSale ? "#e74c3c" : "#fff5f3" }}>
-              <span style={{ fontSize: "0.85rem", fontWeight: 900, color: soSale ? "var(--text-main)" : "#e74c3c" }}>🔥 SALE</span>
-              <span style={{ fontSize: "0.7rem", fontWeight: 700, whiteSpace: "nowrap", color: soSale ? "rgba(255,255,255,0.8)" : "#c0705a" }}>
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", padding: "0.875rem 1.25rem", borderBottom: "1px solid var(--border)", textDecoration: "none", backgroundColor: soSale ? "var(--sale)" : "var(--sale-veu)" }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: 900, color: soSale ? "var(--bg)" : "var(--sale-text)" }}>🔥 SALE</span>
+              <span style={{ fontSize: "0.7rem", fontWeight: 700, whiteSpace: "nowrap", color: soSale ? "var(--bg)" : "var(--sale-text)" }}>
                 {soSale ? "✕ limpar" : "ver ofertas"}
               </span>
             </Link>

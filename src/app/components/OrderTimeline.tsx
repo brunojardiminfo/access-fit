@@ -1,4 +1,15 @@
-import { ORDER_STATUS_LABEL, ORDER_STATUS_COLOR, ORDER_STATUS_ICON } from "@/lib/orderStatus";
+import { ORDER_STATUS_LABEL, ORDER_STATUS_ICON } from "@/lib/orderStatus";
+
+/* ORDER_STATUS_COLOR vive no lib e é dividido com o admin, que continua claro.
+   Esta é a mesma paleta lida sobre o fundo escuro da loja. */
+const TOM: Record<string, { bg: string; color: string }> = {
+  pending:   { bg: "rgba(216,166,44,0.16)",  color: "var(--gold-light)" },
+  confirmed: { bg: "rgba(126,196,240,0.16)", color: "#7ec4f0" },
+  shipped:   { bg: "rgba(183,140,255,0.16)", color: "#b78cff" },
+  delivered: { bg: "rgba(95,211,122,0.16)",  color: "#5fd37a" },
+  cancelled: { bg: "rgba(255,138,122,0.16)", color: "#ff8a7a" },
+  "try-on":  { bg: "rgba(199,155,255,0.16)", color: "#c79bff" },
+};
 
 type HistoryEntry = { status: string; createdAt: string | Date };
 
@@ -24,7 +35,7 @@ export default function OrderTimeline({
     <div>
       {entries.map((entry, idx) => {
         const isFallback = entry.status === "__created__";
-        const color = isFallback ? { bg: "#fff8e1", color: "var(--gold)" } : (ORDER_STATUS_COLOR[entry.status] || { bg: "#f0f0f0", color: "#666" });
+        const color = isFallback ? { bg: "rgba(216,166,44,0.16)", color: "var(--gold-light)" } : (TOM[entry.status] || { bg: "rgba(250,246,238,0.08)", color: "var(--text-sub)" });
         const icon = isFallback ? "🧾" : (ORDER_STATUS_ICON[entry.status] || "•");
         const label = isFallback ? "Pedido criado" : (ORDER_STATUS_LABEL[entry.status] || entry.status);
         const isLast = idx === entries.length - 1;

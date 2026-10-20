@@ -279,7 +279,7 @@ export default function ProductPageClient() {
               {saleInfo ? (
                 <>
                   <span style={{ fontSize: "1.1rem", color: "var(--text-muted)", textDecoration: "line-through" }}>{formatCurrency(product.compareAt || product.price)}</span>
-                  <span style={{ backgroundColor: "#e74c3c", color: "var(--text-main)", fontSize: "0.8rem", fontWeight: 900, padding: "0.2rem 0.7rem", borderRadius: "999px" }}>SALE -{saleInfo.discount}%</span>
+                  <span style={{ backgroundColor: "var(--sale)", color: "var(--bg)", fontSize: "0.8rem", fontWeight: 900, padding: "0.2rem 0.7rem", borderRadius: "999px" }}>SALE -{saleInfo.discount}%</span>
                 </>
               ) : product.compareAt ? (
                 <>
@@ -290,7 +290,7 @@ export default function ProductPageClient() {
             </div>
 
             {outOfStock && (
-              <div style={{ marginTop: "0.75rem", padding: "0.6rem 1rem", backgroundColor: "#fee8e8", borderRadius: "0.625rem", fontSize: "0.8rem", color: "#ff8a7a", fontWeight: 700 }}>
+              <div style={{ marginTop: "0.75rem", padding: "0.6rem 1rem", backgroundColor: "rgba(255,138,122,0.14)", borderRadius: "0.625rem", fontSize: "0.8rem", color: "#ff8a7a", fontWeight: 700 }}>
                 Produto esgotado no momento
               </div>
             )}
@@ -316,7 +316,7 @@ export default function ProductPageClient() {
                           if (selectedSize && quantidadeDe(estoque, c.nome, selectedSize) <= 0) setSelectedSize("");
                         }}
                         disabled={precisaEscolherCor && !disponivel}
-                        style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.35rem 0.7rem 0.35rem 0.4rem", borderRadius: "999px", border: `2px solid ${escolhida ? "var(--gold)" : "var(--border)"}`, backgroundColor: escolhida ? "#fdf6e6" : "var(--bg-card)", cursor: !precisaEscolherCor ? "default" : disponivel ? "pointer" : "not-allowed", opacity: disponivel ? 1 : 0.45, textDecoration: disponivel ? "none" : "line-through" }}>
+                        style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.35rem 0.7rem 0.35rem 0.4rem", borderRadius: "999px", border: `2px solid ${escolhida ? "var(--gold)" : "var(--border)"}`, backgroundColor: escolhida ? "rgba(216,166,44,0.16)" : "var(--bg-card)", cursor: !precisaEscolherCor ? "default" : disponivel ? "pointer" : "not-allowed", opacity: disponivel ? 1 : 0.45, textDecoration: disponivel ? "none" : "line-through" }}>
                         <span aria-hidden style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: c.fundo, border: `1px solid ${c.borda}`, display: "block", flexShrink: 0 }} />
                         <span style={{ fontSize: "0.82rem", fontWeight: escolhida ? 800 : 600, color: "var(--text-sub)" }}>{c.nome}</span>
                       </button>
@@ -347,7 +347,7 @@ export default function ProductPageClient() {
                     const available = isSizeAvailable(size);
                     return (
                       <button key={size} onClick={() => available && setSelectedSize(size)} disabled={!available}
-                        style={{ position: "relative", padding: "0.55rem 1.1rem", borderRadius: "0.625rem", border: `2px solid ${!available ? "var(--border)" : selectedSize === size ? "var(--gold)" : "var(--border)"}`, backgroundColor: !available ? "var(--bg-soft)" : selectedSize === size ? "var(--gold)" : "var(--bg-card)", color: !available ? "var(--text-muted)" : selectedSize === size ? "var(--text-main)" : "var(--text-sub)", fontWeight: 700, fontSize: "0.9rem", cursor: available ? "pointer" : "not-allowed", transition: "all 0.15s", textDecoration: !available ? "line-through" : "none" }}>
+                        style={{ position: "relative", padding: "0.55rem 1.1rem", borderRadius: "0.625rem", border: `2px solid ${!available ? "var(--border)" : selectedSize === size ? "var(--gold)" : "var(--border)"}`, backgroundColor: !available ? "var(--bg-soft)" : selectedSize === size ? "var(--gold)" : "var(--bg-card)", color: !available ? "var(--text-muted)" : selectedSize === size ? "var(--bg)" : "var(--text-sub)", fontWeight: 700, fontSize: "0.9rem", cursor: available ? "pointer" : "not-allowed", transition: "all 0.15s", textDecoration: !available ? "line-through" : "none" }}>
                         {size}
                       </button>
                     );
@@ -416,7 +416,7 @@ export default function ProductPageClient() {
               const btnDisabled = outOfStock || selectedCompSoldOut || !selectedSizeAvailable || faltaEscolherCor;
               return (
                 <button onClick={handleAddToCart} disabled={btnDisabled}
-                  style={{ width: "100%", marginTop: "2rem", padding: "1rem 1.5rem", backgroundColor: added ? "#2a6a2a" : btnDisabled ? "#e8e0d0" : "var(--bg-soft)", color: added ? "var(--text-main)" : btnDisabled ? "var(--text-muted)" : "var(--text-main)", fontWeight: 900, fontSize: "1rem", border: "none", borderRadius: "0.875rem", cursor: btnDisabled ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", transition: "background-color 0.3s", letterSpacing: "0.03em", boxShadow: btnDisabled ? "none" : "0 4px 14px rgba(26,21,16,0.25)" }}>
+                  style={{ width: "100%", marginTop: "2rem", padding: "1rem 1.5rem", backgroundColor: added ? "#2a6a2a" : btnDisabled ? "var(--bg-card)" : "var(--bg-soft)", color: added ? "var(--text-main)" : btnDisabled ? "var(--text-muted)" : "var(--text-main)", fontWeight: 900, fontSize: "1rem", border: "none", borderRadius: "0.875rem", cursor: btnDisabled ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", transition: "background-color 0.3s", letterSpacing: "0.03em", boxShadow: btnDisabled ? "none" : "0 4px 14px rgba(26,21,16,0.25)" }}>
                   {added ? "✓ Adicionado ao carrinho!"
                     : faltaEscolherCor ? "Escolha a cor"
                     : btnDisabled ? "Esgotado"
@@ -450,7 +450,7 @@ export default function ProductPageClient() {
                     </div>
                   </div>
                 )) : (
-                  <div style={{ backgroundColor: "#e8f8e8", border: "1px solid rgba(26,138,42,0.2)", borderRadius: "0.875rem", padding: "1rem", textAlign: "center" }}>
+                  <div style={{ backgroundColor: "rgba(95,211,122,0.12)", border: "1px solid rgba(95,211,122,0.25)", borderRadius: "0.875rem", padding: "1rem", textAlign: "center" }}>
                     <p style={{ fontWeight: 700, color: "#5fd37a" }}>✅ Você está na lista!</p>
                     <p style={{ fontSize: "0.8rem", color: "#5a8a5a", marginTop: "0.25rem" }}>Avisaremos quando chegar.</p>
                   </div>

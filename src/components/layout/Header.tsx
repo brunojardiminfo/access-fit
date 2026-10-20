@@ -188,7 +188,7 @@ export default function Header() {
                         ].map(item => (
                           <Link key={item.href} href={item.href} onClick={() => setUserOpen(false)}
                             style={{ display: "block", padding: "0.65rem 1rem", color: "#3a2a10", fontSize: "0.875rem", textDecoration: "none" }}
-                            onMouseOver={e => { (e.currentTarget as HTMLElement).style.backgroundColor = "#FAF6EE"; (e.currentTarget as HTMLElement).style.color = "var(--gold)"; }}
+                            onMouseOver={e => { (e.currentTarget as HTMLElement).style.backgroundColor = "var(--bg-soft)"; (e.currentTarget as HTMLElement).style.color = "var(--gold)"; }}
                             onMouseOut={e => { (e.currentTarget as HTMLElement).style.backgroundColor = ""; (e.currentTarget as HTMLElement).style.color = "#3a2a10"; }}>
                             {item.label}
                           </Link>
@@ -240,7 +240,7 @@ export default function Header() {
 
         {/* Mobile nav */}
         {menuOpen && (
-          <div style={{ backgroundColor: "#F5EFE2", borderTop: "1px solid var(--border)", padding: "0.5rem 1rem 1rem" }}>
+          <div style={{ backgroundColor: "var(--bg-soft)", borderTop: "1px solid var(--border)", padding: "0.5rem 1rem 1rem" }}>
             <form onSubmit={handleSearch} style={{ display: "flex", gap: "0.5rem", padding: "0.5rem 0 0.75rem", borderBottom: "1px solid var(--border)" }}>
               <input
                 value={searchQuery}

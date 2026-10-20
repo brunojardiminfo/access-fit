@@ -12,12 +12,12 @@ const STATUS_LABEL: Record<string, string> = {
   delivered: "Entregue", cancelled: "Cancelado", "try-on": "Home Try-On",
 };
 const STATUS_COLOR: Record<string, { bg: string; color: string }> = {
-  pending:   { bg: "#fff8e1", color: "var(--gold)" },
-  confirmed: { bg: "#e8f4fd", color: "#1a6a9a" },
-  shipped:   { bg: "#f0e8ff", color: "#b78cff" },
-  delivered: { bg: "#e8f8e8", color: "#5fd37a" },
-  cancelled: { bg: "#fee8e8", color: "#ff8a7a" },
-  "try-on":  { bg: "#fce8ff", color: "#c79bff" },
+  pending:   { bg: "rgba(216,166,44,0.16)",  color: "var(--gold-light)" },
+  confirmed: { bg: "rgba(126,196,240,0.16)", color: "#7ec4f0" },
+  shipped:   { bg: "rgba(183,140,255,0.16)", color: "#b78cff" },
+  delivered: { bg: "rgba(95,211,122,0.16)",  color: "#5fd37a" },
+  cancelled: { bg: "rgba(255,138,122,0.16)", color: "#ff8a7a" },
+  "try-on":  { bg: "rgba(199,155,255,0.16)", color: "#c79bff" },
 };
 
 export default async function ContaPage() {
@@ -94,7 +94,7 @@ export default async function ContaPage() {
               <Link href="/produtos" style={{ color: "var(--gold)", fontWeight: 700, textDecoration: "none", fontSize: "0.875rem" }}>Ver coleção →</Link>
             </div>
           ) : orders.map(order => {
-            const sc = STATUS_COLOR[order.status] || { bg: "#f0f0f0", color: "#666" };
+            const sc = STATUS_COLOR[order.status] || { bg: "rgba(250,246,238,0.08)", color: "var(--text-sub)" };
             return (
               <div key={order.id} style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>

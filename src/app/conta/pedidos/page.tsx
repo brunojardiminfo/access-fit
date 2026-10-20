@@ -13,12 +13,12 @@ const STATUS_LABEL: Record<string, string> = {
   delivered: "Entregue", cancelled: "Cancelado", "try-on": "Home Try-On",
 };
 const STATUS_COLOR: Record<string, { bg: string; color: string }> = {
-  pending:   { bg: "#fff8e1", color: "var(--gold)" },
-  confirmed: { bg: "#e8f4fd", color: "#1a6a9a" },
-  shipped:   { bg: "#f0e8ff", color: "#b78cff" },
-  delivered: { bg: "#e8f8e8", color: "#5fd37a" },
-  cancelled: { bg: "#fee8e8", color: "#ff8a7a" },
-  "try-on":  { bg: "#fce8ff", color: "#c79bff" },
+  pending:   { bg: "rgba(216,166,44,0.16)",  color: "var(--gold-light)" },
+  confirmed: { bg: "rgba(126,196,240,0.16)", color: "#7ec4f0" },
+  shipped:   { bg: "rgba(183,140,255,0.16)", color: "#b78cff" },
+  delivered: { bg: "rgba(95,211,122,0.16)",  color: "#5fd37a" },
+  cancelled: { bg: "rgba(255,138,122,0.16)", color: "#ff8a7a" },
+  "try-on":  { bg: "rgba(199,155,255,0.16)", color: "#c79bff" },
 };
 
 export default async function MeusPedidosPage() {
@@ -56,7 +56,7 @@ export default async function MeusPedidosPage() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             {orders.map(order => {
-              const sc = STATUS_COLOR[order.status] || { bg: "#f0f0f0", color: "#666" };
+              const sc = STATUS_COLOR[order.status] || { bg: "rgba(250,246,238,0.08)", color: "var(--text-sub)" };
               const images = order.items.flatMap(i => { try { return JSON.parse(i.product.images); } catch { return []; } }).filter(Boolean);
               return (
                 <div key={order.id} style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "1rem", overflow: "hidden" }}>
@@ -99,7 +99,7 @@ export default async function MeusPedidosPage() {
                         {order.paymentStatus === "paid" ? "✅ Pago" : order.paymentStatus === "partial" ? "⚠️ Parcialmente pago" : "⏳ Pagamento pendente"}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                        <Link href={`/nota/${order.id}`} target="_blank" style={{ fontSize: "0.78rem", color: "var(--gold)", fontWeight: 700, textDecoration: "none", backgroundColor: "#fff8e1", border: "1px solid rgba(184,137,26,0.3)", padding: "0.3rem 0.75rem", borderRadius: "999px" }}>
+                        <Link href={`/nota/${order.id}`} target="_blank" style={{ fontSize: "0.78rem", color: "var(--gold)", fontWeight: 700, textDecoration: "none", backgroundColor: "rgba(216,166,44,0.16)", border: "1px solid rgba(184,137,26,0.3)", padding: "0.3rem 0.75rem", borderRadius: "999px" }}>
                           🧾 Ver nota
                         </Link>
                         <span style={{ fontWeight: 900, color: "var(--gold)", fontSize: "1rem" }}>{formatCurrency(order.total)}</span>
@@ -108,14 +108,14 @@ export default async function MeusPedidosPage() {
 
                     {order.status === "pending" && (
                       <>
-                        <div style={{ marginTop: "0.75rem", padding: "0.625rem 0.875rem", backgroundColor: "#fff8e1", borderRadius: "0.625rem", fontSize: "0.78rem", color: "#856404" }}>
+                        <div style={{ marginTop: "0.75rem", padding: "0.625rem 0.875rem", backgroundColor: "rgba(216,166,44,0.16)", borderRadius: "0.625rem", fontSize: "0.78rem", color: "#856404" }}>
                           Seu pedido foi recebido! Entraremos em contato pelo WhatsApp para confirmar.
                         </div>
                         <CancelButton orderId={order.id} />
                       </>
                     )}
                     {order.status === "shipped" && (
-                      <div style={{ marginTop: "0.75rem", padding: "0.625rem 0.875rem", backgroundColor: "#f0e8ff", borderRadius: "0.625rem", fontSize: "0.78rem", color: "#b78cff" }}>
+                      <div style={{ marginTop: "0.75rem", padding: "0.625rem 0.875rem", backgroundColor: "rgba(183,140,255,0.16)", borderRadius: "0.625rem", fontSize: "0.78rem", color: "#b78cff" }}>
                         Seu pedido está a caminho!
                       </div>
                     )}

@@ -113,7 +113,7 @@ export default function HeroCarousel({ produtos, isMobile }: { produtos: Produto
                 )}
 
                 {sale && (
-                  <span style={{ position: "absolute", top: 14, left: 14, backgroundColor: "#e74c3c", color: "var(--text-main)", fontSize: "0.62rem", fontWeight: 900, letterSpacing: "0.08em", padding: "0.28rem 0.7rem", borderRadius: "999px" }}>
+                  <span style={{ position: "absolute", top: 14, left: 14, backgroundColor: "var(--sale)", color: "var(--bg)", fontSize: "0.62rem", fontWeight: 900, letterSpacing: "0.08em", padding: "0.28rem 0.7rem", borderRadius: "999px" }}>
                     SALE −{sale.discount}%
                   </span>
                 )}

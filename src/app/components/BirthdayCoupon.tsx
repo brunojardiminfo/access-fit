@@ -62,7 +62,7 @@ export default function BirthdayCoupon() {
       <div
         style={{
           padding: "1.5rem",
-          backgroundColor: "#fff8e1",
+          backgroundColor: "rgba(216,166,44,0.12)",
           border: "2px solid var(--gold)",
           borderRadius: "8px",
           textAlign: "center",
@@ -75,9 +75,9 @@ export default function BirthdayCoupon() {
         <div
           style={{
             padding: "1rem",
-            backgroundColor: "white",
+            backgroundColor: "var(--bg-card)",
             borderRadius: "6px",
-            border: "2px dashed #b8891a",
+            border: "2px dashed var(--gold)",
             marginBottom: "1rem",
           }}
         >
@@ -109,13 +109,13 @@ export default function BirthdayCoupon() {
       <div
         style={{
           padding: "1.5rem",
-          backgroundColor: "#e8f8e8",
-          border: "2px solid #2e7d32",
+          backgroundColor: "rgba(95,211,122,0.12)",
+          border: "2px solid #5fd37a",
           borderRadius: "8px",
           marginBottom: "1.5rem",
         }}
       >
-        <p style={{ fontSize: "1rem", fontWeight: 700, color: "#1a5a1a", marginBottom: "1rem" }}>
+        <p style={{ fontSize: "1rem", fontWeight: 700, color: "#5fd37a", marginBottom: "1rem" }}>
           🎂 Você tem um cupom de aniversário!
         </p>
         <button
@@ -124,8 +124,8 @@ export default function BirthdayCoupon() {
           style={{
             width: "100%",
             padding: "0.75rem",
-            backgroundColor: "#2e7d32",
-            color: "white",
+            backgroundColor: "#2a6a2a",
+            color: "var(--text-main)",
             border: "none",
             borderRadius: "6px",
             fontWeight: 700,
