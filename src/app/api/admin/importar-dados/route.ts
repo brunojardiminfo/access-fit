@@ -18,7 +18,7 @@ function inferCategory(name: string, cat: string): string {
   if (cat) {
     const map: Record<string, string> = {
       "SHORTS": "Shorts", "TOPS": "Tops", "MACAQUINHOS": "Macaquinhos",
-      "LEGGINS": "Leggins", "JAQUETAS": "Jaquetas", "CONJUNTOS": "Conjuntos",
+      "LEGGINS": "Leggings", "LEGGINGS": "Leggings", "JAQUETAS": "Jaquetas", "CONJUNTOS": "Conjuntos",
       "CAMISETAS BÁSICAS": "Camisetas básicas", "Camisetas Básicas": "Camisetas básicas",
       "MACACÃO": "Macacão",
     };
@@ -28,7 +28,7 @@ function inferCategory(name: string, cat: string): string {
   if (n.startsWith("macacão") || n.startsWith("macacao") || n.startsWith("zip back")) return "Macacão";
   if (n.startsWith("conjunto") || n.startsWith("conj") || n.startsWith("calça cozy")) return "Conjuntos";
   if (n.startsWith("camiseta")) return "Camisetas básicas";
-  if (n.startsWith("legging") || n.startsWith("leggin") || n.startsWith("calça legging") || n.startsWith("calça elite")) return "Leggins";
+  if (n.startsWith("legging") || n.startsWith("leggin") || n.startsWith("calça legging") || n.startsWith("calça elite")) return "Leggings";
   if (n.startsWith("macaquinho")) return "Macaquinhos";
   if (n.startsWith("jaqueta") || n.startsWith("casaco")) return "Jaquetas";
   if (n.startsWith("top")) return "Tops";
@@ -37,7 +37,7 @@ function inferCategory(name: string, cat: string): string {
 }
 
 const SKU_PREFIX: Record<string, string> = {
-  "Shorts": "SH", "Tops": "TP", "Macaquinhos": "MQ", "Leggins": "LG",
+  "Shorts": "SH", "Tops": "TP", "Macaquinhos": "MQ", "Leggings": "LG",
   "Jaquetas": "JQ", "Conjuntos": "CF", "Camisetas básicas": "CB",
   "Macacão": "MC", "Vendas Manuais": "VM",
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMobileView } from "@/hooks/useMediaQuery";
-import { CAMPANHA, faseCampanha, mesDaCampanha, diaDeInicio, TETO_PROGRESSIVO } from "@/lib/campanha";
+import { CAMPANHA, faseCampanha, mesDaCampanha, diaDeInicio, tetoDaCampanha } from "@/lib/campanha";
 
 const OURO = "linear-gradient(90deg, #b8891a 0%, #e0b64a 50%, #b8891a 100%)";
 const TINTA = "#1a1510";
@@ -75,8 +75,20 @@ function Teaser({ isMobile }: { isMobile: boolean }) {
   );
 }
 
-/** "1 peça 10% · 2 peças 20% · 3+ peças 30%", lido das regras da campanha. */
+/**
+ * A mecânica em uma linha, lida das regras.
+ *
+ * Com piso em reais a regra é o piso — "acima de R$ 200" —, porque é a única
+ * condição que a cliente precisa cumprir. Sem piso, volta a ser a escada por
+ * quantidade: "1 peça 10% · 2 peças 20% · 3+ peças 30%".
+ */
 function textoDaEscada(): string {
+  if (CAMPANHA.minimoValor !== null) {
+    const minimo = CAMPANHA.minimoValor.toLocaleString("pt-BR", {
+      style: "currency", currency: "BRL", minimumFractionDigits: 0,
+    });
+    return `${tetoDaCampanha()}% em compras acima de ${minimo}`;
+  }
   const escada = [...CAMPANHA.regras].sort((a, b) => a.pecas - b.pecas);
   return escada.map((r, i) => {
     const ultima = i === escada.length - 1;
@@ -88,7 +100,7 @@ function textoDaEscada(): string {
 function Ativa({ isMobile }: { isMobile: boolean }) {
   return (
     <Moldura href="/produtos" isMobile={isMobile}>
-      <Selo isMobile={isMobile}>✦ Até {TETO_PROGRESSIVO}% OFF</Selo>
+      <Selo isMobile={isMobile}>✦ {tetoDaCampanha()}% OFF</Selo>
       <span style={{ color: TINTA, fontSize: isMobile ? "0.8rem" : "0.95rem", fontWeight: 800 }}>
         {CAMPANHA.nome}
       </span>

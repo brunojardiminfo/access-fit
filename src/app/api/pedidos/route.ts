@@ -10,7 +10,9 @@ type IncomingItem = { productId?: string; quantity?: number; price?: number; siz
 
 // O preco cobrado nunca vem do cliente: e recalculado aqui a partir do banco,
 // aplicando o desconto de SALE quando a peca esta em promocao.
-async function resolvePrices(items: IncomingItem[], ignorarCampanha = false) {
+// `valorDaSacola` e o subtotal ja com o SALE: e sobre ele que o piso da
+// campanha e medido. Quem ignora a campanha pode passar 0 — nao e lido.
+async function resolvePrices(items: IncomingItem[], ignorarCampanha: boolean, valorDaSacola: number) {
   const productIds = Array.from(
     new Set(items.map(i => i.productId).filter((id): id is string => !!id))
   );
@@ -37,7 +39,7 @@ async function resolvePrices(items: IncomingItem[], ignorarCampanha = false) {
     const saleInfo = getSaleInfo(product);
     const descontoSale = saleInfo?.discount ?? 0;
     // Vale a melhor condicao entre SALE e progressivo — os dois nunca somam
-    const efetivo = ignorarCampanha ? descontoSale : descontoEfetivo(descontoSale, totalPecas);
+    const efetivo = ignorarCampanha ? descontoSale : descontoEfetivo(descontoSale, totalPecas, valorDaSacola);
 
     const withSale = (value: number) => calculateSalePrice(value, descontoSale);
     const withEfetivo = (value: number) => calculateSalePrice(value, efetivo);
@@ -63,13 +65,16 @@ export async function POST(req: Request) {
 
   // Duas contas: uma so com o SALE (onde o cupom pode entrar) e outra com a
   // campanha. Vale a melhor para a cliente — cupom e campanha nunca somam.
-  const itensSoSale = await resolvePrices(items as IncomingItem[], true);
-  const itensCampanha = await resolvePrices(items as IncomingItem[]);
+  // A conta so com o SALE vem primeiro de proposito: o subtotal dela e a base
+  // que o piso da campanha enxerga, o mesmo numero que o carrinho mostra.
+  const itensSoSale = await resolvePrices(items as IncomingItem[], true, 0);
   const subtotalSoSale = itensSoSale.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+  const itensCampanha = await resolvePrices(items as IncomingItem[], false, subtotalSoSale);
   const subtotalCampanha = itensCampanha.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   const pecas = itensCampanha.reduce((s, i) => s + i.quantity, 0);
-  const progressivoAplicado = faseCampanha() === "ativa" ? descontoProgressivo(pecas) : 0;
+  const progressivoAplicado = faseCampanha() === "ativa" ? descontoProgressivo(pecas, subtotalSoSale) : 0;
 
   // Cupom revalidado no banco: o desconto tambem nao vem do cliente
   // Peça em SALE não acumula cupom: a base do cupom é só o que está a preço cheio

@@ -5,7 +5,7 @@ import { useCart } from "@/store/cart";
 import { X, Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
-import { calcularSacola, descontoDoCupom, CAMPANHA } from "@/lib/campanha";
+import { calcularSacola, descontoDoCupom, CAMPANHA, faseCampanha, tetoDaCampanha } from "@/lib/campanha";
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQuantity, total, couponCode, couponDiscount, setCoupon, clearCoupon } = useCart();
@@ -146,6 +146,17 @@ export default function CartDrawer() {
                   </button>
                 </div>
                 {couponError && <p style={{ color: "#ff8a7a", fontSize: "0.72rem", marginTop: "0.3rem" }}>{couponError}</p>}
+              </div>
+            )}
+
+            {/* Um piso em reais só puxa a segunda peça se a cliente souber o
+                quanto falta. Sem esta linha ele vira só um desconto que não
+                saiu, sem explicação. */}
+            {faseCampanha() === "ativa" && sacola.faltaParaOMinimo > 0 && (
+              <div style={{ backgroundColor: "rgba(216,166,44,0.12)", border: "1px solid var(--border-gold)", borderRadius: "0.625rem", padding: "0.5rem 0.75rem", marginBottom: "0.75rem" }}>
+                <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--gold-light)" }}>
+                  Faltam {formatCurrency(sacola.faltaParaOMinimo)} para {tetoDaCampanha()}% de desconto
+                </p>
               </div>
             )}
 

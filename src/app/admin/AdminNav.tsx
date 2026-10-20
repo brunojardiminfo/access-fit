@@ -11,6 +11,9 @@ const ALL_LINKS = [
   { href: "/admin",             label: "Início",      emoji: "🏠" },
   { href: "/admin/pedidos",     label: "Pedidos",     emoji: "📦" },
   { href: "/admin/produtos",    label: "Produtos",    emoji: "👗" },
+  // A tela existia desde sempre, mas só se chegava nela digitando o endereço.
+  // Fica ao lado de Produtos porque é onde se renomeia a categoria de uma peça.
+  { href: "/admin/categorias",  label: "Categorias",  emoji: "🗂️" },
   { href: "/admin/colecoes",    label: "Coleções",    emoji: "✨" },
   { href: "/admin/caderno",     label: "Caderno",     emoji: "📒" },
   { href: "/admin/fila",        label: "Fila de hoje", emoji: "🎯" },
