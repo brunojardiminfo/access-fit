@@ -67,12 +67,12 @@ export default function ProductCard({ product, indice = 0 }: { product: Product;
 
           <div style={{ position: "absolute", top: 6, left: 6, display: "flex", flexDirection: "column", gap: "3px" }}>
             {selo && !outOfStock && (
-              <span style={{ backgroundColor: selo === "novidade" ? "#2f8f52" : "var(--gold)", color: "var(--text-main)", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>
+              <span style={{ backgroundColor: selo === "novidade" ? "#2f8f52" : "var(--gold)", color: "var(--bg)", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>
                 {TEXTO_SELO[selo]}
               </span>
             )}
             {saleInfo && !outOfStock && (
-              <span style={{ backgroundColor: "#e74c3c", color: "var(--text-main)", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>SALE</span>
+              <span style={{ backgroundColor: "var(--sale)", color: "var(--bg)", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>SALE</span>
             )}
             {discount && !saleInfo && !outOfStock && (
               <span style={{ backgroundColor: "var(--gold)", color: "#16110b", fontSize: "0.6rem", fontWeight: 900, padding: "2px 8px", borderRadius: "999px", whiteSpace: "nowrap" }}>-{discount}%</span>
@@ -133,7 +133,7 @@ export default function ProductCard({ product, indice = 0 }: { product: Product;
           </div>
 
           <button onClick={handleAddToCart} disabled={outOfStock}
-            style={{ width: "100%", padding: "0.5rem", backgroundColor: outOfStock ? "#e8e0d0" : "var(--bg-soft)", color: outOfStock ? "var(--text-muted)" : "var(--text-main)", fontWeight: 800, fontSize: "0.75rem", border: "none", borderRadius: "0.5rem", cursor: outOfStock ? "not-allowed" : "pointer", letterSpacing: "0.03em" }}>
+            style={{ width: "100%", padding: "0.5rem", backgroundColor: outOfStock ? "var(--bg-card)" : "var(--bg-soft)", color: outOfStock ? "var(--text-muted)" : "var(--text-main)", fontWeight: 800, fontSize: "0.75rem", border: "none", borderRadius: "0.5rem", cursor: outOfStock ? "not-allowed" : "pointer", letterSpacing: "0.03em" }}>
             {outOfStock ? "Esgotado" : "Ver produto"}
           </button>
         </div>

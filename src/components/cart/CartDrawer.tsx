@@ -115,7 +115,7 @@ export default function CartDrawer() {
 
             {/* Cupom */}
             {couponDiscount ? (
-              <div style={{ backgroundColor: cupomSemEfeito ? "#fff8e1" : "#e8f8e8", border: `1px solid ${cupomSemEfeito ? "rgba(184,137,26,0.3)" : "rgba(26,138,42,0.2)"}`, borderRadius: "0.625rem", padding: "0.5rem 0.75rem", marginBottom: "0.75rem" }}>
+              <div style={{ backgroundColor: cupomSemEfeito ? "rgba(216,166,44,0.16)" : "rgba(95,211,122,0.14)", border: `1px solid ${cupomSemEfeito ? "rgba(184,137,26,0.3)" : "rgba(26,138,42,0.2)"}`, borderRadius: "0.625rem", padding: "0.5rem 0.75rem", marginBottom: "0.75rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: "0.8rem", fontWeight: 700, color: cupomSemEfeito ? "var(--gold)" : "#5fd37a" }}>🎟️ {couponCode.toUpperCase()} — -{couponDiscount}%</span>
                   <button onClick={removeCoupon} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "0.8rem" }}>✕</button>

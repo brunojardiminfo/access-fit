@@ -72,13 +72,13 @@ export default function HomeClient({
       </section>
 
       {/* SALE */}
-      <section style={{ padding: isMobile ? "2rem 1rem" : "4.5rem 1.5rem", background: "linear-gradient(180deg, #fff5f3 0%, #FAF6EE 100%)", borderTop: "3px solid #e74c3c" }}>
+      <section style={{ padding: isMobile ? "2rem 1rem" : "4.5rem 1.5rem", background: "linear-gradient(180deg, var(--sale-veu) 0%, var(--bg) 100%)", borderTop: "3px solid var(--sale)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "0.75rem" }}>
-            <span style={{ display: "inline-block", backgroundColor: "#e74c3c", color: "var(--text-main)", fontSize: isMobile ? "0.6rem" : "0.7rem", fontWeight: 900, letterSpacing: "0.18em", padding: "0.35rem 1rem", borderRadius: "999px", marginBottom: "0.75rem" }}>
+            <span style={{ display: "inline-block", backgroundColor: "var(--sale)", color: "var(--bg)", fontSize: isMobile ? "0.6rem" : "0.7rem", fontWeight: 900, letterSpacing: "0.18em", padding: "0.35rem 1rem", borderRadius: "999px", marginBottom: "0.75rem" }}>
               PREÇOS REDUZIDOS
             </span>
-            <h2 style={{ fontSize: isMobile ? "1.75rem" : "3rem", fontWeight: 900, color: "#e74c3c", margin: 0, lineHeight: 1 }}>
+            <h2 style={{ fontSize: isMobile ? "1.75rem" : "3rem", fontWeight: 900, color: "var(--sale-text)", margin: 0, lineHeight: 1 }}>
               🔥 SALE
             </h2>
           </div>

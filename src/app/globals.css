@@ -19,12 +19,20 @@
   --border-gold: rgba(216, 166, 44, 0.38);
   --text-main:   #FAF6EE;
   --text-sub:    rgba(250, 246, 238, 0.64);
-  --text-muted:  rgba(250, 246, 238, 0.40);
+  /* 0.40 lia a 3.6:1 sobre o cartão — abaixo do mínimo de 4.5. O cinza
+     "discreto" que funcionava sobre creme não sobrevive ao fundo escuro. */
+  --text-muted:  rgba(250, 246, 238, 0.52);
   /* O ouro clareia. O #b8891a lia bem sobre creme e some sobre escuro — é a
      mesma marca, com o contraste que o fundo novo exige. */
   --gold:        #d8a62c;
   --gold-light:  #f0c75a;
   --gold-dark:   #b8891a;
+  /* O SALE é vermelho em cima de creme desde sempre. Sobre o fundo escuro o
+     mesmo vermelho lê a 4.9:1 como preenchimento, mas apaga como texto — daí
+     dois tons: o cheio para o selo, o claro para a palavra. */
+  --sale:        #e74c3c;
+  --sale-text:   #ff7a68;
+  --sale-veu:    rgba(231, 76, 60, 0.12);
 }
 
 /* O PAINEL DO ADMIN CONTINUA CLARO.
@@ -43,6 +51,9 @@ body.area-admin {
   --gold:        #b8891a;
   --gold-light:  #d4a820;
   --gold-dark:   #8a6510;
+  --sale:        #e74c3c;
+  --sale-text:   #c0392b;
+  --sale-veu:    #fff5f3;
 }
 
 html, body {
@@ -71,7 +82,7 @@ input:focus, textarea:focus, select:focus {
   border-color: var(--gold) !important;
   box-shadow: 0 0 0 3px rgba(180, 130, 20, 0.12) !important;
 }
-select option { background-color: #fff; color: var(--text-main); }
+select option { background-color: var(--bg-card); color: var(--text-main); }
 
 .gold-text {
   background: linear-gradient(135deg, #c9920a 0%, #e0b030 50%, #a07010 100%);
@@ -235,7 +246,7 @@ a, button { -webkit-tap-highlight-color: transparent; transition: opacity 0.15s,
   50%      { opacity: 0.55; }
 }
 .esqueleto {
-  background: linear-gradient(90deg, #F0E8D0 0%, #F7F1E2 50%, #F0E8D0 100%);
+  background: linear-gradient(90deg, var(--bg-card) 0%, var(--bg-soft) 50%, var(--bg-card) 100%);
   animation: respirar 1.4s ease-in-out infinite;
   border-radius: 0.5rem;
 }

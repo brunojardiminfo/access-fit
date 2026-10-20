@@ -92,7 +92,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
         style={{
           width: "100%",
           padding: "1rem",
-          backgroundColor: isOpen ? "#f0e6d2" : "var(--bg)",
+          backgroundColor: isOpen ? "var(--bg-soft)" : "var(--bg)",
           border: "2px solid var(--gold)",
           color: "var(--text-sub)",
           fontSize: "1rem",
@@ -112,7 +112,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
             padding: "1.5rem",
             backgroundColor: "var(--bg)",
             borderRadius: "8px",
-            border: "1px solid #e0d4c0",
+            border: "1px solid var(--border)",
           }}
         >
           <form onSubmit={handleGetRecommendation}>
@@ -129,7 +129,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
                   style={{
                     width: "100%",
                     padding: "0.75rem",
-                    border: "1px solid #d4c5b0",
+                    border: "1px solid var(--border)",
                     borderRadius: "4px",
                     fontSize: "1rem",
                     boxSizing: "border-box",
@@ -149,7 +149,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
                   style={{
                     width: "100%",
                     padding: "0.75rem",
-                    border: "1px solid #d4c5b0",
+                    border: "1px solid var(--border)",
                     borderRadius: "4px",
                     fontSize: "1rem",
                     boxSizing: "border-box",
@@ -169,7 +169,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
                   style={{
                     width: "100%",
                     padding: "0.75rem",
-                    border: "1px solid #d4c5b0",
+                    border: "1px solid var(--border)",
                     borderRadius: "4px",
                     fontSize: "1rem",
                     boxSizing: "border-box",
@@ -188,7 +188,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
                   style={{
                     width: "100%",
                     padding: "0.75rem",
-                    border: "1px solid #d4c5b0",
+                    border: "1px solid var(--border)",
                     borderRadius: "4px",
                     fontSize: "1rem",
                     boxSizing: "border-box",
@@ -203,8 +203,8 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
               style={{
                 width: "100%",
                 padding: "0.75rem",
-                backgroundColor: loading ? "#d4c5b0" : "var(--gold)",
-                color: "white",
+                backgroundColor: loading ? "var(--bg-card)" : "var(--gold)",
+                color: loading ? "var(--text-muted)" : "var(--bg)",
                 border: "none",
                 borderRadius: "4px",
                 fontSize: "1rem",
@@ -217,7 +217,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
             </button>
 
             {error && (
-              <div style={{ marginTop: "1rem", padding: "0.75rem", backgroundColor: "#ffe0e0", color: "#d32f2f", borderRadius: "4px", fontSize: "0.9rem" }}>
+              <div style={{ marginTop: "1rem", padding: "0.75rem", backgroundColor: "rgba(255,138,122,0.14)", color: "#ff8a7a", borderRadius: "4px", fontSize: "0.9rem" }}>
                 {error}
               </div>
             )}
@@ -226,7 +226,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
           {result && (
             <div style={{ marginTop: "2rem" }}>
               {!checkSizeFit(result.recommendedSize) && (
-                <div style={{ marginBottom: "1rem", padding: "1rem", backgroundColor: "#ffe8e8", border: "2px solid #d32f2f", borderRadius: "8px", color: "#d32f2f" }}>
+                <div style={{ marginBottom: "1rem", padding: "1rem", backgroundColor: "rgba(255,138,122,0.14)", border: "2px solid #ff8a7a", borderRadius: "8px", color: "#ff8a7a" }}>
                   <p style={{ margin: 0, fontWeight: 700, marginBottom: "0.25rem" }}>⚠️ Atenção!</p>
                   <p style={{ margin: 0, fontSize: "0.9rem" }}>
                     {productName} é tamanho único para {productSizeRange === "PM" ? "P/M (38-42)" : "G/GG (42-48)"}.
@@ -235,7 +235,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
                 </div>
               )}
 
-              <div style={{ marginBottom: "1.5rem", padding: "1.5rem", backgroundColor: "white", borderRadius: "8px", border: "2px solid var(--gold)" }}>
+              <div style={{ marginBottom: "1.5rem", padding: "1.5rem", backgroundColor: "var(--bg-card)", borderRadius: "8px", border: "2px solid var(--gold)" }}>
                 <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-sub)", marginBottom: "0.5rem" }}>Tamanho Recomendado:</p>
                 <p style={{ margin: 0, fontSize: "2.5rem", fontWeight: 700, color: "var(--gold)" }}>{result.recommendedSize}</p>
               </div>
@@ -251,8 +251,8 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
                         key={stat.size}
                         style={{
                           padding: "1rem",
-                          backgroundColor: stat.size === result.recommendedSize ? "#f0e6d2" : "white",
-                          border: `2px solid ${stat.size === result.recommendedSize ? "var(--gold)" : "#d4c5b0"}`,
+                          backgroundColor: stat.size === result.recommendedSize ? "var(--bg-soft)" : "var(--bg-card)",
+                          border: `2px solid ${stat.size === result.recommendedSize ? "var(--gold)" : "var(--border)"}`,
                           borderRadius: "8px",
                           textAlign: "center",
                         }}
@@ -260,7 +260,7 @@ export default function SizeGuide({ productSizeRange, productName }: Props) {
                         <p style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "var(--text-sub)", marginBottom: "0.5rem" }}>
                           Tamanho {stat.size}
                         </p>
-                        <div style={{ width: "100%", height: "8px", backgroundColor: "#e0d4c0", borderRadius: "4px", overflow: "hidden", marginBottom: "0.5rem" }}>
+                        <div style={{ width: "100%", height: "8px", backgroundColor: "var(--bg-soft)", borderRadius: "4px", overflow: "hidden", marginBottom: "0.5rem" }}>
                           <div
                             style={{
                               height: "100%",

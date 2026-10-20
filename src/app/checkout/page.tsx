@@ -346,7 +346,7 @@ function CheckoutContent() {
                 <label style={{
                   display: "flex", gap: "0.6rem", alignItems: "flex-start", cursor: "pointer",
                   marginTop: "0.75rem", padding: "0.7rem 0.8rem", borderRadius: "0.75rem",
-                  backgroundColor: "#f4f0fa", border: "1px solid rgba(138,26,184,0.25)",
+                  backgroundColor: "rgba(183,140,255,0.12)", border: "1px solid rgba(183,140,255,0.3)",
                 }}>
                   <input type="checkbox" checked={usarCredito}
                     onChange={e => setUsarCredito(e.target.checked)}
@@ -474,7 +474,7 @@ function CheckoutContent() {
 
             {/* Termos Home Try-On */}
             {type === "tryon" && (
-              <div style={{ backgroundColor: "#fff8e1", border: "1px solid rgba(184,137,26,0.3)", borderRadius: "1rem", padding: "1.25rem" }}>
+              <div style={{ backgroundColor: "rgba(216,166,44,0.12)", border: "1px solid rgba(184,137,26,0.3)", borderRadius: "1rem", padding: "1.25rem" }}>
                 <p style={{ fontWeight: 800, color: "#5a3a00", fontSize: "0.9rem", marginBottom: "0.75rem" }}>⚠️ Termos do Home Try-On</p>
                 {/* Aviso taxa */}
                 <div style={{ backgroundColor: "var(--bg-soft)", border: "1px solid var(--border-gold)", borderRadius: "0.75rem", padding: "0.875rem 1rem", marginBottom: "1rem", display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>

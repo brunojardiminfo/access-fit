@@ -64,7 +64,7 @@ export default function PerfilPage() {
           </div>
 
           <button onClick={handleSave} disabled={saving}
-            style={{ backgroundColor: saved ? "#5fd37a" : "var(--gold)", color: "var(--text-main)", border: "none", borderRadius: "0.75rem", padding: "0.875rem", fontWeight: 900, fontSize: "0.95rem", cursor: "pointer", marginTop: "0.5rem" }}>
+            style={{ backgroundColor: saved ? "#5fd37a" : "var(--gold)", color: "var(--bg)", border: "none", borderRadius: "0.75rem", padding: "0.875rem", fontWeight: 900, fontSize: "0.95rem", cursor: "pointer", marginTop: "0.5rem" }}>
             {saving ? "Salvando..." : saved ? "✓ Salvo!" : "Salvar alterações"}
           </button>
         </div>
