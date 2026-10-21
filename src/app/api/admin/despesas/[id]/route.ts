@@ -29,13 +29,15 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 
   const isCard = paymentMethod === "cartao_credito";
+  // Mesma distinção do POST: parcelado divide, recorrente repete o valor cheio.
+  const recorrente = body.modo === "recorrente";
   const totalInst = isCard && installments > 1 ? parseInt(installments) : 1;
   // dueDate vem como "YYYY-MM" → dia 10
   const firstDue = isCard && dueDate
     ? (() => { const [y, m] = dueDate.split("-").map(Number); return new Date(y, m - 1, 10); })()
     : (dueDate ? new Date(dueDate) : null);
 
-  const instAmt = parseFloat((parseFloat(amount) / totalInst).toFixed(2));
+  const instAmt = recorrente ? parseFloat(amount) : parseFloat((parseFloat(amount) / totalInst).toFixed(2));
 
   if (totalInst === 1) {
     // Simples: só atualiza
@@ -59,10 +61,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     where: { id },
     data: {
       date: dateOnly(date),
-      description: `${description} (1/${totalInst})`,
+      description: recorrente ? description : `${description} (1/${totalInst})`,
       amount: instAmt, category, paymentMethod: "cartao_credito",
       supplierId: supplierId || null, notes: notes || null,
-      dueDate: firstDue, installments: totalInst,
+      dueDate: firstDue,
+      installments: recorrente ? 1 : totalInst,
       installmentNumber: 1, groupId,
     },
   });
@@ -70,17 +73,19 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   for (let i = 1; i < totalInst; i++) {
     const due = addMonths(firstDue!, i);
     const isLast = i === totalInst - 1;
-    const parcAmt = isLast
-      ? parseFloat((parseFloat(amount) - instAmt * (totalInst - 1)).toFixed(2))
-      : instAmt;
+    const parcAmt = recorrente
+      ? instAmt
+      : isLast ? parseFloat((parseFloat(amount) - instAmt * (totalInst - 1)).toFixed(2)) : instAmt;
     await prisma.expense.create({
       data: {
         date: dateOnly(date),
-        description: `${description} (${i + 1}/${totalInst})`,
+        description: recorrente ? description : `${description} (${i + 1}/${totalInst})`,
         amount: parcAmt, category, paymentMethod: "cartao_credito",
         supplierId: supplierId || null, notes: notes || null,
-        dueDate: due, installments: totalInst,
-        installmentNumber: i + 1, groupId,
+        dueDate: due,
+        installments: recorrente ? 1 : totalInst,
+        installmentNumber: recorrente ? 1 : i + 1,
+        groupId,
       },
     });
   }

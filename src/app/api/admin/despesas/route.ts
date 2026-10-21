@@ -74,8 +74,12 @@ export async function POST(req: Request) {
   if (!date) return NextResponse.json({ error: "Data obrigatória" }, { status: 400 });
 
   const isCard = paymentMethod === "cartao_credito";
+  // Parcelado divide o valor; recorrente repete o valor cheio todo mês. Eram a
+  // mesma coisa no código, e lançar uma assinatura mensal de R$ 113,48 "em 12x"
+  // virava doze cobranças de R$ 9,46.
+  const recorrente = body.modo === "recorrente";
   const totalInst = isCard && installments > 1 ? parseInt(installments) : 1;
-  const instAmt = parseFloat((amount / totalInst).toFixed(2));
+  const instAmt = recorrente ? parseFloat(amount) : parseFloat((amount / totalInst).toFixed(2));
   const groupId = totalInst > 1 ? randomUUID() : null;
 
   // dueDate vem como "YYYY-MM" → converte para dia 10
@@ -99,16 +103,24 @@ export async function POST(req: Request) {
   for (let i = 0; i < totalInst; i++) {
     const due = addMonths(firstDue!, i);
     const isLast = i === totalInst - 1;
-    const parcAmt = isLast ? parseFloat((amount - instAmt * (totalInst - 1)).toFixed(2)) : instAmt;
+    // Na recorrente cada mês é o valor cheio. No parcelado a última parcela
+    // absorve a sobra do arredondamento, para a soma fechar com o total.
+    const parcAmt = recorrente
+      ? instAmt
+      : isLast ? parseFloat((amount - instAmt * (totalInst - 1)).toFixed(2)) : instAmt;
     created.push(await prisma.expense.create({
       data: {
         date: dateOnly(date),
-        description: `${description.trim()} (${i + 1}/${totalInst})`,
+        // A recorrente não numera: cada mês é uma cobrança inteira, não a
+        // fatia de uma compra. O mês do vencimento já separa uma da outra.
+        description: recorrente ? description.trim() : `${description.trim()} (${i + 1}/${totalInst})`,
         amount: parcAmt, category: category || "outros",
         paymentMethod: "cartao_credito",
         supplierId: supplierId || null, notes: notes || null,
-        dueDate: due, installments: totalInst,
-        installmentNumber: i + 1, groupId,
+        dueDate: due,
+        installments: recorrente ? 1 : totalInst,
+        installmentNumber: recorrente ? 1 : i + 1,
+        groupId,
       },
     }));
   }
