@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/firebase-admin";
 import { restoreProductStock, ajustarEstoquePorStatus, consomeEstoque, decrementProductStock } from "@/lib/stock";
+import { montarItemDoPedido, ehVendaAvulsa } from "@/lib/itensDoPedido";
 import { recalcOrderTotals } from "@/lib/orderTotals";
 
 const STATUS_NOTIFICATION: Record<string, { title: string; body: string }> = {
@@ -78,12 +79,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     const addedTotal = body.addItems.reduce((s: number, i: any) => s + i.price * i.quantity, 0);
     await prisma.orderItem.createMany({
-      data: body.addItems.map((i: any) => ({
-        orderId: id,
-        productId: i.productId || vendaManual.id,
-        quantity: i.quantity,
-        price: i.price,
-        size: i.description || null,
+      data: await Promise.all(body.addItems.map(async (i: any) => {
+        const pid = i.productId || vendaManual.id;
+        const prod = await prisma.product.findUnique({ where: { id: pid }, select: { costPrice: true } });
+        return { orderId: id, ...montarItemDoPedido(i, vendaManual.id, prod?.costPrice ?? null) };
       })),
     });
     await prisma.order.update({
@@ -98,8 +97,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const statusAtual = (body.status ?? previousStatus) as string | undefined;
     if (consomeEstoque(statusAtual)) {
       for (const i of body.addItems as any[]) {
-        if (!i.productId || i.productId === vendaManual.id) continue;
-        await decrementProductStock(i.productId, i.quantity, i.size ?? i.description ?? null, i.color ?? null);
+        if (ehVendaAvulsa(i, vendaManual.id)) continue;
+        // Mesmos campos que foram gravados no item, para a devolução ao
+        // cancelar encontrar exatamente a chave de onde a peça saiu.
+        await decrementProductStock(i.productId, i.quantity, i.size || null, i.color || null);
       }
     }
   }

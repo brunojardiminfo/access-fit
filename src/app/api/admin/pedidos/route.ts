@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { decrementProductStock, consomeEstoque } from "@/lib/stock";
+import { montarItemDoPedido } from "@/lib/itensDoPedido";
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -142,15 +143,7 @@ export async function POST(req: Request) {
           create: await Promise.all(items.map(async (i: any) => {
             const pid = i.productId || fallbackProductId!;
             const prod = await prisma.product.findUnique({ where: { id: pid }, select: { costPrice: true } });
-            return {
-              productId: pid,
-              quantity: i.quantity,
-              price: i.price,
-              size: i.size || null,
-              color: i.color || null,
-              componentName: i.componentName || null,
-              costPrice: prod?.costPrice ?? null,
-            };
+            return montarItemDoPedido(i, fallbackProductId, prod?.costPrice ?? null);
           })),
         },
       },
