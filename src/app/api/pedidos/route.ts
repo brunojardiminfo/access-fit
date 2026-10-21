@@ -53,7 +53,11 @@ async function resolvePrices(items: IncomingItem[], ignorarCampanha: boolean, va
       value => bate(value) || bate(withSale(value)) || bate(withEfetivo(value))
     );
 
-    return { ...item, quantity, price: withEfetivo(matched ?? product.price), descontoSale };
+    // O custo vai junto, congelado no momento da venda. Sem isso o item nasce
+    // sem custo e o lucro daquele pedido passa a depender do preço de custo de
+    // HOJE — que muda a cada reposição, e reescreve o passado.
+    return { ...item, quantity, price: withEfetivo(matched ?? product.price), descontoSale,
+             costPrice: product.costPrice ?? null };
   });
 }
 
@@ -207,6 +211,7 @@ export async function POST(req: Request) {
     size: i.size || null,
     color: i.color || null,
     componentName: i.componentName || null,
+    costPrice: (i as { costPrice?: number | null }).costPrice ?? null,
   }));
 
   // Veio de um link de compartilhamento: aproveita o rascunho em vez de criar

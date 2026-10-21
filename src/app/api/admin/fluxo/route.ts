@@ -21,7 +21,13 @@ export async function GET(req: Request) {
       createdAt: { gte: fromDate, lte: toDate },
       status: { not: "cancelled" },
     },
-    select: { total: true, paymentMethod: true, dueDate: true, items: { select: { costPrice: true, quantity: true } } },
+    select: {
+      total: true, paymentMethod: true, dueDate: true,
+      // O custo do catálogo entra junto: pedido feito pelo site não grava o
+      // custo no item, e sem esta queda a venda online contava como se a peça
+      // fosse de graça — o mesmo fallback que métricas e analytics já faziam.
+      items: { select: { costPrice: true, quantity: true, product: { select: { costPrice: true } } } },
+    },
   });
 
   // Receita total
@@ -34,7 +40,8 @@ export async function GET(req: Request) {
 
   // Custos de Produtos (sum de costPrice * quantity)
   const custos = orders.reduce((s, o) =>
-    s + o.items.reduce((si, item) => si + ((item.costPrice || 0) * item.quantity), 0), 0);
+    s + o.items.reduce((si, item) =>
+      si + ((item.costPrice ?? item.product?.costPrice ?? 0) * item.quantity), 0), 0);
 
   // Despesas Gerais (todas as despesas exceto taxa_operadora)
   const despesas = await prisma.expense.findMany({
