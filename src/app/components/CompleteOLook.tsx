@@ -51,7 +51,7 @@ export default function CompleteOLook({ productSlug }: { productSlug: string }) 
                 {imgs[0] ? (
                   <img src={imgs[0]} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                 ) : (
-                  <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(184,137,26,0.4)", fontSize: "0.6rem", fontWeight: 700, textAlign: "center", padding: "0 0.4rem" }}>
+                  <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-sub)", fontSize: "0.6rem", fontWeight: 700, textAlign: "center", padding: "0 0.4rem" }}>
                     Foto em breve
                   </div>
                 )}

@@ -96,7 +96,7 @@ export default function HomeClient({
           ) : null}
           {saleProducts.length > 0 ? (
             <div style={{ textAlign: "center", marginTop: isMobile ? "1.25rem" : "2rem" }}>
-              <Link href="/produtos?sale=1" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", backgroundColor: "#e74c3c", color: "var(--text-main)", fontWeight: 900, padding: isMobile ? "0.75rem 1.5rem" : "0.9rem 2rem", borderRadius: "0.875rem", textDecoration: "none", fontSize: isMobile ? "0.85rem" : "0.95rem", boxShadow: "0 4px 18px rgba(231,76,60,0.35)" }}>
+              <Link href="/produtos?sale=1" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", backgroundColor: "var(--sale)", color: "var(--bg)", fontWeight: 900, padding: isMobile ? "0.75rem 1.5rem" : "0.9rem 2rem", borderRadius: "0.875rem", textDecoration: "none", fontSize: isMobile ? "0.85rem" : "0.95rem", boxShadow: "0 4px 18px rgba(231,76,60,0.35)" }}>
                 Ver tudo em SALE <ArrowRight size={16} />
               </Link>
             </div>

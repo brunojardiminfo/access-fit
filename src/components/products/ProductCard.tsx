@@ -66,7 +66,7 @@ export default function ProductCard({ product, indice = 0 }: { product: Product;
           ) : (
             <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
               <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect width="40" height="40" rx="20" fill="rgba(184,137,26,0.08)"/><path d="M14 28C14 21 17 15 20 15C23 15 26 21 26 28" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/><circle cx="20" cy="11" r="3" stroke="var(--gold)" strokeWidth="1.5" opacity="0.5"/></svg>
-              <span style={{ color: "var(--gold)", fontSize: "0.7rem", fontWeight: 600, opacity: 0.6, textAlign: "center", padding: "0 0.5rem" }}>Foto em breve</span>
+              <span style={{ color: "var(--text-sub)", fontSize: "0.7rem", fontWeight: 600, textAlign: "center", padding: "0 0.5rem" }}>Foto em breve</span>
             </div>
           )}
 
@@ -93,8 +93,11 @@ export default function ProductCard({ product, indice = 0 }: { product: Product;
                 <span key={c.nome} title={c.nome} aria-label={c.nome}
                   style={{ width: 11, height: 11, borderRadius: "50%", backgroundColor: c.fundo, border: `1px solid ${c.borda}`, display: "block", flexShrink: 0 }} />
               ))}
+              {/* A pílula das bolinhas é branca de propósito, para a cor da peça
+                  aparecer por cima da foto. Então o "+2" é escuro: creme sobre
+                  branco some. */}
               {cores.length > 4 && (
-                <span style={{ fontSize: "0.55rem", fontWeight: 800, color: "var(--text-muted)", lineHeight: 1 }}>+{cores.length - 4}</span>
+                <span style={{ fontSize: "0.55rem", fontWeight: 800, color: "#3a2f1e", lineHeight: 1 }}>+{cores.length - 4}</span>
               )}
             </div>
           )}
@@ -129,7 +132,7 @@ export default function ProductCard({ product, indice = 0 }: { product: Product;
           {/* Preço e botão descem juntos para o pé do cartão, alinhados entre
               as peças da mesma linha. */}
           <div className="rodape-cartao" style={{ display: "flex", alignItems: "center", gap: "0.3rem", marginBottom: "0.6rem", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "1rem", fontWeight: 900, color: saleInfo ? "#e74c3c" : "var(--gold)" }}>{formatCurrency(finalPrice)}</span>
+            <span style={{ fontSize: "1rem", fontWeight: 900, color: saleInfo ? "var(--sale-text)" : "var(--gold)" }}>{formatCurrency(finalPrice)}</span>
             {(product.compareAt || saleInfo) && (
               <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", textDecoration: "line-through" }}>
                 {formatCurrency(product.compareAt || product.price)}
