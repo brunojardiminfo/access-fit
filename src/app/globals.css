@@ -155,13 +155,22 @@ a, button { -webkit-tap-highlight-color: transparent; transition: opacity 0.15s,
    ──────────────────────────────────────────────────────────────────────── */
 
 /* Vitrine: duas peças por linha no celular, quatro no computador. */
+/* minmax(0, 1fr), e não 1fr.
+   `1fr` sozinho vale minmax(auto, 1fr): a coluna nunca encolhe abaixo do
+   conteúdo mínimo do cartão. A linha "6 cores: Cinza, Branco, Marrom, Azul
+   Marinho, Rosa, Preto" não quebra, mede 229px, e empurrava cada coluna para
+   252px — duas delas davam 520px numa tela de 390. Como o site esconde a
+   rolagem lateral, o excesso não rolava: era cortado. O zero no mínimo deixa
+   a coluna encolher, e aí a reticência da linha das cores faz o seu papel. */
 .grade-vitrine {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1.25rem;
 }
-@media (max-width: 1100px) { .grade-vitrine { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 767px)  { .grade-vitrine { grid-template-columns: repeat(2, 1fr); gap: 1rem; } }
+@media (max-width: 1100px) { .grade-vitrine { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 767px)  { .grade-vitrine { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; } }
+/* Cinto e suspensório: item de grade também precisa poder encolher. */
+.grade-vitrine > * { min-width: 0; }
 
 /* Peças do mesmo tamanho: o cartão estica até a altura da linha e o preço
    desce para o rodapé dele. Sem isto, nome de duas linhas ou uma lista de
