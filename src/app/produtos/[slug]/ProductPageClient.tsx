@@ -11,7 +11,7 @@ import RecommendedProducts from "@/app/components/RecommendedProducts";
 import CompleteOLook from "@/app/components/CompleteOLook";
 import { bolinhasDeCor } from "@/lib/cores";
 import {
-  parseEstoque, quantidadeDe, totalDaCor, coresDoEstoque, tamanhosDaCor,
+  parseEstoque, quantidadeDe, totalDaCor, coresParaVitrine, tamanhosDaCor,
   temEstoquePorVariacao, temCorNoEstoque, SEM_COR,
 } from "@/lib/variacoes";
 
@@ -79,11 +79,11 @@ export default function ProductPageClient() {
   const hasSizeStock = temEstoquePorVariacao(estoque);
   const estoquePorCor = temCorNoEstoque(estoque);
 
-  // Só entram as cores que a peça de fato tem lançadas. Enquanto o estoque
-  // estiver no formato antigo, sem cor, as cores seguem informativas — igual
-  // ao que a vitrine já mostra.
+  // Só entram as cores com peça na prateleira: cor cadastrada e esgotada não
+  // é oferecida. Enquanto o estoque estiver no formato antigo, sem cor, as
+  // cores seguem informativas — igual ao que a vitrine já mostra.
   const coresEmEstoque = estoquePorCor
-    ? coresDoEstoque(estoque, coresCadastradas).filter(c => c !== SEM_COR)
+    ? coresParaVitrine(coresCadastradas, estoque)
     : [];
   const cores = bolinhasDeCor(estoquePorCor ? coresEmEstoque : coresCadastradas);
   const precisaEscolherCor = coresEmEstoque.length > 0;
