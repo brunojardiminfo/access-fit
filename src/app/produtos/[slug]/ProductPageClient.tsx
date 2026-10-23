@@ -316,9 +316,15 @@ export default function ProductPageClient() {
                           if (selectedSize && quantidadeDe(estoque, c.nome, selectedSize) <= 0) setSelectedSize("");
                         }}
                         disabled={precisaEscolherCor && !disponivel}
-                        style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.35rem 0.7rem 0.35rem 0.4rem", borderRadius: "999px", border: `2px solid ${escolhida ? "var(--gold)" : "var(--border)"}`, backgroundColor: escolhida ? "rgba(216,166,44,0.16)" : "var(--bg-card)", cursor: !precisaEscolherCor ? "default" : disponivel ? "pointer" : "not-allowed", opacity: disponivel ? 1 : 0.45, textDecoration: disponivel ? "none" : "line-through" }}>
+                        style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.35rem 0.7rem 0.35rem 0.4rem", borderRadius: "999px", border: `2px solid ${escolhida ? "var(--gold)" : "var(--border)"}`, backgroundColor: escolhida ? "var(--bg-soft)" : "var(--bg-card)", cursor: !precisaEscolherCor ? "default" : disponivel ? "pointer" : "not-allowed", opacity: disponivel ? 1 : 0.45, textDecoration: disponivel ? "none" : "line-through" }}>
                         <span aria-hidden style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: c.fundo, border: `1px solid ${c.borda}`, display: "block", flexShrink: 0 }} />
-                        <span style={{ fontSize: "0.82rem", fontWeight: escolhida ? 800 : 600, color: "var(--text-sub)" }}>{c.nome}</span>
+                        {/* Cor sólida e texto cheio na pílula escolhida, de propósito.
+                            Um fundo translúcido não tem cor própria: ele vira a
+                            mistura do que estiver atrás. Se a folha de estilo
+                            vier velha do cache do navegador, o que está atrás é
+                            claro, o dourado a 16% vira creme e o rótulo creme
+                            desaparece — 1,03:1. Sólido não depende do fundo. */}
+                        <span style={{ fontSize: "0.82rem", fontWeight: escolhida ? 800 : 600, color: escolhida ? "var(--text-main)" : "var(--text-sub)" }}>{c.nome}</span>
                       </button>
                     );
                   })}
