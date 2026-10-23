@@ -119,7 +119,7 @@ export default function RecommendedProducts({ productSlug }: Props) {
                     }}
                   />
                 ) : (
-                  <div style={{ color: "var(--gold)", fontSize: "0.7rem", opacity: 0.5 }}>
+                  <div style={{ color: "var(--text-sub)", fontSize: "0.7rem" }}>
                     Foto em breve
                   </div>
                 )}

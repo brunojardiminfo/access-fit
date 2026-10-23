@@ -379,7 +379,7 @@ function CheckoutContent() {
                     style={{ display: "flex", gap: "0.875rem", alignItems: "center", padding: "0.875rem 1rem", borderRadius: "0.75rem", border: `2px solid ${type === opt.value ? "var(--gold)" : "var(--border)"}`, backgroundColor: type === opt.value ? "var(--bg-soft)" : "var(--bg)", cursor: "pointer", textAlign: "left" }}>
                     <span style={{ fontSize: "1.5rem" }}>{opt.emoji}</span>
                     <div>
-                      <p style={{ fontWeight: 700, color: type === opt.value ? "var(--gold)" : "#16110b", fontSize: "0.9rem" }}>{opt.title}</p>
+                      <p style={{ fontWeight: 700, color: type === opt.value ? "var(--gold)" : "var(--text-main)", fontSize: "0.9rem" }}>{opt.title}</p>
                       <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.1rem" }}>{opt.desc}</p>
                     </div>
                   </button>

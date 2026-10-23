@@ -187,9 +187,9 @@ export default function Header() {
                           ...((session.user as any)?.role === "admin" ? [{ label: "⚙ Painel Admin", href: "/admin" }] : []),
                         ].map(item => (
                           <Link key={item.href} href={item.href} onClick={() => setUserOpen(false)}
-                            style={{ display: "block", padding: "0.65rem 1rem", color: "#3a2a10", fontSize: "0.875rem", textDecoration: "none" }}
+                            style={{ display: "block", padding: "0.65rem 1rem", color: "var(--text-main)", fontSize: "0.875rem", textDecoration: "none" }}
                             onMouseOver={e => { (e.currentTarget as HTMLElement).style.backgroundColor = "var(--bg-soft)"; (e.currentTarget as HTMLElement).style.color = "var(--gold)"; }}
-                            onMouseOut={e => { (e.currentTarget as HTMLElement).style.backgroundColor = ""; (e.currentTarget as HTMLElement).style.color = "#3a2a10"; }}>
+                            onMouseOut={e => { (e.currentTarget as HTMLElement).style.backgroundColor = ""; (e.currentTarget as HTMLElement).style.color = "var(--text-main)"; }}>
                             {item.label}
                           </Link>
                         ))}
@@ -254,7 +254,7 @@ export default function Header() {
             </form>
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}
-                style={{ display: "block", padding: "0.75rem 0.5rem", color: "#5a4020", fontSize: "0.95rem", fontWeight: 600, textDecoration: "none", borderBottom: "1px solid var(--border)" }}>
+                style={{ display: "block", padding: "0.75rem 0.5rem", color: "var(--text-sub)", fontSize: "0.95rem", fontWeight: 600, textDecoration: "none", borderBottom: "1px solid var(--border)" }}>
                 {link.label}
               </Link>
             ))}

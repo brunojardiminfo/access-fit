@@ -368,7 +368,7 @@ export default function ProductPageClient() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
                   <h3 style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--gold)", letterSpacing: "0.1em", textTransform: "uppercase" }}>💰 Escolha o que comprar</h3>
                   {bundleSavings > 0 && (
-                    <div style={{ backgroundColor: "rgba(46,125,50,0.12)", color: "#2e7d32", padding: "0.4rem 0.8rem", borderRadius: "999px", fontSize: "0.75rem", fontWeight: 700 }}>
+                    <div style={{ backgroundColor: "rgba(95,211,122,0.14)", color: "#5fd37a", padding: "0.4rem 0.8rem", borderRadius: "999px", fontSize: "0.75rem", fontWeight: 700 }}>
                       💚 Economize {formatCurrency(bundleSavings)} ({bundleSavingsPercent}%)
                     </div>
                   )}
@@ -381,7 +381,7 @@ export default function ProductPageClient() {
                       <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem", backgroundColor: compSoldOut ? "var(--bg-soft)" : selectedComponent === "completo" ? "rgba(184,137,26,0.08)" : "var(--bg)", borderRadius: "0.625rem", border: `2px solid ${compSoldOut ? "var(--border)" : selectedComponent === "completo" ? "var(--gold)" : "var(--border)"}`, cursor: compSoldOut ? "not-allowed" : "pointer", opacity: compSoldOut ? 0.55 : 1 }}>
                         <input type="radio" name="component" value="completo" checked={selectedComponent === "completo"} onChange={() => !compSoldOut && setSelectedComponent("completo")} disabled={compSoldOut} style={{ width: "1.1rem", height: "1.1rem", accentColor: "var(--gold)", cursor: compSoldOut ? "not-allowed" : "pointer" }} />
                         <div style={{ flex: 1 }}>
-                          <p style={{ fontWeight: 700, color: compSoldOut ? "var(--text-muted)" : "#16110b", fontSize: "0.9rem", textDecoration: compSoldOut ? "line-through" : "none" }}>Conjunto Completo</p>
+                          <p style={{ fontWeight: 700, color: compSoldOut ? "var(--text-muted)" : "var(--text-main)", fontSize: "0.9rem", textDecoration: compSoldOut ? "line-through" : "none" }}>Conjunto Completo</p>
                           <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{compSoldOut ? "Esgotado" : "Todas as peças juntas"}</p>
                         </div>
                         <span style={{ fontSize: "1rem", fontWeight: 900, color: compSoldOut ? "var(--text-muted)" : saleInfo ? "#e74c3c" : "var(--gold)" }}>{formatCurrency(finalPrice)}</span>
@@ -396,7 +396,7 @@ export default function ProductPageClient() {
                       <label key={comp.id} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem", backgroundColor: compSoldOut ? "var(--bg-soft)" : selectedComponent === comp.id ? "rgba(184,137,26,0.08)" : "var(--bg)", borderRadius: "0.625rem", border: `2px solid ${compSoldOut ? "var(--border)" : selectedComponent === comp.id ? "var(--gold)" : "var(--border)"}`, cursor: compSoldOut ? "not-allowed" : "pointer", opacity: compSoldOut ? 0.55 : 1 }}>
                         <input type="radio" name="component" value={comp.id} checked={selectedComponent === comp.id} onChange={() => !compSoldOut && setSelectedComponent(comp.id)} disabled={compSoldOut} style={{ width: "1.1rem", height: "1.1rem", accentColor: "var(--gold)", cursor: compSoldOut ? "not-allowed" : "pointer" }} />
                         <div style={{ flex: 1 }}>
-                          <p style={{ fontWeight: 700, color: compSoldOut ? "var(--text-muted)" : "#16110b", fontSize: "0.9rem", textDecoration: compSoldOut ? "line-through" : "none" }}>{comp.name}</p>
+                          <p style={{ fontWeight: 700, color: compSoldOut ? "var(--text-muted)" : "var(--text-main)", fontSize: "0.9rem", textDecoration: compSoldOut ? "line-through" : "none" }}>{comp.name}</p>
                           {compSoldOut && <p style={{ fontSize: "0.75rem", color: "#ff8a7a" }}>Esgotado</p>}
                         </div>
                         <span style={{ fontSize: "1rem", fontWeight: 900, color: compSoldOut ? "var(--text-muted)" : saleInfo ? "#e74c3c" : "var(--gold)" }}>{formatCurrency(componentPrice(comp.price))}</span>
