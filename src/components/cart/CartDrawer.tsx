@@ -54,7 +54,7 @@ export default function CartDrawer() {
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.25rem 1.25rem 1rem", borderBottom: "1px solid var(--border)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
-            <ShoppingBag size={20} color="var(--gold)" />
+            <ShoppingBag size={20} style={{ color: "var(--gold)" }} />
             <span style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text-main)" }}>Meu Carrinho</span>
             {items.length > 0 && (
               <span style={{ backgroundColor: "var(--gold)", color: "#16110b", fontSize: "0.7rem", fontWeight: 700, width: 20, height: 20, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>{items.length}</span>
@@ -88,12 +88,12 @@ export default function CartDrawer() {
                     )}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "0.5rem" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--border)", backgroundColor: "var(--bg)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <Minus size={12} color="var(--text-sub)" />
+                        <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--border)", backgroundColor: "var(--bg)", color: "var(--text-sub)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Minus size={12} />
                         </button>
                         <span style={{ fontWeight: 700, color: "var(--text-main)", fontSize: "0.875rem", minWidth: 20, textAlign: "center" }}>{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--border)", backgroundColor: "var(--bg)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <Plus size={12} color="var(--text-sub)" />
+                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={{ width: 24, height: 24, borderRadius: "50%", border: "1px solid var(--border)", backgroundColor: "var(--bg)", color: "var(--text-sub)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Plus size={12} />
                         </button>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
