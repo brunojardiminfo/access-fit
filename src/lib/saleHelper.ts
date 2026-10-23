@@ -9,11 +9,15 @@ export function isSaleEligible(createdAt: Date): boolean {
 
 /**
  * Filtro Prisma das peças em SALE: marcadas na mão ou com DIAS_PARA_SALE dias
- * de cadastro. Fica aqui para a vitrine, a home e o admin usarem a mesma regra.
+ * de cadastro, e nunca as que foram tiradas do SALE à mão. Fica aqui para a
+ * vitrine, a home e o admin usarem a mesma regra.
  */
 export function saleWhere() {
   const corte = new Date(Date.now() - DIAS_PARA_SALE * 24 * 60 * 60 * 1000);
-  return { OR: [{ createdAt: { lte: corte } }, { onSale: true }] };
+  return {
+    saleBlocked: false,
+    OR: [{ createdAt: { lte: corte } }, { onSale: true }],
+  };
 }
 
 export function calculateSalePrice(price: number, discount: number = 20): number {
@@ -25,7 +29,13 @@ export function getSaleInfo(product: {
   createdAt: Date;
   onSale?: boolean;
   saleDiscount?: number | null;
+  saleBlocked?: boolean;
 }) {
+  // Tirada do SALE à mão: nem a data nem a marcação a trazem de volta. É o
+  // único jeito de uma peça velha ficar fora, porque a regra por dias entra
+  // sozinha e não perguntava a ninguém.
+  if (product.saleBlocked) return null;
+
   // Se não está autorizado para SALE e não é elegível por data
   if (!product.onSale && !isSaleEligible(product.createdAt)) {
     return null;
@@ -40,7 +50,7 @@ export function getSaleInfo(product: {
     };
   }
 
-  // Se é elegível por data (DIAS_PARA_SALE+ dias) e não foi bloqueado
+  // Se é elegível por data (DIAS_PARA_SALE+ dias)
   if (isSaleEligible(product.createdAt)) {
     return {
       salePrice: calculateSalePrice(product.price, 20),
