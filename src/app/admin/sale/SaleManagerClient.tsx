@@ -220,20 +220,17 @@ export default function SaleManagerClient({
           return (
             <div
               key={product.id}
+              className="linha-sale"
               style={{
                 backgroundColor: "#fff",
                 border: "1px solid rgba(140,100,20,0.15)",
                 borderRadius: "0.875rem",
                 padding: "1.25rem",
-                display: "grid",
-                gridTemplateColumns: "auto 1.4fr 1fr 1fr 1fr auto",
-                gap: "1rem",
-                alignItems: "center",
               }}
             >
               {/* A foto: é por ela que se reconhece a peça. Só pelo nome,
                   "Top Aline" e "Top Aline 2" são a mesma coisa na cabeça. */}
-              <div style={{
+              <div className="sale-foto" style={{
                 width: 84, height: 108, borderRadius: "0.625rem", overflow: "hidden",
                 backgroundColor: "#f4efe4", border: "1px solid rgba(140,100,20,0.15)",
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
@@ -246,7 +243,7 @@ export default function SaleManagerClient({
               </div>
 
               {/* Produto */}
-              <div style={{ minWidth: 0 }}>
+              <div className="sale-peca" style={{ minWidth: 0 }}>
                 {product.saleBlocked && (
                   <span style={{
                     display: "inline-block", fontSize: "0.6rem", fontWeight: 800,
@@ -286,7 +283,7 @@ export default function SaleManagerClient({
               </div>
 
               {/* Datas */}
-              <div>
+              <div className="sale-data">
                 <p style={{ fontSize: "0.75rem", color: "#9a8060", marginBottom: "0.2rem" }}>
                   Criado em
                 </p>
@@ -306,7 +303,7 @@ export default function SaleManagerClient({
               </div>
 
               {/* Preço Original */}
-              <div>
+              <div className="sale-preco">
                 <p style={{ fontSize: "0.75rem", color: "#9a8060", marginBottom: "0.2rem" }}>
                   Preço Original
                 </p>
@@ -316,7 +313,7 @@ export default function SaleManagerClient({
               </div>
 
               {/* Desconto + Preço com Desconto */}
-              <div>
+              <div className="sale-desconto">
                 <p style={{ fontSize: "0.75rem", color: "#9a8060", marginBottom: "0.2rem" }}>
                   Desconto & Preço
                 </p>
@@ -335,7 +332,8 @@ export default function SaleManagerClient({
                     }}
                     disabled={loading}
                     style={{
-                      width: "50px",
+                      // 64px: com 50 o "20" ficava cortado pela setinha do campo.
+                      width: "64px",
                       padding: "0.4rem",
                       border: "1px solid rgba(140,100,20,0.2)",
                       borderRadius: "0.4rem",
@@ -360,7 +358,7 @@ export default function SaleManagerClient({
 
               {/* As duas ações na mesma célula: sem isto a segunda vira um
                   sétimo item da grade e cai numa linha sozinha. */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+              <div className="sale-acoes" style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
               <button
                 onClick={() => handleToggleSale(product.id, product.onSale)}
                 // Peça fora do SALE ignora qualquer desconto: autorizar aqui
@@ -436,7 +434,7 @@ export default function SaleManagerClient({
       )}
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", borderBottom: "1px solid rgba(140,100,20,0.1)" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1.5rem", borderBottom: "1px solid rgba(140,100,20,0.1)" }}>
         <button
           onClick={() => setActiveTab("upcoming")}
           style={{

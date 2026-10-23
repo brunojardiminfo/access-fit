@@ -295,3 +295,36 @@ button, a[role="button"] { transition: transform 0.08s ease-out, opacity 0.15s, 
 @media (hover: hover) {
   .cartao-peca:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
 }
+
+/* A linha do SALE no admin. Eram seis colunas fixas: no computador cabem, no
+   celular cada uma fica com uns 50px e o nome da peça desce uma palavra por
+   linha, enquanto os botões saem pela direita da tela.
+
+   No celular a linha vira um cartão: foto e nome lado a lado em cima, e
+   depois cada bloco ocupando a largura toda — menos preço e desconto, que
+   são curtos e dividem a mesma faixa. */
+.linha-sale {
+  display: grid;
+  grid-template-columns: auto 1.4fr 1fr 1fr 1fr auto;
+  gap: 1rem;
+  align-items: center;
+}
+.linha-sale > * { min-width: 0; }
+
+@media (max-width: 900px) {
+  .linha-sale {
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 0.75rem 0.85rem;
+    align-items: start;
+  }
+  .linha-sale .sale-foto     { grid-column: 1; grid-row: 1; }
+  .linha-sale .sale-peca     { grid-column: 2; grid-row: 1; }
+  .linha-sale .sale-data     { grid-column: 1 / -1; }
+  .linha-sale .sale-preco    { grid-column: 1; }
+  .linha-sale .sale-desconto { grid-column: 2; }
+  /* Os botões ficam empilhados e ocupando a largura toda: no celular o polegar
+     acerta a área, não a palavra. (Empilhados por conta do próprio elemento —
+     a direção da coluna vem do estilo dele, não daqui.) */
+  .linha-sale .sale-acoes    { grid-column: 1 / -1; }
+  .linha-sale .sale-acoes > button { white-space: normal; }
+}
