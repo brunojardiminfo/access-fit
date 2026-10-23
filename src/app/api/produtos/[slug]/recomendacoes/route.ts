@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { PECA_NA_VITRINE } from "@/lib/vitrine";
 
 export async function GET(
   _req: Request,
@@ -49,7 +50,7 @@ export async function GET(
         where: {
           categoryId: produto.categoryId,
           id: { not: produto.id },
-          active: true,
+          ...PECA_NA_VITRINE,
         },
         select: { id: true },
         take: 10 - produtosRecomendadosIds.length,
@@ -59,7 +60,9 @@ export async function GET(
 
     // 3. Buscar dados dos produtos recomendados
     const produtosDetalhes = await prisma.product.findMany({
-      where: { id: { in: produtosRecomendadosIds } },
+      // Os ids de "compradas juntas" vêm do histórico de pedidos e podem
+      // apontar para peça esgotada — o filtro precisa estar aqui também.
+      where: { id: { in: produtosRecomendadosIds }, ...PECA_NA_VITRINE },
       select: {
         id: true,
         name: true,

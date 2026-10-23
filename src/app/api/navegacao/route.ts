@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { PECA_NA_VITRINE, PRODUTO_NA_VITRINE } from "@/lib/vitrine";
 
 /**
  * O que entra no menu e no rodapé da loja.
@@ -17,12 +18,12 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   const [categorias, colecoes] = await Promise.all([
     prisma.category.findMany({
-      where: { products: { some: { active: true } } },
+      where: { products: { some: PECA_NA_VITRINE } },
       select: { name: true, slug: true },
       orderBy: { name: "asc" },
     }),
     prisma.collection.findMany({
-      where: { active: true, products: { some: { product: { active: true } } } },
+      where: { active: true, products: { some: PRODUTO_NA_VITRINE } },
       select: { name: true, slug: true, tagline: true, sazonal: true },
       orderBy: [{ sazonal: "asc" }, { ordem: "asc" }, { name: "asc" }],
     }),

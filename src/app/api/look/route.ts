@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { lerLook } from "@/lib/look";
 import { parseEstoque, quantidadeDe, totalDaCor, temCorNoEstoque, SEM_COR } from "@/lib/variacoes";
+import { PECA_NA_VITRINE } from "@/lib/vitrine";
 
 /**
  * Resolve as peças de um link de look. Público: o link é feito para circular.
@@ -16,7 +17,7 @@ export async function GET(req: Request) {
   if (pedidos.length === 0) return NextResponse.json({ pecas: [] });
 
   const produtos = await prisma.product.findMany({
-    where: { slug: { in: pedidos.map(i => i.slug) }, active: true },
+    where: { slug: { in: pedidos.map(i => i.slug) }, ...PECA_NA_VITRINE },
     include: { category: { select: { name: true } } },
   });
   const porSlug = new Map(produtos.map(p => [p.slug, p]));
