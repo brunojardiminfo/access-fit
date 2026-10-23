@@ -9,9 +9,14 @@ interface Product {
   price: number;
   saleDiscount: number | null;
   onSale: boolean;
+  saleBlocked?: boolean;
   createdAt: string | Date;
   stock: number;
   category: { name: string };
+  images?: string;
+  colors?: string;
+  sizes?: string;
+  sizeStock?: string | null;
 }
 
 interface Props {
@@ -30,6 +35,42 @@ export default function SaleManagerClient({
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [customDiscount, setCustomDiscount] = useState(20);
+
+  /** Tira a peça do SALE, ou devolve. É o único jeito de uma peça com os dias
+      de cadastro ficar de fora: a regra por data entra sozinha. */
+  const handleToggleBloqueio = async (productId: string, bloqueadaAgora: boolean) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/produtos/${productId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ saleBlocked: !bloqueadaAgora, onSale: false }),
+      });
+      if (res.ok) {
+        setMessage(bloqueadaAgora ? "✅ Peça voltou para o SALE" : "✅ Peça tirada do SALE");
+        setTimeout(() => window.location.reload(), 700);
+      } else {
+        setMessage("❌ Não deu para salvar");
+      }
+    } catch {
+      setMessage("❌ Não deu para salvar");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const primeiraFoto = (p: Product): string | null => {
+    try {
+      const fotos = JSON.parse(p.images || "[]");
+      return Array.isArray(fotos) && fotos.length ? String(fotos[0]) : null;
+    } catch { return null; }
+  };
+  const listaDe = (json?: string | null): string[] => {
+    try {
+      const v = JSON.parse(json || "[]");
+      return Array.isArray(v) ? v.map(String) : [];
+    } catch { return []; }
+  };
 
   const formatDate = (date: string | Date) => {
     const d = typeof date === "string" ? new Date(date) : date;
@@ -185,21 +226,63 @@ export default function SaleManagerClient({
                 borderRadius: "0.875rem",
                 padding: "1.25rem",
                 display: "grid",
-                gridTemplateColumns: "1fr 1fr 1fr 1fr auto",
+                gridTemplateColumns: "auto 1.4fr 1fr 1fr 1fr auto",
                 gap: "1rem",
                 alignItems: "center",
               }}
             >
+              {/* A foto: é por ela que se reconhece a peça. Só pelo nome,
+                  "Top Aline" e "Top Aline 2" são a mesma coisa na cabeça. */}
+              <div style={{
+                width: 84, height: 108, borderRadius: "0.625rem", overflow: "hidden",
+                backgroundColor: "#f4efe4", border: "1px solid rgba(140,100,20,0.15)",
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              }}>
+                {primeiraFoto(product)
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={primeiraFoto(product)!} alt={product.name}
+                         style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />
+                  : <span style={{ fontSize: "0.6rem", color: "#9a8060", textAlign: "center", padding: "0 4px" }}>sem foto</span>}
+              </div>
+
               {/* Produto */}
-              <div>
+              <div style={{ minWidth: 0 }}>
+                {product.saleBlocked && (
+                  <span style={{
+                    display: "inline-block", fontSize: "0.6rem", fontWeight: 800,
+                    letterSpacing: "0.08em", color: "#7a6040", backgroundColor: "#f0e8d0",
+                    border: "1px solid rgba(140,100,20,0.3)", borderRadius: "999px",
+                    padding: "1px 8px", marginBottom: "0.3rem",
+                  }}>FORA DO SALE</span>
+                )}
                 <p style={{ fontWeight: 700, color: "#1a1510", marginBottom: "0.2rem" }}>
-                  {product.name.length > 40
-                    ? product.name.slice(0, 40) + "..."
-                    : product.name}
+                  {product.name}
                 </p>
-                <p style={{ fontSize: "0.75rem", color: "#9a8060" }}>
+                <p style={{ fontSize: "0.75rem", color: "#9a8060", marginBottom: "0.35rem" }}>
                   {product.category.name} • Estoque: {product.stock}
                 </p>
+                {/* Cores e tamanhos: o que distingue uma peça da irmã dela */}
+                {listaDe(product.colors).length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", marginBottom: "0.3rem" }}>
+                    {listaDe(product.colors).slice(0, 6).map(c => (
+                      <span key={c} style={{
+                        fontSize: "0.65rem", fontWeight: 600, color: "#5a4a2a",
+                        backgroundColor: "#f4efe4", border: "1px solid rgba(140,100,20,0.18)",
+                        borderRadius: "999px", padding: "1px 7px",
+                      }}>{c}</span>
+                    ))}
+                    {listaDe(product.colors).length > 6 && (
+                      <span style={{ fontSize: "0.65rem", color: "#9a8060", fontWeight: 700 }}>
+                        +{listaDe(product.colors).length - 6}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {listaDe(product.sizes).length > 0 && (
+                  <p style={{ fontSize: "0.68rem", color: "#9a8060" }}>
+                    Tamanhos: {listaDe(product.sizes).join(" · ")}
+                  </p>
+                )}
               </div>
 
               {/* Datas */}
@@ -211,8 +294,13 @@ export default function SaleManagerClient({
                   {formatDate(product.createdAt)}
                 </p>
                 {diasEstoque !== undefined && (
-                  <p style={{ fontSize: "0.75rem", color: "#e74c3c", fontWeight: 700 }}>
-                    🔥 {diasEstoque} dias no estoque · em SALE automático
+                  <p style={{
+                    fontSize: "0.75rem", fontWeight: 700,
+                    color: product.saleBlocked ? "#7a6040" : "#e74c3c",
+                  }}>
+                    {product.saleBlocked
+                      ? `${diasEstoque} dias no estoque · fora do SALE por escolha sua`
+                      : `🔥 ${diasEstoque} dias no estoque · em SALE automático`}
                   </p>
                 )}
               </div>
@@ -270,10 +358,15 @@ export default function SaleManagerClient({
                 </p>
               </div>
 
-              {/* Botão Autorizar */}
+              {/* As duas ações na mesma célula: sem isto a segunda vira um
+                  sétimo item da grade e cai numa linha sozinha. */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
               <button
                 onClick={() => handleToggleSale(product.id, product.onSale)}
-                disabled={loading}
+                // Peça fora do SALE ignora qualquer desconto: autorizar aqui
+                // não faria nada, e um botão que não faz nada é uma mentira.
+                disabled={loading || product.saleBlocked}
+                title={product.saleBlocked ? "Devolva a peça ao SALE primeiro." : undefined}
                 style={{
                   padding: "0.6rem 1rem",
                   backgroundColor: product.onSale ? "#fee8e8" : "#e8f5e9",
@@ -286,13 +379,32 @@ export default function SaleManagerClient({
                   borderRadius: "0.625rem",
                   fontWeight: 700,
                   fontSize: "0.8rem",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  opacity: loading ? 0.6 : 1,
+                  cursor: loading || product.saleBlocked ? "not-allowed" : "pointer",
+                  opacity: loading || product.saleBlocked ? 0.45 : 1,
                   whiteSpace: "nowrap",
                 }}
               >
                 {product.onSale ? "🗑️ Remover" : "✅ Autorizar"}
               </button>
+                <button
+                  onClick={() => handleToggleBloqueio(product.id, !!product.saleBlocked)}
+                  disabled={loading}
+                  title={product.saleBlocked
+                    ? "A peça está fora do SALE. Clique para devolver."
+                    : "Tira a peça do SALE mesmo tendo os dias de cadastro."}
+                  style={{
+                    padding: "0.6rem 1rem",
+                    backgroundColor: product.saleBlocked ? "#e8f5e9" : "#f4efe4",
+                    color: product.saleBlocked ? "#2e7d32" : "#5a4a2a",
+                    border: `1px solid ${product.saleBlocked ? "rgba(46,125,50,0.3)" : "rgba(140,100,20,0.25)"}`,
+                    borderRadius: "0.625rem", fontWeight: 700, fontSize: "0.8rem",
+                    cursor: loading ? "not-allowed" : "pointer",
+                    opacity: loading ? 0.6 : 1, whiteSpace: "nowrap",
+                  }}
+                >
+                  {product.saleBlocked ? "↩️ Devolver ao SALE" : "🚫 Tirar do SALE"}
+                </button>
+              </div>
             </div>
           );
         })}
@@ -338,7 +450,7 @@ export default function SaleManagerClient({
             fontSize: "0.95rem",
           }}
         >
-          🕒 Em SALE automático — 20% ({upcomingSaleProducts.length})
+          🕒 Em SALE automático — 20% ({upcomingSaleProducts.filter(p => !p.saleBlocked).length})
         </button>
         <button
           onClick={() => setActiveTab("active")}
