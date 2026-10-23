@@ -74,6 +74,25 @@ export function coresDisponiveis(mapa: Record<string, number>, ordem: string[] =
   return coresDoEstoque(mapa, ordem).filter(c => totalDaCor(mapa, c) > 0);
 }
 
+/**
+ * As cores que a LOJA deve mostrar: só as que têm peça na prateleira.
+ *
+ * Cor cadastrada e esgotada não aparece para a cliente — nem na bolinha do
+ * cartão, nem na lista "N cores: ...", nem como opção na página da peça.
+ * Oferecer uma cor que não existe é prometer o que não dá para entregar.
+ *
+ * Peça cujo estoque ainda está no formato antigo, sem cor, não tem como
+ * saber quanto há de cada uma: aí as cadastradas seguem valendo, que é o
+ * que sempre foi mostrado.
+ *
+ * O admin não usa esta função: lá a cor zerada continua à vista, porque é
+ * de lá que ela é reposta.
+ */
+export function coresParaVitrine(cadastradas: string[], mapa: Record<string, number>): string[] {
+  if (!temCorNoEstoque(mapa)) return cadastradas;
+  return coresDisponiveis(mapa, cadastradas).filter(c => c !== SEM_COR);
+}
+
 /** Tamanhos lançados para uma cor, na ordem em que a peça os cadastrou. */
 export function tamanhosDaCor(mapa: Record<string, number>, cor: string, ordem: string[] = []): string[] {
   const presentes = Object.keys(mapa).map(lerChave).filter(v => v.cor === cor).map(v => v.tamanho);

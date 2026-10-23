@@ -5,12 +5,13 @@ import { formatCurrency, parseJson } from "@/lib/utils";
 import { getSaleInfo } from "@/lib/saleHelper";
 import { seloDeFrescor, TEXTO_SELO } from "@/lib/selos";
 import { bolinhasDeCor } from "@/lib/cores";
+import { coresParaVitrine, parseEstoque } from "@/lib/variacoes";
 import { useCart } from "@/store/cart";
 
 type Product = {
   id: string; name: string; slug: string; price: number;
   compareAt: number | null; images: string; sizes: string;
-  colors: string; stock: number; createdAt: string | Date;
+  colors: string; sizeStock?: string | null; stock: number; createdAt: string | Date;
   restockedAt?: string | Date | null;
   onSale?: boolean; saleDiscount?: number | null;
   category: { name: string };
@@ -27,7 +28,11 @@ export default function ProductCard({ product, indice = 0 }: { product: Product;
   const discount = product.compareAt ? Math.round((1 - product.price / product.compareAt) * 100) : null;
   const createdDate = typeof product.createdAt === "string" ? new Date(product.createdAt) : product.createdAt;
   const selo = seloDeFrescor(product);
-  const cores = bolinhasDeCor(parseJson<string[]>(product.colors, []));
+  // A bolinha e a lista de cores mostram só o que há na prateleira: cor
+  // cadastrada e esgotada não aparece para a cliente.
+  const cores = bolinhasDeCor(
+    coresParaVitrine(parseJson<string[]>(product.colors, []), parseEstoque(product.sizeStock))
+  );
   const saleInfo = getSaleInfo({
     price: product.price,
     createdAt: createdDate,

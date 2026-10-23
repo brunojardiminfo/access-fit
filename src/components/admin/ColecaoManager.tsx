@@ -156,6 +156,24 @@ export default function ColecaoManager({ colecoes }: { colecoes: Colecao[] }) {
 
   return (
     <div>
+      {/* Pôr e tirar peça de coleção é o que mais se faz aqui, e o único
+          caminho era um link no pé da página, embaixo de todos os cartões.
+          Agora abre o bloco. O do pé continua, para quem rolou até lá. */}
+      {colecoes.length > 0 && (
+        <a href="/admin/colecoes/classificar"
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem",
+                   backgroundColor: "#1a1510", color: "#fff", borderRadius: "0.75rem",
+                   padding: "0.875rem 1.125rem", textDecoration: "none", marginBottom: "1.25rem" }}>
+          <span>
+            <span style={{ display: "block", fontWeight: 800, fontSize: "0.92rem" }}>Editar as peças das coleções</span>
+            <span style={{ display: "block", fontSize: "0.76rem", opacity: 0.75, marginTop: "2px" }}>
+              pôr, tirar e definir o papel de cada peça
+            </span>
+          </span>
+          <span style={{ fontSize: "1.1rem" }}>→</span>
+        </a>
+      )}
+
       {erro && (
         <p style={{ color: "#c04040", fontSize: "0.82rem", marginBottom: "1rem", backgroundColor: "#fff0f0", padding: "0.625rem 0.875rem", borderRadius: "0.5rem" }}>{erro}</p>
       )}
@@ -221,7 +239,7 @@ export default function ColecaoManager({ colecoes }: { colecoes: Colecao[] }) {
       {colecoes.length > 0 && (
         <a href="/admin/colecoes/classificar"
           style={{ display: "block", textAlign: "center", backgroundColor: "#1a1510", color: "#fff", fontWeight: 700, borderRadius: "0.75rem", padding: "0.875rem", textDecoration: "none", fontSize: "0.9rem" }}>
-          Classificar as peças →
+          Editar as peças das coleções →
         </a>
       )}
     </div>

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import ProductCard from "@/components/products/ProductCard";
 import { compararPorPapel } from "@/lib/colecoes";
 import type { Metadata } from "next";
+import { PECA_NA_VITRINE, PRODUTO_NA_VITRINE } from "@/lib/vitrine";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export default async function ColecaoPage({ params }: { params: Promise<{ slug: 
     select: {
       name: true, tagline: true, description: true, sazonal: true, active: true,
       products: {
-        where: { product: { active: true } },
+        where: PRODUTO_NA_VITRINE,
         select: { product: { include: { category: true } } },
       },
     },

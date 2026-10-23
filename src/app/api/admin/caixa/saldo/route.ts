@@ -32,10 +32,14 @@ export async function GET(req: Request) {
       _sum: { amount: true },
       where: dateFilter ? { date: dateFilter } : {},
     }),
-    // Valor do estoque atual ao custo
-    prisma.product.aggregate({
-      _sum: { costPrice: true },
+    // Valor do estoque atual ao custo.
+    // Era um _sum de costPrice, que soma o custo UNITÁRIO de cada peça e
+    // ignora quantas existem: 5 leggings ou 500 davam o mesmo número, e esse
+    // número ia direto para o patrimônio. Agora multiplica pelo que há em
+    // estoque, como o relatório de estoque sempre fez.
+    prisma.product.findMany({
       where: { active: true, NOT: { slug: "venda-manual" } },
+      select: { costPrice: true, stock: true },
     }),
     // A receber
     prisma.order.findMany({
@@ -48,7 +52,7 @@ export async function GET(req: Request) {
   const despesasVal    = todasDespesas._sum.amount || 0;
   const despesasEstVal = despesasEstoque._sum.amount || 0;
   const aportesVal     = aportes._sum.amount || 0;
-  const estoqueVal     = estoque._sum.costPrice || 0;
+  const estoqueVal     = estoque.reduce((s, p) => s + (p.costPrice || 0) * Math.max(0, p.stock), 0);
   const aReceberVal    = cadernoAberto.reduce((s, o) => s + (o.total - o.amountPaid), 0);
 
   // Caixa real = receitas + aportes - TODAS as despesas (incluindo estoque)

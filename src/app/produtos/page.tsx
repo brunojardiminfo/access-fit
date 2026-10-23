@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import ProductCard from "@/components/products/ProductCard";
 import Link from "next/link";
 import { saleWhere } from "@/lib/saleHelper";
+import { PECA_NA_VITRINE } from "@/lib/vitrine";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function ProdutosPage({
 
   const products = await prisma.product.findMany({
     where: {
-      active: true,
+      ...PECA_NA_VITRINE,
       ...(categoria ? { category: { slug: categoria } } : {}),
       ...(busca ? { name: { contains: busca, mode: "insensitive" } } : {}),
       ...(tamanho ? { sizes: { contains: tamanho } } : {}),

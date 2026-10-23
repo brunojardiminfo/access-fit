@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { decrementProductStock, consomeEstoque } from "@/lib/stock";
+import { montarItemDoPedido } from "@/lib/itensDoPedido";
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -111,18 +112,9 @@ export async function POST(req: Request) {
   const paid = parseFloat(amountPaid) || 0;
 
   try {
-    // Baixa só quando o pedido já nasce num status que consome estoque.
-    // Nascendo como "aguardando", a baixa acontece ao confirmar.
-    const statusInicial = body.status || "delivered";
-    if (consomeEstoque(statusInicial)) {
-      for (const item of items) {
-        if (item.productId) {
-          await decrementProductStock(item.productId, item.quantity, item.size, item.color);
-        }
-      }
-    }
 
     const order = await prisma.order.create({
+      include: { items: true },
       data: {
         userId: customerId,
         status: body.status || "delivered",
@@ -142,21 +134,28 @@ export async function POST(req: Request) {
           create: await Promise.all(items.map(async (i: any) => {
             const pid = i.productId || fallbackProductId!;
             const prod = await prisma.product.findUnique({ where: { id: pid }, select: { costPrice: true } });
-            return {
-              productId: pid,
-              quantity: i.quantity,
-              price: i.price,
-              size: i.size || null,
-              color: i.color || null,
-              componentName: i.componentName || null,
-              costPrice: prod?.costPrice ?? null,
-            };
+            return montarItemDoPedido(i, fallbackProductId, prod?.costPrice ?? null);
           })),
         },
       },
     });
 
     await prisma.orderStatusHistory.create({ data: { orderId: order.id, status: order.status } });
+
+    // A baixa vem DEPOIS do pedido existir. Antes ela era a primeira coisa do
+    // try: se o create falhasse — uma data inválida basta — o catch devolvia
+    // erro e as peças já tinham saído do estoque, sem pedido nenhum para
+    // explicar o sumiço. Medido: 2 peças perdidas por tentativa falha.
+    //
+    // E sai dos itens JÁ GRAVADOS, não do corpo da requisição, para a baixa e
+    // a futura devolução lerem exatamente os mesmos campos.
+    // Nascendo como "aguardando", a baixa acontece ao confirmar.
+    if (consomeEstoque(order.status)) {
+      for (const item of order.items) {
+        if (item.productId === fallbackProductId) continue;  // venda avulsa não tem estoque
+        await decrementProductStock(item.productId, item.quantity, item.size, item.color);
+      }
+    }
 
     if (paid > 0) {
       await prisma.payment.create({

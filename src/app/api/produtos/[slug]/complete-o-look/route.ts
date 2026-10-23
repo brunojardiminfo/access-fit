@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { parseJson } from "@/lib/utils";
 import { parseEstoque, coresDisponiveis, SEM_COR } from "@/lib/variacoes";
+import { PECA_NA_VITRINE } from "@/lib/vitrine";
 
 const QUANTAS = 3;
 
@@ -42,10 +43,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
 
     const candidatos = await prisma.product.findMany({
       where: {
-        active: true,
+        ...PECA_NA_VITRINE,
         id: { not: atual.id },
         categoryId: { not: atual.categoryId },
-        stock: { gt: 0 },
       },
       select: {
         id: true, name: true, slug: true, price: true, images: true, colors: true,

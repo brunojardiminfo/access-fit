@@ -168,7 +168,7 @@ export default function FinanceiroPage() {
   const [filterCategory, setFilterCategory] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ date: today(), description: "", amount: "", category: "outros", paymentMethod: "pix", supplierId: "", notes: "", installments: "1", dueDate: "" });
+  const [form, setForm] = useState({ date: today(), description: "", amount: "", category: "outros", paymentMethod: "pix", supplierId: "", notes: "", installments: "1", dueDate: "", modo: "parcelado" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [showSupplierForm, setShowSupplierForm] = useState(false);
@@ -201,7 +201,10 @@ export default function FinanceiroPage() {
     if (res.ok) {
       const data = await res.json();
       setCardExpenses(data.expenses);
-      const t = data.expenses.reduce((s: number, e: Expense) => s + e.amount / (e.installments || 1), 0);
+      // Cada linha JÁ guarda o valor da sua parcela. Dividir de novo por
+      // `installments` mostrava a parcela dividida pelo número de parcelas:
+      // uma compra de R$ 113,48 em 12x aparecia como R$ 0,79 por linha.
+      const t = data.expenses.reduce((s: number, e: Expense) => s + e.amount, 0);
       setCardTotal(t);
     }
   }, [cardFrom, cardTo]);
@@ -209,8 +212,8 @@ export default function FinanceiroPage() {
   useEffect(() => { if (tab === "lancamentos") { loadExpenses(); if (suppliers.length === 0) fetch("/api/admin/fornecedores").then(r => r.json()).then(setSuppliers); } }, [tab, loadExpenses]);
   useEffect(() => { if (tab === "cartao") loadCardExpenses(); }, [tab, loadCardExpenses]);
 
-  const openNew = () => { setEditId(null); setForm({ date: today(), description: "", amount: "", category: "outros", paymentMethod: "pix", supplierId: "", notes: "", installments: "1", dueDate: "" }); setError(""); setShowForm(true); };
-  const openEdit = (e: Expense) => { setEditId(e.id); setForm({ date: e.date.split("T")[0], description: e.description, amount: String(e.amount), category: e.category, paymentMethod: e.paymentMethod, supplierId: e.supplier?.id || "", notes: e.notes || "", installments: String(e.installments || 1), dueDate: e.dueDate ? e.dueDate.substring(0,7) : "" }); setError(""); setShowForm(true); };
+  const openNew = () => { setEditId(null); setForm({ date: today(), description: "", amount: "", category: "outros", paymentMethod: "pix", supplierId: "", notes: "", installments: "1", dueDate: "", modo: "parcelado" }); setError(""); setShowForm(true); };
+  const openEdit = (e: Expense) => { setEditId(e.id); setForm({ date: e.date.split("T")[0], description: e.description, amount: String(e.amount), category: e.category, paymentMethod: e.paymentMethod, supplierId: e.supplier?.id || "", notes: e.notes || "", installments: String(e.installments || 1), dueDate: e.dueDate ? e.dueDate.substring(0,7) : "", modo: "parcelado" }); setError(""); setShowForm(true); };
 
   const handleSave = async () => {
     if (!form.description.trim()) { setError("Informe a descrição."); return; }
@@ -218,10 +221,10 @@ export default function FinanceiroPage() {
     if (!amt || amt <= 0) { setError("Informe um valor válido."); return; }
     const isCard = form.paymentMethod === "cartao_credito";
     const parcelas = parseInt(form.installments) || 1;
-    if (isCard && parcelas > 1 && !form.dueDate) { setError("Informe o mês da 1ª parcela."); return; }
+    if (isCard && parcelas > 1 && !form.dueDate) { setError(form.modo === "recorrente" ? "Informe o mês da 1ª cobrança." : "Informe o mês da 1ª parcela."); return; }
     setSaving(true); setError("");
     const url = editId ? `/api/admin/despesas/${editId}` : "/api/admin/despesas";
-    const res = await fetch(url, { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, amount: amt, installments: parcelas }) });
+    const res = await fetch(url, { method: editId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, amount: amt, installments: parcelas, modo: isCard ? form.modo : "parcelado" }) });
     setSaving(false);
     if (res.ok) { setShowForm(false); loadExpenses(); } else { const d = await res.json(); setError(d.error || "Erro ao salvar."); }
   };
@@ -865,7 +868,7 @@ export default function FinanceiroPage() {
                       <td style={{ padding: "0.75rem 1rem", fontWeight: 700, color: isOverdue ? "#c04040" : "#6a30b8", fontSize: "0.8rem", whiteSpace: "nowrap" }}>{e.dueDate ? new Date(e.dueDate).toLocaleDateString("pt-BR") : "—"}{isOverdue && " ⚠️"}</td>
                       <td style={{ padding: "0.75rem 1rem", color: "#1a1510", fontWeight: 600 }}>{e.description}</td>
                       <td style={{ padding: "0.75rem 1rem", color: "#6a30b8", fontSize: "0.78rem" }}>{parcelas > 1 ? `${e.installmentNumber || 1}/${parcelas}` : "À vista"}</td>
-                      <td style={{ padding: "0.75rem 1rem", color: "#c04040", fontWeight: 700 }}>-{fmt(e.amount / parcelas)}</td>
+                      <td style={{ padding: "0.75rem 1rem", color: "#c04040", fontWeight: 700 }}>-{fmt(e.amount)}</td>
                     </tr>
                   );
                 })}
@@ -893,15 +896,72 @@ export default function FinanceiroPage() {
               <div><label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#5a4a2a", display: "block", marginBottom: "0.4rem" }}>Descrição *</label><input type="text" placeholder="Ex: Compra de leggings" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} style={inp()} /></div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
                 <div><label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#5a4a2a", display: "block", marginBottom: "0.4rem" }}>Categoria</label><select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} style={inp()}>{CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</select></div>
-                <div><label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#5a4a2a", display: "block", marginBottom: "0.4rem" }}>Pagamento</label><select value={form.paymentMethod} onChange={e => setForm(f => ({ ...f, paymentMethod: e.target.value, installments: "1", dueDate: "" }))} style={inp()}>{PAYMENTS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}</select></div>
+                <div><label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#5a4a2a", display: "block", marginBottom: "0.4rem" }}>Pagamento</label><select value={form.paymentMethod} onChange={e => setForm(f => ({ ...f, paymentMethod: e.target.value, installments: "1", dueDate: "", modo: "parcelado" }))} style={inp()}>{PAYMENTS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}</select></div>
               </div>
               {form.paymentMethod === "cartao_credito" && (
                 <div style={{ backgroundColor: "#f0e8ff", border: "1px solid rgba(106,48,184,0.2)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                  <p style={{ fontSize: "0.75rem", fontWeight: 800, color: "#6a30b8" }}>💳 Parcelamento</p>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-                    <div><label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#5a4a2a", display: "block", marginBottom: "0.4rem" }}>Parcelas</label><select value={form.installments} onChange={e => setForm(f => ({ ...f, installments: e.target.value }))} style={inp()}>{[1,2,3,4,5,6,7,8,9,10,11,12].map(n => <option key={n} value={n}>{n}x {n > 1 && form.amount ? `de ${fmt(parseFloat(form.amount.replace(",","."))/n)}` : ""}</option>)}</select></div>
-                    <div><label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#5a4a2a", display: "block", marginBottom: "0.4rem" }}>Mês da {parseInt(form.installments) > 1 ? "1ª " : ""}fatura</label><input type="month" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} style={inp()} /></div>
+                  <p style={{ fontSize: "0.75rem", fontWeight: 800, color: "#6a30b8" }}>💳 Cartão de crédito</p>
+
+                  {/* Dividir e repetir são contas opostas e viviam no mesmo
+                      campo "Parcelas". Uma assinatura mensal de R$ 113,48
+                      lançada "em 12x" virava doze cobranças de R$ 9,46. */}
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    {[
+                      { v: "parcelado",  t: "Parcelado",  d: "divide o valor" },
+                      { v: "recorrente", t: "Recorrente", d: "repete todo mês" },
+                    ].map(op => (
+                      <button key={op.v} type="button"
+                        onClick={() => setForm(f => ({ ...f, modo: op.v }))}
+                        style={{
+                          flex: 1, textAlign: "left", cursor: "pointer",
+                          padding: "0.55rem 0.7rem", borderRadius: "0.5rem",
+                          border: `2px solid ${form.modo === op.v ? "#6a30b8" : "rgba(106,48,184,0.25)"}`,
+                          backgroundColor: form.modo === op.v ? "#6a30b8" : "#fff",
+                          color: form.modo === op.v ? "#fff" : "#6a30b8",
+                        }}>
+                        <span style={{ display: "block", fontSize: "0.78rem", fontWeight: 800 }}>{op.t}</span>
+                        <span style={{ display: "block", fontSize: "0.68rem", opacity: 0.85 }}>{op.d}</span>
+                      </button>
+                    ))}
                   </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                    <div>
+                      <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#5a4a2a", display: "block", marginBottom: "0.4rem" }}>
+                        {form.modo === "recorrente" ? "Repetir por" : "Parcelas"}
+                      </label>
+                      <select value={form.installments} onChange={e => setForm(f => ({ ...f, installments: e.target.value }))} style={inp()}>
+                        {[1,2,3,4,5,6,7,8,9,10,11,12].map(n => {
+                          const v = parseFloat((form.amount || "0").replace(",", "."));
+                          const porMes = form.modo === "recorrente" ? v : v / n;
+                          return (
+                            <option key={n} value={n}>
+                              {form.modo === "recorrente"
+                                ? `${n} ${n > 1 ? "meses" : "mês"}${v ? ` de ${fmt(porMes)}` : ""}`
+                                : `${n}x ${n > 1 && v ? `de ${fmt(porMes)}` : ""}`}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#5a4a2a", display: "block", marginBottom: "0.4rem" }}>
+                        {parseInt(form.installments) > 1
+                          ? (form.modo === "recorrente" ? "Mês da 1ª cobrança" : "Mês da 1ª fatura")
+                          : "Mês da fatura"}
+                      </label>
+                      <input type="month" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} style={inp()} />
+                    </div>
+                  </div>
+
+                  {/* O total sai do campo, não da cabeça de quem lança. */}
+                  {form.amount && parseInt(form.installments) > 1 && (
+                    <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "#6a30b8" }}>
+                      {form.modo === "recorrente"
+                        ? `${form.installments} cobranças de ${fmt(parseFloat(form.amount.replace(",",".")))} — total ${fmt(parseFloat(form.amount.replace(",",".")) * parseInt(form.installments))}`
+                        : `${form.installments} parcelas somando ${fmt(parseFloat(form.amount.replace(",",".")))}`}
+                    </p>
+                  )}
                 </div>
               )}
               <div>
