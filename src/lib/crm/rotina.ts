@@ -4,7 +4,7 @@ import { recalcularEtiquetas } from "./etiquetas";
 import { filaDoDia } from "./fila";
 import { sendPushToUser } from "@/lib/firebase-admin";
 import { DIA } from "./perfil";
-import { DIAS_PARA_SALE } from "@/lib/saleHelper";
+import { DIAS_PARA_SALE, paradasHaMuitoTempo } from "@/lib/saleHelper";
 import { parseJson } from "@/lib/utils";
 
 /**
@@ -48,12 +48,11 @@ const semanaDe = (d: Date) => {
 /** Peça parada, estoque acabando e a pauta da semana. */
 export async function rotinaSemanal(agora = new Date()) {
   const semana = semanaDe(agora);
-  const limite = new Date(agora.getTime() - DIAS_PARA_SALE * DIA);
   let criadas = 0;
 
   const paradas = await prisma.product.findMany({
-    where: { active: true, stock: { gt: 0 }, onSale: false, createdAt: { lte: limite } },
-    select: { id: true, name: true, createdAt: true, stock: true },
+    where: { active: true, stock: { gt: 0 }, onSale: false, ...paradasHaMuitoTempo(agora) },
+    select: { id: true, name: true, createdAt: true, restockedAt: true, stock: true },
     orderBy: { createdAt: "asc" },
     take: TETO_LISTA,
   });

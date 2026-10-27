@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import SaleManagerClient from "./SaleManagerClient";
-import { DIAS_PARA_SALE } from "@/lib/saleHelper";
+import { DIAS_PARA_SALE, paradasHaMuitoTempo } from "@/lib/saleHelper";
 
 export const dynamic = "force-dynamic";
 
@@ -10,19 +10,16 @@ export default async function SaleManagerPage() {
   const session = await auth();
   if (!session || (session.user as any)?.role !== "admin") redirect("/");
 
-  const today = new Date();
-  const corteSale = new Date(today.getTime() - DIAS_PARA_SALE * 24 * 60 * 60 * 1000);
-
   let upcomingSaleProducts: any[] = [];
   let activeSaleProducts: any[] = [];
 
   try {
     const [upcoming, active] = await Promise.all([
       prisma.product.findMany({
-        where: {
-          active: true,
-          createdAt: { lte: corteSale },
-        },
+        // Mesma regra da loja: conta da reposição quando houve uma, senão
+        // do cadastro. Sem isto o admin listava peça que a vitrine não põe
+        // em SALE, e vice-versa.
+        where: { active: true, ...paradasHaMuitoTempo() },
         include: { category: true },
         orderBy: { createdAt: "desc" },
       }),
@@ -48,8 +45,9 @@ export default async function SaleManagerPage() {
           <a href="/admin" style={{ color: "#b8891a", fontSize: "0.875rem", textDecoration: "none" }}>← Admin</a>
           <h1 style={{ color: "#1a1510", fontSize: "2rem", fontWeight: 900, marginTop: "0.3rem" }}>🔥 Gerenciador de SALE</h1>
           <p style={{ color: "#9a8060", fontSize: "0.875rem", marginTop: "0.5rem" }}>
-            Toda peça com {DIAS_PARA_SALE} dias ou mais de cadastro entra em SALE de 20% na loja automaticamente.
-            Use &quot;Autorizar&quot; para aplicar um desconto diferente de 20% em uma peça.
+            {`Toda peça parada há ${DIAS_PARA_SALE} dias ou mais entra em SALE de 20% na loja automaticamente. ` +
+              `A conta recomeça quando chega reposição: mercadoria nova não é peça encalhada. ` +
+              `Use "Autorizar" para aplicar um desconto diferente de 20% em uma peça.`}
           </p>
         </div>
 

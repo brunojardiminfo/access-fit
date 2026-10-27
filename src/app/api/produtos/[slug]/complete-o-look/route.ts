@@ -49,7 +49,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
       },
       select: {
         id: true, name: true, slug: true, price: true, images: true, colors: true,
-        sizeStock: true, createdAt: true, onSale: true, saleDiscount: true,
+        sizeStock: true, createdAt: true, restockedAt: true,
+        onSale: true, saleDiscount: true, saleBlocked: true,
         category: { select: { name: true } },
       },
       orderBy: { createdAt: "desc" },

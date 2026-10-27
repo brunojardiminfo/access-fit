@@ -124,6 +124,9 @@ export async function POST(req: Request) {
             price: g.preco,
             costPrice: g.custo,
             sizes: JSON.stringify(mergedSizes),
+            // Planilha que soma estoque é reposição como qualquer outra: a
+            // mercadoria é nova, então o relógio do SALE recomeça aqui também.
+            ...(g.estoque > 0 ? { restockedAt: new Date() } : {}),
           },
         });
         results.push({ row: g.rows.join("+"), name: g.nome, status: "atualizado", message: `Estoque somado (+${g.estoque})` });

@@ -12,8 +12,10 @@ type Recomendacao = {
   price: number;
   images: string;
   createdAt: string | Date;
+  restockedAt?: string | Date | null;
   onSale?: boolean;
   saleDiscount?: number | null;
+  saleBlocked?: boolean;
   category: { name: string };
 };
 
@@ -68,8 +70,10 @@ export default function RecommendedProducts({ productSlug }: Props) {
           const saleInfo = getSaleInfo({
             price: produto.price,
             createdAt: createdDate,
+            restockedAt: produto.restockedAt ?? null,
             onSale: produto.onSale,
             saleDiscount: produto.saleDiscount,
+            saleBlocked: produto.saleBlocked,
           });
           const finalPrice = saleInfo ? saleInfo.salePrice : produto.price;
           return (

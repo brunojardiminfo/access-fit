@@ -13,7 +13,7 @@ type Product = {
   compareAt: number | null; images: string; sizes: string;
   colors: string; sizeStock?: string | null; stock: number; createdAt: string | Date;
   restockedAt?: string | Date | null;
-  onSale?: boolean; saleDiscount?: number | null;
+  onSale?: boolean; saleDiscount?: number | null; saleBlocked?: boolean;
   category: { name: string };
 };
 
@@ -36,8 +36,10 @@ export default function ProductCard({ product, indice = 0 }: { product: Product;
   const saleInfo = getSaleInfo({
     price: product.price,
     createdAt: createdDate,
+    restockedAt: product.restockedAt ?? null,
     onSale: product.onSale,
     saleDiscount: product.saleDiscount,
+    saleBlocked: product.saleBlocked,
   });
   const finalPrice = saleInfo ? saleInfo.salePrice : product.price;
   const outOfStock = product.stock === 0;

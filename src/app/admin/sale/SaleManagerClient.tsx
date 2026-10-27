@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DIAS_PARA_SALE } from "@/lib/saleHelper";
+import { DIAS_PARA_SALE, diasParada, foiReposta, paradaDesde } from "@/lib/saleHelper";
 
 interface Product {
   id: string;
@@ -11,6 +11,7 @@ interface Product {
   onSale: boolean;
   saleBlocked?: boolean;
   createdAt: string | Date;
+  restockedAt: string | Date | null;
   stock: number;
   category: { name: string };
   images?: string;
@@ -77,12 +78,9 @@ export default function SaleManagerClient({
     return d.toLocaleDateString("pt-BR");
   };
 
-  // Peca entra em SALE automatico de 20% ao completar DIAS_PARA_SALE dias de cadastro
-  const daysInStock = (createdAt: string | Date) => {
-    const created = typeof createdAt === "string" ? new Date(createdAt) : createdAt;
-    const today = new Date();
-    return Math.floor((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
-  };
+  // A conta é desde que esta mercadoria está parada, não desde o cadastro da
+  // peça: reposição reinicia o relógio.
+  const daysInStock = (p: Product) => diasParada(p);
 
   const calculateSalePrice = (price: number, discount: number) => {
     return (price * (100 - discount) / 100).toLocaleString("pt-BR", {
@@ -202,7 +200,7 @@ export default function SaleManagerClient({
         <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#9a8060" }}>
           <p style={{ fontSize: "1rem", fontWeight: 600 }}>
             {activeTab === "upcoming"
-              ? `Nenhuma peça com ${DIAS_PARA_SALE} dias ou mais de cadastro`
+              ? `Nenhuma peça parada há ${DIAS_PARA_SALE} dias ou mais`
               : "Nenhuma peça com desconto personalizado"}
           </p>
         </div>
@@ -215,7 +213,7 @@ export default function SaleManagerClient({
           const discount = product.saleDiscount || 20;
           const diasEstoque =
             activeTab === "upcoming"
-              ? daysInStock(product.createdAt)
+              ? daysInStock(product)
               : undefined;
           return (
             <div
@@ -284,20 +282,27 @@ export default function SaleManagerClient({
 
               {/* Datas */}
               <div className="sale-data">
+                {/* Quando houve reposição, é a data dela que manda — mostrar
+                    "criado em" aqui faria a conta dos dias parecer errada. */}
                 <p style={{ fontSize: "0.75rem", color: "#9a8060", marginBottom: "0.2rem" }}>
-                  Criado em
+                  {foiReposta(product) ? "Reposto em" : "Criado em"}
                 </p>
                 <p style={{ fontWeight: 600, color: "#1a1510" }}>
-                  {formatDate(product.createdAt)}
+                  {formatDate(paradaDesde(product))}
                 </p>
+                {foiReposta(product) && (
+                  <p style={{ fontSize: "0.7rem", color: "#9a8060" }}>
+                    cadastrada em {formatDate(product.createdAt)}
+                  </p>
+                )}
                 {diasEstoque !== undefined && (
                   <p style={{
                     fontSize: "0.75rem", fontWeight: 700,
                     color: product.saleBlocked ? "#7a6040" : "#e74c3c",
                   }}>
                     {product.saleBlocked
-                      ? `${diasEstoque} dias no estoque · fora do SALE por escolha sua`
-                      : `🔥 ${diasEstoque} dias no estoque · em SALE automático`}
+                      ? `${diasEstoque} dias parada · fora do SALE por escolha sua`
+                      : `🔥 ${diasEstoque} dias parada · em SALE automático`}
                   </p>
                 )}
               </div>
