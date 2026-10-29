@@ -5,15 +5,33 @@ import ProductCard from "@/components/products/ProductCard";
 import { compararPorPapel } from "@/lib/colecoes";
 import type { Metadata } from "next";
 import { PECA_NA_VITRINE, PRODUTO_NA_VITRINE } from "@/lib/vitrine";
+import { consultaDaVitrine } from "@/lib/cacheDaVitrine";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
-  const c = await prisma.collection.findUnique({
+const cabecalhoDaColecao = (slug: string) => consultaDaVitrine(["colecao-meta", slug], () =>
+  prisma.collection.findUnique({
     where: { slug },
     select: { name: true, tagline: true, description: true },
-  });
+  }),
+);
+
+const colecaoCompleta = (slug: string) => consultaDaVitrine(["colecao", slug], () =>
+  prisma.collection.findUnique({
+    where: { slug },
+    select: {
+      name: true, tagline: true, description: true, sazonal: true, active: true,
+      products: {
+        where: PRODUTO_NA_VITRINE,
+        select: { product: { include: { category: true } } },
+      },
+    },
+  }),
+);
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const c = await cabecalhoDaColecao(slug)();
   if (!c) return { title: "Coleção | Access Fit" };
   return {
     title: `${c.name} | Access Fit`,
@@ -24,16 +42,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function ColecaoPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
-  const colecao = await prisma.collection.findUnique({
-    where: { slug },
-    select: {
-      name: true, tagline: true, description: true, sazonal: true, active: true,
-      products: {
-        where: PRODUTO_NA_VITRINE,
-        select: { product: { include: { category: true } } },
-      },
-    },
-  });
+  const colecao = await colecaoCompleta(slug)();
 
   if (!colecao || !colecao.active) notFound();
 

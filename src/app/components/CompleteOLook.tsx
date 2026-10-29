@@ -7,7 +7,8 @@ import { getSaleInfo } from "@/lib/saleHelper";
 
 type Peca = {
   id: string; name: string; slug: string; price: number; images: string;
-  createdAt: string | Date; onSale?: boolean; saleDiscount?: number | null;
+  createdAt: string | Date; restockedAt?: string | Date | null;
+  onSale?: boolean; saleDiscount?: number | null; saleBlocked?: boolean;
   category: { name: string };
 };
 
@@ -42,7 +43,10 @@ export default function CompleteOLook({ productSlug }: { productSlug: string }) 
         {pecas.map(p => {
           const imgs = parseJson<string[]>(p.images, []);
           const criado = typeof p.createdAt === "string" ? new Date(p.createdAt) : p.createdAt;
-          const sale = getSaleInfo({ price: p.price, createdAt: criado, onSale: p.onSale, saleDiscount: p.saleDiscount });
+          const sale = getSaleInfo({
+            price: p.price, createdAt: criado, restockedAt: p.restockedAt ?? null,
+            onSale: p.onSale, saleDiscount: p.saleDiscount, saleBlocked: p.saleBlocked,
+          });
           const preco = sale ? sale.salePrice : p.price;
           return (
             <Link key={p.id} href={`/produtos/${p.slug}`}

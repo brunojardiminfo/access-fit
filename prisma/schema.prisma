@@ -146,6 +146,9 @@ model Product {
   featuredHero             Boolean   @default(false)
   featured                 Boolean   @default(false)
   saleDiscount             Float?
+  /// Tira a peça do SALE mesmo que ela já tenha os dias de cadastro.
+  /// Sem isto, peça velha entra em SALE sozinha e não há como tirar.
+  saleBlocked              Boolean  @default(false)
   onSale                   Boolean   @default(false)
   isConjunto               Boolean   @default(false)
   sellComponentsSeparately Boolean   @default(false)

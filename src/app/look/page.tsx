@@ -10,7 +10,8 @@ import { useCart } from "@/store/cart";
 
 type Peca = {
   id: string; slug: string; name: string; price: number; images: string;
-  createdAt: string; onSale?: boolean; saleDiscount?: number | null;
+  createdAt: string; restockedAt?: string | null;
+  onSale?: boolean; saleDiscount?: number | null; saleBlocked?: boolean;
   category: { name: string };
   cor: string | null; tamanho: string | null; quantidade: number; disponivel: boolean;
 };
@@ -43,7 +44,8 @@ function LookInterno() {
   const precoFinal = (peca: Peca) => {
     const sale = getSaleInfo({
       price: peca.price, createdAt: new Date(peca.createdAt),
-      onSale: peca.onSale, saleDiscount: peca.saleDiscount,
+      restockedAt: peca.restockedAt ?? null,
+      onSale: peca.onSale, saleDiscount: peca.saleDiscount, saleBlocked: peca.saleBlocked,
     });
     return { preco: sale ? sale.salePrice : peca.price, sale };
   };

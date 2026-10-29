@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { parseJson } from "@/lib/utils";
 import { parseEstoque, coresDisponiveis, SEM_COR } from "@/lib/variacoes";
 import { PECA_NA_VITRINE } from "@/lib/vitrine";
+import { consultaDaVitrine } from "@/lib/cacheDaVitrine";
 
 const QUANTAS = 3;
 
@@ -22,15 +23,12 @@ function normaliza(cor: string): string {
  * Sem peça da mesma cor, o bloco não aparece. Preferimos não mostrar nada a
  * mostrar uma combinação que não combina.
  */
-export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-
-  try {
+const lookDaPeca = (slug: string) => consultaDaVitrine(["complete-o-look", slug], async () => {
     const atual = await prisma.product.findUnique({
       where: { slug },
       select: { id: true, categoryId: true, colors: true, sizeStock: true },
     });
-    if (!atual) return NextResponse.json({ error: "Produto não encontrado" }, { status: 404 });
+    if (!atual) return null;
 
     // As cores desta peça: as que têm estoque, ou as cadastradas quando ela
     // ainda não tem controle por cor
@@ -49,7 +47,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
       },
       select: {
         id: true, name: true, slug: true, price: true, images: true, colors: true,
-        sizeStock: true, createdAt: true, onSale: true, saleDiscount: true,
+        sizeStock: true, createdAt: true, restockedAt: true,
+        onSale: true, saleDiscount: true, saleBlocked: true,
         category: { select: { name: true } },
       },
       orderBy: { createdAt: "desc" },
@@ -70,7 +69,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
       if (!porCategoria.has(p.category.name)) porCategoria.set(p.category.name, p);
     }
 
-    return NextResponse.json({ pecas: [...porCategoria.values()].slice(0, QUANTAS) });
+    return { pecas: [...porCategoria.values()].slice(0, QUANTAS) };
+});
+
+export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  try {
+    const resultado = await lookDaPeca(slug)();
+    if (!resultado) return NextResponse.json({ error: "Produto não encontrado" }, { status: 404 });
+    return NextResponse.json(resultado);
   } catch (error) {
     console.error("Erro no complete o look:", error);
     return NextResponse.json({ pecas: [] });

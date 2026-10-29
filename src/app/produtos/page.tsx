@@ -3,8 +3,47 @@ import ProductCard from "@/components/products/ProductCard";
 import Link from "next/link";
 import { saleWhere } from "@/lib/saleHelper";
 import { PECA_NA_VITRINE } from "@/lib/vitrine";
+import { consultaDaVitrine } from "@/lib/cacheDaVitrine";
 
 export const dynamic = "force-dynamic";
+
+type Filtros = {
+  categoria?: string; busca?: string; tamanho?: string; ordem?: string; soSale: boolean;
+};
+
+/**
+ * A lista filtrada. A chave carrega todos os filtros — chave igual para
+ * filtros diferentes serviria a lista errada para a cliente.
+ *
+ * Busca é texto livre, então cada termo novo vira uma entrada. Não é problema:
+ * a entrada só nasce quando alguém de fato busca aquilo, e termo repetido
+ * passa a não encostar no banco.
+ */
+function listaDaColecao(f: Filtros) {
+  const { categoria, busca, tamanho, ordem, soSale } = f;
+  return consultaDaVitrine(
+    ["produtos", categoria ?? "", busca ?? "", tamanho ?? "", ordem ?? "", soSale ? "sale" : ""],
+    () => prisma.product.findMany({
+      where: {
+        ...PECA_NA_VITRINE,
+        ...(categoria ? { category: { slug: categoria } } : {}),
+        ...(busca ? { name: { contains: busca, mode: "insensitive" as const } } : {}),
+        ...(tamanho ? { sizes: { contains: tamanho } } : {}),
+        ...(soSale ? saleWhere() : {}),
+      },
+      include: { category: true },
+      orderBy: ordem === "preco_asc" ? { price: "asc" }
+        : ordem === "preco_desc" ? { price: "desc" }
+        : ordem === "nome" ? { name: "asc" }
+        : { createdAt: "desc" },
+    }),
+  );
+}
+
+/** As categorias mudam de ano em ano; valem para a loja inteira. */
+const listaDeCategorias = consultaDaVitrine(["categorias"], () =>
+  prisma.category.findMany({ orderBy: { name: "asc" } }),
+);
 
 export default async function ProdutosPage({
   searchParams,
@@ -15,22 +54,10 @@ export default async function ProdutosPage({
   const { categoria, busca, tamanho, ordem, sale } = params;
   const soSale = sale === "1";
 
-  const categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
-
-  const products = await prisma.product.findMany({
-    where: {
-      ...PECA_NA_VITRINE,
-      ...(categoria ? { category: { slug: categoria } } : {}),
-      ...(busca ? { name: { contains: busca, mode: "insensitive" } } : {}),
-      ...(tamanho ? { sizes: { contains: tamanho } } : {}),
-      ...(soSale ? saleWhere() : {}),
-    },
-    include: { category: true },
-    orderBy: ordem === "preco_asc" ? { price: "asc" }
-      : ordem === "preco_desc" ? { price: "desc" }
-      : ordem === "nome" ? { name: "asc" }
-      : { createdAt: "desc" },
-  });
+  const [categories, products] = await Promise.all([
+    listaDeCategorias(),
+    listaDaColecao({ categoria, busca, tamanho, ordem, soSale })(),
+  ]);
 
   const currentCategory = categories.find((c) => c.slug === categoria);
 

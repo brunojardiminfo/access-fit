@@ -22,7 +22,8 @@ type Product = {
   price: number; compareAt: number | null; images: string;
   sizes: string; sizeRange: string | null; colors: string; stock: number; sku: string | null; sizeStock: string;
   isConjunto: boolean; sellComponentsSeparately: boolean; conjuntoItems: ConjuntoItem[];
-  createdAt: string | Date; onSale?: boolean; saleDiscount?: number | null;
+  createdAt: string | Date; restockedAt?: string | Date | null;
+  onSale?: boolean; saleDiscount?: number | null; saleBlocked?: boolean;
   category: { name: string; slug: string };
 };
 
@@ -116,8 +117,10 @@ export default function ProductPageClient() {
   const saleInfo = getSaleInfo({
     price: product.price,
     createdAt: createdDate,
+    restockedAt: product.restockedAt ?? null,
     onSale: product.onSale,
     saleDiscount: product.saleDiscount,
+    saleBlocked: product.saleBlocked,
   });
   const finalPrice = saleInfo ? saleInfo.salePrice : product.price;
   // Componentes do conjunto seguem o mesmo percentual de desconto da peca
