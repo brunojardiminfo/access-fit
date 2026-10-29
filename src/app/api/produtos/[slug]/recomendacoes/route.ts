@@ -1,23 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { PECA_NA_VITRINE } from "@/lib/vitrine";
+import { consultaDaVitrine } from "@/lib/cacheDaVitrine";
 
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ slug: string }> }
-) {
-  const { slug } = await params;
-
-  try {
+/**
+ * As recomendações de uma peça: quatro ou cinco consultas, disparadas em toda
+ * abertura de página de produto. Guardadas juntas, como uma coisa só.
+ */
+const recomendacoesDaPeca = (slug: string) => consultaDaVitrine(["recomendacoes", slug], async () => {
     // Buscar o produto atual
     const produto = await prisma.product.findUnique({
       where: { slug },
       select: { id: true, categoryId: true, category: { select: { slug: true } } },
     });
 
-    if (!produto) {
-      return NextResponse.json({ error: "Produto não encontrado" }, { status: 404 });
-    }
+    if (!produto) return null;
 
     // 1. Buscar produtos mais vendidos juntos (mesmos pedidos)
     const pedidosComEsteItem = await prisma.orderItem.findMany({
@@ -79,11 +76,24 @@ export async function GET(
       take: 3,
     });
 
-    return NextResponse.json({
+    return {
       recomendacoes: produtosDetalhes,
       tipo: produtosJuntosIds.length > 0 ? "vendidos_juntos" : "mesma_categoria",
       categorySlug: produto.category?.slug,
-    });
+    };
+});
+
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  const { slug } = await params;
+  try {
+    const resultado = await recomendacoesDaPeca(slug)();
+    if (!resultado) {
+      return NextResponse.json({ error: "Produto não encontrado" }, { status: 404 });
+    }
+    return NextResponse.json(resultado);
   } catch (error) {
     console.error(error);
     return NextResponse.json(

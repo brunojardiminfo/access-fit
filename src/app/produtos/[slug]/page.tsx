@@ -2,15 +2,21 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { parseJson } from "@/lib/utils";
 import ProductPageClient from "./ProductPageClient";
+import { consultaDaVitrine } from "@/lib/cacheDaVitrine";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const product = await prisma.product.findUnique({
+/** Só o que entra no título e no card de compartilhamento. */
+const dadosDoCabecalho = (slug: string) => consultaDaVitrine(["peca-meta", slug], () =>
+  prisma.product.findUnique({
     where: { slug },
     select: { name: true, description: true, price: true, images: true, category: { select: { name: true } } },
-  });
+  }),
+);
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await dadosDoCabecalho(slug)();
 
   if (!product) return { title: "Produto não encontrado — Access Fit" };
 

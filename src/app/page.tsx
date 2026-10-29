@@ -3,10 +3,20 @@ import { avisoDoLancamentoAtivo } from "@/lib/lancamento";
 import HomeClient from "./HomeClient";
 import { saleWhere } from "@/lib/saleHelper";
 import { PECA_NA_VITRINE } from "@/lib/vitrine";
+import { consultaDaVitrine } from "@/lib/cacheDaVitrine";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+/**
+ * As cinco consultas da home, guardadas juntas: é uma visita só, e separá-las
+ * faria o banco acordar cinco vezes em vez de uma.
+ *
+ * `saleWhere()` é chamado aqui dentro de propósito. Ele usa a data de hoje
+ * para saber quem já tem os 90 dias; calculado fora, a data congelaria no
+ * fechamento do cache. Dentro, ela é recalculada a cada remontagem — e, numa
+ * regra de 90 dias, uma hora de atraso não muda nada.
+ */
+const vitrineDaHome = consultaDaVitrine(["home"], async () => {
   const [heroProducts, featuredProducts, newArrivals, saleProducts, categories] = await Promise.all([
     prisma.product.findMany({
       where: { featuredHero: true, ...PECA_NA_VITRINE },
@@ -32,6 +42,12 @@ export default async function HomePage() {
     }),
     prisma.category.findMany({ orderBy: { name: "asc" } }),
   ]);
+  return { heroProducts, featuredProducts, newArrivals, saleProducts, categories };
+});
+
+export default async function HomePage() {
+  const { heroProducts, featuredProducts, newArrivals, saleProducts, categories } =
+    await vitrineDaHome();
 
   // O carrossel do topo quer ao menos 4 peças: completa com as novidades
   const displayHeroProducts = heroProducts.length >= 4

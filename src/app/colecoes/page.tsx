@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { PECA_NA_VITRINE, PRODUTO_NA_VITRINE } from "@/lib/vitrine";
+import { consultaDaVitrine } from "@/lib/cacheDaVitrine";
 
 export const metadata: Metadata = {
   title: "Coleções | Access Fit",
@@ -10,17 +11,21 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function ColecoesPage() {
-  // Coleção vazia não aparece: durante a curadoria elas existem sem peça
-  // dentro, e mandar a cliente para uma página vazia é pior que não ter link.
-  const colecoes = await prisma.collection.findMany({
+// Coleção vazia não aparece: durante a curadoria elas existem sem peça
+// dentro, e mandar a cliente para uma página vazia é pior que não ter link.
+const listaDeColecoes = consultaDaVitrine(["colecoes"], () =>
+  prisma.collection.findMany({
     where: { active: true, products: { some: PRODUTO_NA_VITRINE } },
     select: {
       name: true, slug: true, tagline: true, description: true, sazonal: true,
       _count: { select: { products: true } },
     },
     orderBy: [{ sazonal: "asc" }, { ordem: "asc" }, { name: "asc" }],
-  });
+  }),
+);
+
+export default async function ColecoesPage() {
+  const colecoes = await listaDeColecoes();
 
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "3rem 1.5rem 4rem" }}>
