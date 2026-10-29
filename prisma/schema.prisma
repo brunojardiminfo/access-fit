@@ -581,7 +581,7 @@ model CustomerCredit {
   userId         String
   /// Positivo concede, negativo consome. O saldo nunca pode ficar negativo.
   amount         Float
-  /// peca-recebida | devolucao | cortesia | pagamento-maior | acerto
+  /// peca-recebida | devolucao | cortesia | indicacao | pagamento-maior | acerto
   /// uso | abatimento-caderno | devolvido-em-dinheiro
   kind           String
   note           String?

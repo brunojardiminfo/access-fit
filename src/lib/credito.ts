@@ -35,6 +35,7 @@ export const MOTIVOS_DE_ENTRADA = [
   { kind: "peca-recebida", rotulo: "Peça recebida da cliente" },
   { kind: "devolucao", rotulo: "Devolução de compra" },
   { kind: "cortesia", rotulo: "Cortesia" },
+  { kind: "indicacao", rotulo: "Voucher por indicação" },
   { kind: "pagamento-maior", rotulo: "Pagou a mais" },
   { kind: "acerto", rotulo: "Acerto manual" },
 ] as const;

@@ -9,6 +9,7 @@ import { ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from "@/lib/orderStatus";
 import Historico from "./Historico";
 import Etiquetas from "./Etiquetas";
 import Credito from "./Credito";
+import VoucherIndicacao from "./VoucherIndicacao";
 
 export const dynamic = "force-dynamic";
 
@@ -276,6 +277,13 @@ export default async function ClientePerfilPage({ params }: { params: Promise<{ 
               note: l.note, authorName: l.authorName,
               createdAt: l.createdAt.toISOString(),
             }))}
+          />
+
+          <VoucherIndicacao
+            userId={cliente.id}
+            nome={cliente.name}
+            telefone={cliente.phone}
+            indicadas={indicadas.map(r => ({ id: r.id, nome: r.referred.name || "Cliente" }))}
           />
 
           <Bloco titulo="O que ela compra">
