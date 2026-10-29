@@ -1,5 +1,7 @@
 "use client";
 import { useEffect } from "react";
+import CondicoesHomeTryOn from "@/components/CondicoesHomeTryOn";
+import { ehHomeTryOn } from "@/lib/homeTryOn";
 
 const METHOD_LABEL: Record<string, string> = {
   pix: "Pix", cartao: "Cartão de Crédito", dinheiro: "Dinheiro", caderno: "Caderno / Fiado", link: "Link de Pagamento",
@@ -251,6 +253,9 @@ export default function NotaPedidoClient({ order }: { order: any }) {
             )}
           </div>
         </div>
+
+        {/* Condições do Home Try-On — só quando o pedido é try-on */}
+        {ehHomeTryOn(order.status) && <CondicoesHomeTryOn variante="papel" />}
 
         {/* Observações */}
         {order.notes && (

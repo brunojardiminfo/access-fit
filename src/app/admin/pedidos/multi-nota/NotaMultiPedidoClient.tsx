@@ -1,4 +1,6 @@
 "use client";
+import CondicoesHomeTryOn from "@/components/CondicoesHomeTryOn";
+import { ehHomeTryOn } from "@/lib/homeTryOn";
 import { useEffect } from "react";
 
 const METHOD_LABEL: Record<string, string> = {
@@ -188,6 +190,10 @@ export default function NotaMultiPedidoClient({ orders }: { orders: any[] }) {
             </p>
           </div>
         </div>
+
+        {/* Basta um pedido Home Try-On na leva para as condições valerem:
+            as peças saem para casa do mesmo jeito. */}
+        {orders.some(o => ehHomeTryOn(o.status)) && <CondicoesHomeTryOn variante="papel" />}
 
         {/* Rodapé */}
         <div style={{ marginTop: "2.5rem", paddingTop: "1.25rem", borderTop: "2px solid #f0e8d0", textAlign: "center" }}>
