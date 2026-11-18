@@ -328,3 +328,46 @@ button, a[role="button"] { transition: transform 0.08s ease-out, opacity 0.15s, 
   .linha-sale .sale-acoes    { grid-column: 1 / -1; }
   .linha-sale .sale-acoes > button { white-space: normal; }
 }
+
+/* A linha da liquidação. Mesma lição da tela do SALE: colunas fixas não
+   cabem num celular de 390px — o nome desce uma palavra por linha e os
+   números saem pela direita. No computador é tabela; no celular, cartão. */
+.linha-liquida {
+  display: grid;
+  grid-template-columns: auto 52px minmax(0, 1.6fr) auto auto auto;
+  gap: 0.9rem;
+  align-items: center;
+}
+.linha-liquida > * { min-width: 0; }
+.foto-liquida {
+  width: 52px; height: 66px; border-radius: 0.45rem; overflow: hidden;
+  background-color: #f4efe4; border: 1px solid rgba(140,100,20,0.14);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+@media (max-width: 860px) {
+  .linha-liquida {
+    grid-template-columns: auto 52px minmax(0, 1fr);
+    gap: 0.6rem 0.75rem;
+    align-items: start;
+  }
+  /* Os três números dividem a largura toda, embaixo da foto e do nome. */
+  .linha-liquida > :nth-child(n+4) {
+    grid-column: span 1;
+  }
+  .linha-liquida > :nth-child(4) { grid-column: 1 / 3; }
+  .linha-liquida > :nth-child(5),
+  .linha-liquida > :nth-child(6) { grid-column: span 1; }
+}
+
+/* A barra de ação da liquidação precisa ficar ACIMA do menu inferior do
+   admin (z-index 100), e no celular não pode cobri-lo: sem isto o clique em
+   "Aplicar" não chega ao botão — o menu intercepta. */
+.barra-liquida { position: fixed; left: 0; right: 0; bottom: 0; z-index: 110; }
+@media (max-width: 640px) {
+  /* Acima do menu inferior, e enxuta: no celular esta barra fica por cima da
+     lista, então cada linha a mais é uma peça a menos visível. */
+  .barra-liquida { bottom: 68px; padding: 0.6rem 0.9rem !important; }
+  .barra-liquida > div { gap: 0.5rem !important; }
+  .barra-liquida .aviso-liquida { min-width: 0 !important; font-size: 0.7rem !important; }
+}
