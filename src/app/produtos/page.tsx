@@ -4,6 +4,7 @@ import Link from "next/link";
 import { saleWhere } from "@/lib/saleHelper";
 import { PECA_NA_VITRINE } from "@/lib/vitrine";
 import { consultaDaVitrine } from "@/lib/cacheDaVitrine";
+import { PECA_PUBLICA } from "@/lib/pecaPublica";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,7 @@ function listaDaColecao(f: Filtros) {
         ...(tamanho ? { sizes: { contains: tamanho } } : {}),
         ...(soSale ? saleWhere() : {}),
       },
-      include: { category: true },
+      select: PECA_PUBLICA,
       orderBy: ordem === "preco_asc" ? { price: "asc" }
         : ordem === "preco_desc" ? { price: "desc" }
         : ordem === "nome" ? { name: "asc" }

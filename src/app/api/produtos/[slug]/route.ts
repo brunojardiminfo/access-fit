@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { consultaDaVitrine } from "@/lib/cacheDaVitrine";
+import { PECA_PUBLICA_COM_CONJUNTO } from "@/lib/pecaPublica";
 
 /**
  * A peça inteira — é esta consulta que monta a página do produto, já que a
@@ -10,10 +11,7 @@ import { consultaDaVitrine } from "@/lib/cacheDaVitrine";
 const pecaPeloApelido = (slug: string) => consultaDaVitrine(["peca", slug], () =>
   prisma.product.findUnique({
     where: { slug },
-    include: {
-      category: true,
-      conjuntoItems: true,
-    },
+    select: PECA_PUBLICA_COM_CONJUNTO,
   }),
 );
 

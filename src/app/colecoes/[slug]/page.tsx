@@ -6,6 +6,7 @@ import { compararPorPapel } from "@/lib/colecoes";
 import type { Metadata } from "next";
 import { PECA_NA_VITRINE, PRODUTO_NA_VITRINE } from "@/lib/vitrine";
 import { consultaDaVitrine } from "@/lib/cacheDaVitrine";
+import { PECA_PUBLICA } from "@/lib/pecaPublica";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ const colecaoCompleta = (slug: string) => consultaDaVitrine(["colecao", slug], (
       name: true, tagline: true, description: true, sazonal: true, active: true,
       products: {
         where: PRODUTO_NA_VITRINE,
-        select: { product: { include: { category: true } } },
+        select: { product: { select: PECA_PUBLICA } },
       },
     },
   }),
