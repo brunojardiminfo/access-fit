@@ -15,6 +15,9 @@ const ALL_LINKS = [
   // Fica ao lado de Produtos porque é onde se renomeia a categoria de uma peça.
   { href: "/admin/categorias",  label: "Categorias",  emoji: "🗂️" },
   { href: "/admin/colecoes",    label: "Coleções",    emoji: "✨" },
+  // Ao lado de Coleções porque é a mesma decisão de curadoria, vista pelo
+  // outro lado: o que empurrar para frente e o que precisa sair.
+  { href: "/admin/liquida",     label: "Liquidação",  emoji: "💸" },
   { href: "/admin/caderno",     label: "Caderno",     emoji: "📒" },
   { href: "/admin/fila",        label: "Fila de hoje", emoji: "🎯" },
   { href: "/admin/clientes",    label: "Clientes",    emoji: "👥" },
@@ -114,7 +117,10 @@ export default function AdminNav({ adminRole }: { adminRole?: string | null }) {
         position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
         backgroundColor: "#FFFDF7",
         borderTop: "1px solid rgba(184,137,26,0.2)",
-        display: "flex",
+        // `display` NÃO fica aqui: a classe .admin-bottomnav esconde esta
+        // barra acima de 640px, e estilo escrito no elemento ganha da classe.
+        // Com ele aqui, o menu de celular aparecia também no computador,
+        // duplicando a navegação de cima e cobrindo o rodapé das telas.
         boxShadow: "0 -2px 16px rgba(184,137,26,0.1)",
         paddingBottom: "env(safe-area-inset-bottom)",
         // Os itens somados passam da largura do celular (592px numa tela de

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { lerLook } from "@/lib/look";
 import { parseEstoque, quantidadeDe, totalDaCor, temCorNoEstoque, SEM_COR } from "@/lib/variacoes";
 import { PECA_NA_VITRINE } from "@/lib/vitrine";
+import { PECA_PUBLICA } from "@/lib/pecaPublica";
 
 /**
  * Resolve as peças de um link de look. Público: o link é feito para circular.
@@ -18,7 +19,7 @@ export async function GET(req: Request) {
 
   const produtos = await prisma.product.findMany({
     where: { slug: { in: pedidos.map(i => i.slug) }, ...PECA_NA_VITRINE },
-    include: { category: { select: { name: true } } },
+    select: PECA_PUBLICA,
   });
   const porSlug = new Map(produtos.map(p => [p.slug, p]));
 

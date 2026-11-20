@@ -4,6 +4,7 @@ import HomeClient from "./HomeClient";
 import { saleWhere } from "@/lib/saleHelper";
 import { PECA_NA_VITRINE } from "@/lib/vitrine";
 import { consultaDaVitrine } from "@/lib/cacheDaVitrine";
+import { PECA_PUBLICA } from "@/lib/pecaPublica";
 
 export const dynamic = "force-dynamic";
 
@@ -20,23 +21,23 @@ const vitrineDaHome = consultaDaVitrine(["home"], async () => {
   const [heroProducts, featuredProducts, newArrivals, saleProducts, categories] = await Promise.all([
     prisma.product.findMany({
       where: { featuredHero: true, ...PECA_NA_VITRINE },
-      include: { category: true },
+      select: PECA_PUBLICA,
       take: 6,
     }),
     prisma.product.findMany({
       where: { featured: true, ...PECA_NA_VITRINE },
-      include: { category: true },
+      select: PECA_PUBLICA,
       take: 4,
     }),
     prisma.product.findMany({
       where: PECA_NA_VITRINE,
-      include: { category: true },
+      select: PECA_PUBLICA,
       orderBy: { createdAt: "desc" },
       take: 20,
     }),
     prisma.product.findMany({
       where: { ...PECA_NA_VITRINE, ...saleWhere() },
-      include: { category: true },
+      select: PECA_PUBLICA,
       orderBy: { createdAt: "asc" },
       take: 8,
     }),
