@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
+import FaixaBlackNovember from "@/components/layout/FaixaBlackNovember";
+import { blackNovemberAtiva, chamadaDePrazo } from "@/lib/blackNovember";
+import { maiorDescontoDoSale } from "@/lib/descontoDoSale";
 import Footer from "@/components/layout/Footer";
 import CartDrawer from "@/components/cart/CartDrawer";
 import RegistroDeSacola from "@/components/cart/RegistroDeSacola";
@@ -51,11 +54,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // da finalização do pedido
   const isCheckout = pathname.startsWith("/checkout");
 
+  // A faixa da Black November. A consulta só acontece dentro da janela da
+  // promoção e fora do admin — passada a data, nem o banco é tocado.
+  const naBlack = !isAdmin && blackNovemberAtiva();
+  const descontoDoSale = naBlack ? await maiorDescontoDoSale() : 0;
+
   return (
     <html lang="pt-BR">
       <body className={`${inter.className}${isAdmin ? " area-admin" : ""}`} style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         <SessionProvider>
           <NotificationSubscriber />
+          {/* Antes do menu: é a primeira coisa que a cliente vê ao abrir a
+              loja, em qualquer página. Só aparece se houver desconto de fato
+              no SALE — anunciar "até 0%" seria pior que não anunciar. */}
+          {naBlack && descontoDoSale > 0 && (
+            <FaixaBlackNovember desconto={descontoDoSale} prazo={chamadaDePrazo()} />
+          )}
           {!isAdmin && <Header />}
           {!isAdmin && !isCheckout && <CampanhaBar />}
           <main style={{ flex: 1 }}>{children}</main>
