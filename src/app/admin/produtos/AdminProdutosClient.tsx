@@ -10,11 +10,28 @@ type Product = {
   category: Category;
 };
 
+/**
+ * Peça sem foto nenhuma.
+ *
+ * Conta só as fotos que valem: um campo com `[""]` dentro — sobra de um
+ * cadastro em que a foto foi apagada e o lugar dela ficou — tem comprimento 1
+ * e passaria por "tem foto", justamente nas peças que mais precisam aparecer
+ * nesta lista.
+ */
+function semFoto(p: Product): boolean {
+  return parseJson<string[]>(p.images, []).filter(u => (u || "").trim()).length === 0;
+}
+
 export default function AdminProdutosClient({ products, categories }: { products: Product[]; categories: Category[] }) {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("ativo");
   const [sizeFilter, setSizeFilter] = useState("");
+  // Separado do filtro de status de propósito: "sem foto" é outra pergunta.
+  // Dentro do select, procurar as ativas sem foto — que é a pergunta de
+  // verdade, porque peça sem foto na vitrine é a que perde venda — obrigaria
+  // a escolher entre um filtro e o outro.
+  const [soSemFoto, setSoSemFoto] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showBulkEdit, setShowBulkEdit] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -35,14 +52,36 @@ export default function AdminProdutosClient({ products, categories }: { products
       if (statusFilter === "estoque_baixo" && (p.stock === 0 || p.stock > 5)) return false;
       if (sizeFilter && !parseJson<string[]>(p.sizes, []).includes(sizeFilter)) return false;
       if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+      if (soSemFoto && !semFoto(p)) return false;
       return true;
     });
+  }, [products, catFilter, statusFilter, sizeFilter, search, soSemFoto]);
+
+  /**
+   * Quantas peças sem foto existem DENTRO dos outros filtros.
+   *
+   * Contar sobre o catálogo inteiro daria um número que o botão não cumpre: a
+   * tela abre filtrada em "Ativos", e o botão prometeria 13 para mostrar 9.
+   * Assim o número é sempre o que o clique entrega.
+   */
+  const quantasSemFoto = useMemo(() => {
+    return products.filter(p => {
+      if (catFilter && p.category.id !== catFilter) return false;
+      if (statusFilter === "ativo" && !p.active) return false;
+      if (statusFilter === "inativo" && p.active) return false;
+      if (statusFilter === "sem_estoque" && p.stock > 0) return false;
+      if (statusFilter === "estoque_baixo" && (p.stock === 0 || p.stock > 5)) return false;
+      if (sizeFilter && !parseJson<string[]>(p.sizes, []).includes(sizeFilter)) return false;
+      if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+      return semFoto(p);
+    }).length;
   }, [products, catFilter, statusFilter, sizeFilter, search]);
 
   const totalValor = filtered.reduce((a, p) => a + p.price * p.stock, 0);
   const totalUnidades = filtered.reduce((a, p) => a + p.stock, 0);
   const semEstoque = filtered.filter(p => p.stock === 0).length;
   const estoqueBaixo = filtered.filter(p => p.stock > 0 && p.stock <= 5).length;
+  const semFotoNaLista = filtered.filter(semFoto).length;
 
   const inp = { padding: "0.55rem 0.875rem", border: "1px solid rgba(140,100,20,0.25)", borderRadius: "0.625rem", fontSize: "0.8rem", backgroundColor: "#FAF6EE", outline: "none" };
 
@@ -73,6 +112,7 @@ export default function AdminProdutosClient({ products, categories }: { products
           { emoji: "🔢", label: "Unidades", value: totalUnidades },
           { emoji: "⚠️", label: "Estoque Baixo", value: estoqueBaixo, warn: estoqueBaixo > 0 },
           { emoji: "❌", label: "Sem Estoque", value: semEstoque, warn: semEstoque > 0 },
+          { emoji: "📷", label: "Sem Foto", value: semFotoNaLista, warn: semFotoNaLista > 0 },
         ].map(s => (
           <div key={s.label} style={{ backgroundColor: "#fff", border: `1px solid ${(s as any).warn ? "rgba(192,64,64,0.25)" : "rgba(140,100,20,0.1)"}`, borderRadius: "0.875rem", padding: "1rem 1.25rem", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
             <div style={{ fontSize: "1.25rem", marginBottom: "0.4rem" }}>{s.emoji}</div>
@@ -107,14 +147,21 @@ export default function AdminProdutosClient({ products, categories }: { products
             🚫 Ocultos do site ({products.filter(p => !p.active).length})
           </button>
         )}
+        {quantasSemFoto > 0 && (
+          <button onClick={() => setSoSemFoto(!soSemFoto)}
+            title="Peças sem nenhuma foto cadastrada. Na vitrine elas aparecem como um quadrado vazio."
+            style={{ fontSize: "0.75rem", fontWeight: 700, padding: "0.55rem 0.875rem", borderRadius: "0.625rem", border: "1px solid rgba(140,100,20,0.2)", cursor: "pointer", whiteSpace: "nowrap", backgroundColor: soSemFoto ? "#c04040" : "#FAF6EE", color: soSemFoto ? "#fff" : "#9a8060" }}>
+            📷 Sem foto ({quantasSemFoto})
+          </button>
+        )}
         {allSizes.length > 0 && (
           <select value={sizeFilter} onChange={e => setSizeFilter(e.target.value)} style={{ ...inp, minWidth: 120 }}>
             <option value="">Todos tamanhos</option>
             {allSizes.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         )}
-        {(search || catFilter || statusFilter !== "ativo" || sizeFilter) && (
-          <button onClick={() => { setSearch(""); setCatFilter(""); setStatusFilter("ativo"); setSizeFilter(""); }}
+        {(search || catFilter || statusFilter !== "ativo" || sizeFilter || soSemFoto) && (
+          <button onClick={() => { setSearch(""); setCatFilter(""); setStatusFilter("ativo"); setSizeFilter(""); setSoSemFoto(false); }}
             style={{ backgroundColor: "#FAF6EE", border: "1px solid rgba(140,100,20,0.2)", color: "#9a8060", fontWeight: 700, fontSize: "0.75rem", padding: "0.55rem 0.875rem", borderRadius: "0.625rem", cursor: "pointer", whiteSpace: "nowrap" }}>
             ✕ Limpar
           </button>
@@ -175,8 +222,12 @@ export default function AdminProdutosClient({ products, categories }: { products
                     </td>
                     <td style={{ padding: "0.875rem 1rem" }}>
                       <a href={`/admin/produtos/${p.id}`} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                        <div style={{ width: 40, height: 40, backgroundColor: "#F0E8D0", borderRadius: "0.5rem", overflow: "hidden", flexShrink: 0 }}>
-                          {images[0] && <img src={images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                        {/* Sem foto o quadrado ficava vazio e parecia imagem
+                            que não carregou. Marcado, a falta se lê de relance
+                            ao rolar a lista — que é como ela é usada. */}
+                        <div title={semFoto(p) ? "Sem foto cadastrada" : undefined}
+                          style={{ width: 40, height: 40, backgroundColor: semFoto(p) ? "#fee8e8" : "#F0E8D0", border: semFoto(p) ? "1px dashed rgba(192,64,64,0.55)" : "none", borderRadius: "0.5rem", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem" }}>
+                          {semFoto(p) ? "📷" : <img src={images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                         </div>
                         <span style={{ color: "#b8891a", fontWeight: 600, fontSize: "0.875rem", textDecoration: "underline", textUnderlineOffset: "2px" }}>{p.name}</span>
                       </a>
