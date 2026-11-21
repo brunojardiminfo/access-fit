@@ -21,6 +21,7 @@ const ALL_LINKS = [
   { href: "/admin/caderno",     label: "Caderno",     emoji: "📒" },
   { href: "/admin/fila",        label: "Fila de hoje", emoji: "🎯" },
   { href: "/admin/clientes",    label: "Clientes",    emoji: "👥" },
+  { href: "/admin/parceiras",   label: "Parceiras",   emoji: "🤝" },
   { href: "/admin/segmentos",   label: "Etiquetas",   emoji: "🏷️" },
   { href: "/admin/followup",    label: "Follow-up",   emoji: "📩" },
   { href: "/admin/financeiro",  label: "Financeiro",  emoji: "💳" },

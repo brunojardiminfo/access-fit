@@ -34,6 +34,7 @@ model User {
   crmTags           CustomerTagLink[]
   crmTasks          CrmTask[]
   credits           CustomerCredit[]
+  parceria          Parceira[]
 }
 
 model Account {
@@ -314,6 +315,12 @@ model Order {
   discount          Float     @default(0)
   notes             String?
   couponCode        String?
+  /// Quem trouxe esta venda. Separado de `couponCode` de propósito: o cupom é
+  /// o DESCONTO da cliente, isto é o CRACHÁ de quem vendeu. Enquanto eram o
+  /// mesmo campo, toda venda em que o cupom não podia sair — peça em SALE não
+  /// acumula cupom — sumia do relatório da parceira, que é justo quando ela
+  /// mais vende.
+  parceiraId        String?
   deliveredAt       DateTime?
   followUpSentAt    DateTime?
   thanks24hSentAt   DateTime?
@@ -323,12 +330,46 @@ model Order {
   updatedAt         DateTime  @updatedAt
 
   user          User                 @relation(fields: [userId], references: [id])
+  parceira      Parceira?            @relation(fields: [parceiraId], references: [id], onDelete: SetNull)
   address       Address?             @relation(fields: [addressId], references: [id])
   items         OrderItem[]
   installments  Installment[]
   returns       Return[]
   statusHistory OrderStatusHistory[]
   payments      Payment[]
+
+  @@index([parceiraId])
+}
+
+/// Parceira influencer: quem divulga a loja e ganha por isso.
+///
+/// O `codigo` é o mesmo texto do cupom dela ("ISA10"), e não uma chave à
+/// parte: assim o relatório enxerga tanto as vendas marcadas à mão quanto as
+/// antigas, que só têm `Order.couponCode`. Sem isso, ligar a parceira
+/// apagaria todo o histórico dela da noite para o dia.
+///
+/// `userId` é a conta dela na loja, onde o cashback vira saldo de verdade.
+/// Sem conta, o cashback existe como número no relatório mas não há onde
+/// gastá-lo — por isso a tela cobra a conta antes de deixar creditar.
+model Parceira {
+  id        String   @id @default(cuid())
+  nome      String
+  /// Mesmo texto do cupom dela, em maiúsculas. Ex.: "ISA10".
+  codigo    String   @unique
+  telefone  String?
+  /// % que ela ganha sobre o que vende. Por parceira, porque nem toda
+  /// parceria é negociada igual.
+  comissao  Float    @default(5)
+  userId    String?
+  /// Chave do link que ela abre sem senha. Aleatória e longa: é a única
+  /// tranca da página, então não pode ser o nome nem o código dela.
+  token     String   @unique
+  ativa     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  pedidos Order[]
 }
 
 model OrderStatusHistory {
