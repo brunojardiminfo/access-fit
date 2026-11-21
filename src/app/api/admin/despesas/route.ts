@@ -110,7 +110,21 @@ export async function POST(req: Request) {
       : isLast ? parseFloat((amount - instAmt * (totalInst - 1)).toFixed(2)) : instAmt;
     created.push(await prisma.expense.create({
       data: {
-        date: dateOnly(date),
+        /**
+         * CADA LINHA VIVE NO MÊS EM QUE É COBRADA, não no dia do lançamento.
+         *
+         * Era aqui que a assinatura mensal multiplicava. As doze linhas
+         * nasciam todas com a MESMA `date` — o dia em que foi lançada — e só
+         * o vencimento mudava. Como todo relatório soma por `date`
+         * (`where: { date: { gte: startOfMonth } }` no painel, no caixa e nas
+         * métricas), os doze meses caíam no mesmo mês: R$ 113 viravam
+         * R$ 1.356 em novembro e R$ 0 no resto do ano.
+         *
+         * Vale igual para o parcelado: a fatura de 12x chega uma por mês, e
+         * jogar as doze no mês da compra inflava aquele mês e esvaziava os
+         * onze seguintes.
+         */
+        date: due,
         // A recorrente não numera: cada mês é uma cobrança inteira, não a
         // fatia de uma compra. O mês do vencimento já separa uma da outra.
         description: recorrente ? description.trim() : `${description.trim()} (${i + 1}/${totalInst})`,
