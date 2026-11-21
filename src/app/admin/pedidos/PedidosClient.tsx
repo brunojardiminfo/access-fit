@@ -17,6 +17,8 @@ type Order = {
   user: { id: string; name: string; email: string; phone?: string };
   address?: { street: string; number: string; complement?: string | null; district: string; city: string; state: string; zipCode: string } | null;
   items: OrderItem[];
+  parceiraId?: string | null;
+  couponCode?: string | null;
   installments: Installment[];
   statusHistory: StatusHistoryEntry[];
 };
@@ -120,6 +122,22 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
   const [editingItemCost, setEditingItemCost] = useState<string | null>(null);
   const [itemCostValue, setItemCostValue] = useState("");
   const [editingItemPrice, setEditingItemPrice] = useState<string | null>(null);
+  // As parceiras vêm uma vez e servem a todos os pedidos abertos na tela.
+  const [parceiras, setParceiras] = useState<{ id: string; nome: string; codigo: string }[]>([]);
+  useEffect(() => {
+    fetch("/api/admin/parceiras")
+      .then(r => r.ok ? r.json() : { parceiras: [] })
+      .then(j => setParceiras((j.parceiras || []).filter((p: { ativa: boolean }) => p.ativa)))
+      .catch(() => {});
+  }, []);
+
+  const marcarParceira = async (orderId: string, parceiraId: string) => {
+    const res = await fetch(`/api/admin/pedidos/${orderId}`, {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ parceiraId: parceiraId || null }),
+    });
+    if (res.ok) setLocalOrders(prev => prev.map(o => o.id === orderId ? { ...o, parceiraId: parceiraId || null } : o));
+  };
   const [itemPriceValue, setItemPriceValue] = useState("");
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
   const [editingInstallmentId, setEditingInstallmentId] = useState<string | null>(null);
@@ -828,6 +846,27 @@ export default function PedidosClient({ orders, customers = [] }: { orders: Orde
 
                           {activeTab === "itens" && (
                             <div style={{ backgroundColor: "#fff", borderRadius: "0.75rem", padding: "1rem", border: "1px solid rgba(140,100,20,0.08)" }}>
+                              {/* Quem trouxe a venda, separado do cupom.
+                                  Na Black November o cupom da parceira não sai
+                                  (peça em SALE não acumula), e sem isto a venda
+                                  dela sumiria do relatório justo na semana em
+                                  que ela mais vende. */}
+                              {parceiras.length > 0 && (
+                                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", paddingBottom: "0.7rem", marginBottom: "0.7rem", borderBottom: "1px solid rgba(140,100,20,0.1)" }}>
+                                  <span style={{ fontSize: "0.72rem", color: "#9a8060", fontWeight: 700 }}>🤝 Parceira:</span>
+                                  <select value={order.parceiraId || ""}
+                                    onChange={e => marcarParceira(order.id, e.target.value)}
+                                    style={{ ...inp, fontSize: "0.75rem", padding: "0.25rem 0.5rem" }}>
+                                    <option value="">— nenhuma —</option>
+                                    {parceiras.map(p => <option key={p.id} value={p.id}>{p.nome} ({p.codigo})</option>)}
+                                  </select>
+                                  {order.couponCode && !order.parceiraId && (
+                                    <span style={{ fontSize: "0.7rem", color: "#9a8060" }}>
+                                      já conta pelo cupom {order.couponCode}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                               {order.items.map(item => {
                                 const custo = item.costPrice ?? item.product.costPrice ?? null;
                                 const isEditingCost = editingItemCost === item.id;

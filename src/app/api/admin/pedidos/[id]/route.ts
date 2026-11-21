@@ -32,6 +32,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (body.installmentCount !== undefined) data.installmentCount = body.installmentCount;
   if (body.userId !== undefined) data.userId = body.userId;
   if (body.discount !== undefined) data.discount = Math.max(0, Number(body.discount) || 0);
+  // Quem trouxe a venda. Vazio tira a marcação — e o pedido pode continuar
+  // contando para a parceira pelo cupom, que é outro caminho.
+  if (body.parceiraId !== undefined) data.parceiraId = body.parceiraId || null;
 
   // Estoque acompanha o status: sai ao confirmar/enviar/entregar/try-on e volta
   // ao cancelar. Pedido que nunca passou por esses status nao tem o que devolver.
