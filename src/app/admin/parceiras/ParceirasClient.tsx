@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { formatCurrency } from "@/lib/utils";
 
-type Cliente = { id: string; name: string | null; email: string };
+type Cliente = { id: string; name: string | null; email: string; phone: string | null };
+type Cupom = { code: string; discount: number; type: string };
 type Parceira = {
   id: string; nome: string; codigo: string; telefone: string | null;
   comissao: number; ativa: boolean; token: string;
@@ -22,7 +23,7 @@ const INP = {
   borderRadius: "0.6rem", fontSize: "0.82rem", backgroundColor: "#FAF6EE", outline: "none",
 } as const;
 
-export default function ParceirasClient({ clientes }: { clientes: Cliente[] }) {
+export default function ParceirasClient({ clientes, cupons }: { clientes: Cliente[]; cupons: Cupom[] }) {
   const [lista, setLista] = useState<Parceira[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
@@ -36,6 +37,23 @@ export default function ParceirasClient({ clientes }: { clientes: Cliente[] }) {
     setCarregando(false);
   };
   useEffect(() => { buscar(); }, []);
+
+  /**
+   * Escolher a cliente preenche nome e WhatsApp.
+   *
+   * Sobrescreve só o que ainda não foi editado à mão: se o Bruno já ajustou o
+   * nome ("Isa" em vez de "Isabela Fernandes da Silva"), trocar a conta por
+   * engano não pode apagar o ajuste dele.
+   */
+  const escolherCliente = (userId: string) => {
+    const c = clientes.find(x => x.id === userId);
+    setNovo(n => ({
+      ...n,
+      userId,
+      nome: n.nome.trim() ? n.nome : (c?.name || ""),
+      telefone: n.telefone.trim() ? n.telefone : (c?.phone || ""),
+    }));
+  };
 
   const criar = async () => {
     setErro(""); setOcupado("novo");
@@ -111,27 +129,74 @@ export default function ParceirasClient({ clientes }: { clientes: Cliente[] }) {
       </button>
 
       {abrirNovo && (
-        <div style={{ ...CARTAO, marginBottom: "1.5rem", display: "flex", gap: "0.6rem", flexWrap: "wrap", alignItems: "center" }}>
-          <input style={{ ...INP, minWidth: 180 }} placeholder="Nome" value={novo.nome}
-            onChange={e => setNovo({ ...novo, nome: e.target.value })} />
-          <input style={{ ...INP, width: 130 }} placeholder="Código (ISA10)" value={novo.codigo}
-            onChange={e => setNovo({ ...novo, codigo: e.target.value.toUpperCase() })} />
-          <input style={{ ...INP, width: 150 }} placeholder="WhatsApp" value={novo.telefone}
-            onChange={e => setNovo({ ...novo, telefone: e.target.value })} />
-          <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-            <input style={{ ...INP, width: 70 }} type="number" value={novo.comissao}
-              onChange={e => setNovo({ ...novo, comissao: e.target.value })} />
-            <span style={{ fontSize: "0.82rem", color: "#9a8060" }}>% cashback</span>
+        <div style={{ ...CARTAO, marginBottom: "1.5rem", display: "grid", gap: "0.9rem" }}>
+
+          {/* 1. A cliente, que já está no banco com nome e telefone */}
+          <label style={{ display: "grid", gap: "0.3rem" }}>
+            <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "#9a8060", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              1. Quem é a parceira
+            </span>
+            <select style={{ ...INP, maxWidth: 420 }} value={novo.userId} onChange={e => escolherCliente(e.target.value)}>
+              <option value="">— escolher na lista de clientes —</option>
+              {clientes.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.name || c.email}{c.phone ? ` · ${c.phone}` : " · sem telefone"}
+                </option>
+              ))}
+            </select>
+            <span style={{ fontSize: "0.72rem", color: "#9a8060" }}>
+              É nessa conta que o cashback vira saldo. Nome e WhatsApp vêm dela — dá para ajustar abaixo.
+            </span>
+          </label>
+
+          {/* 2. O cupom que já existe, escolhido e não digitado */}
+          <label style={{ display: "grid", gap: "0.3rem" }}>
+            <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "#9a8060", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              2. Cupom dela
+            </span>
+            {cupons.length > 0 ? (
+              <select style={{ ...INP, maxWidth: 420 }} value={novo.codigo}
+                onChange={e => setNovo({ ...novo, codigo: e.target.value })}>
+                <option value="">— escolher um cupom —</option>
+                {cupons.map(c => (
+                  <option key={c.code} value={c.code}>
+                    {c.code} · {c.type === "percent" ? `${c.discount}%` : `R$ ${c.discount}`}
+                  </option>
+                ))}
+                <option value="__novo__">outro código (digitar)</option>
+              </select>
+            ) : (
+              <span style={{ fontSize: "0.78rem", color: "#9a8060" }}>
+                Nenhum cupom ativo no banco — digite o código abaixo.
+              </span>
+            )}
+            {(novo.codigo === "__novo__" || cupons.length === 0) && (
+              <input style={{ ...INP, maxWidth: 200 }} placeholder="ISA10" autoFocus
+                value={novo.codigo === "__novo__" ? "" : novo.codigo}
+                onChange={e => setNovo({ ...novo, codigo: e.target.value.toUpperCase() })} />
+            )}
+            <span style={{ fontSize: "0.72rem", color: "#9a8060" }}>
+              Use o código do cupom que ela já divulga: as vendas antigas feitas com ele entram
+              no relatório dela na hora, sem mexer em pedido nenhum.
+            </span>
+          </label>
+
+          {/* 3. O que dá para ajustar */}
+          <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", alignItems: "center" }}>
+            <input style={{ ...INP, minWidth: 180 }} placeholder="Nome como ela aparece" value={novo.nome}
+              onChange={e => setNovo({ ...novo, nome: e.target.value })} />
+            <input style={{ ...INP, width: 170 }} placeholder="WhatsApp" value={novo.telefone}
+              onChange={e => setNovo({ ...novo, telefone: e.target.value })} />
+            <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+              <input style={{ ...INP, width: 70 }} type="number" value={novo.comissao}
+                onChange={e => setNovo({ ...novo, comissao: e.target.value })} />
+              <span style={{ fontSize: "0.82rem", color: "#9a8060" }}>% cashback</span>
+            </div>
+            <button onClick={criar} disabled={ocupado === "novo" || !novo.nome.trim() || !novo.codigo || novo.codigo === "__novo__"}
+              style={{ backgroundColor: "#1a8a2a", color: "#fff", fontWeight: 800, fontSize: "0.82rem", padding: "0.55rem 1.1rem", borderRadius: "0.6rem", border: "none", cursor: "pointer", opacity: (!novo.nome.trim() || !novo.codigo || novo.codigo === "__novo__") ? 0.5 : 1 }}>
+              Cadastrar
+            </button>
           </div>
-          <select style={{ ...INP, minWidth: 220 }} value={novo.userId}
-            onChange={e => setNovo({ ...novo, userId: e.target.value })}>
-            <option value="">Conta dela na loja (para o crédito)</option>
-            {clientes.map(c => <option key={c.id} value={c.id}>{c.name || c.email}</option>)}
-          </select>
-          <button onClick={criar} disabled={ocupado === "novo"}
-            style={{ backgroundColor: "#1a8a2a", color: "#fff", fontWeight: 800, fontSize: "0.82rem", padding: "0.55rem 1.1rem", borderRadius: "0.6rem", border: "none", cursor: "pointer" }}>
-            Cadastrar
-          </button>
         </div>
       )}
 
