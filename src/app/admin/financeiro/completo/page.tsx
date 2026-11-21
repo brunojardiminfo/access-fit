@@ -106,6 +106,35 @@ export default function FinanceiroPage() {
 
   useEffect(() => { loadVendas(); }, [loadVendas]);
 
+  /**
+   * Despesas com a data no mês errado.
+   *
+   * O aviso só aparece quando há o que corrigir, e some sozinho depois. Um
+   * botão de manutenção parado para sempre numa tela vira ruído, e ninguém
+   * clica em ruído.
+   */
+  const [desalinhadas, setDesalinhadas] = useState<{ quantas: number; total: number } | null>(null);
+  const [alinhando, setAlinhando] = useState(false);
+
+  const verDesalinhadas = useCallback(async () => {
+    const r = await fetch("/api/admin/despesas/alinhar");
+    if (r.ok) { const d = await r.json(); setDesalinhadas(d.quantas > 0 ? d : null); }
+  }, []);
+  useEffect(() => { verDesalinhadas(); }, [verDesalinhadas]);
+
+  const alinhar = async () => {
+    setAlinhando(true);
+    const r = await fetch("/api/admin/despesas/alinhar", { method: "POST" });
+    if (r.ok) {
+      const { corrigidas } = await r.json();
+      alert(`${corrigidas} lançamento(s) movido(s) para o mês da cobrança. Nenhum valor foi alterado.`);
+      setDesalinhadas(null);
+      // os números da tela mudam junto
+      loadCaixa(); loadDadosMensais(); loadExpenses();
+    }
+    setAlinhando(false);
+  };
+
   // ── DADOS MENSAIS ──
   const [dadosMensais, setDadosMensais] = useState<{ [key: string]: { receitas: number; despesas: number } }>({});
   const [loadingMensais, setLoadingMensais] = useState(true);
@@ -268,6 +297,24 @@ export default function FinanceiroPage() {
           </div>
         )}
       </div>
+
+      {desalinhadas && (
+        <div style={{ backgroundColor: "#fff8e1", border: "1px solid rgba(184,137,26,0.45)", borderRadius: "0.875rem", padding: "1rem 1.25rem", marginBottom: "1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+          <div style={{ color: "#5a4a2a", fontSize: "0.85rem", lineHeight: 1.6, maxWidth: 680 }}>
+            <strong>{desalinhadas.quantas} lançamento(s)</strong> estão somados no mês em que foram
+            cadastrados, e não no mês em que são cobrados — é o que fazia uma assinatura mensal
+            aparecer multiplicada num mês só. Dá para mover todos para o mês certo.
+            <br />
+            <span style={{ color: "#9a8060", fontSize: "0.78rem" }}>
+              Só a data muda. Nenhum valor é alterado, somado ou apagado.
+            </span>
+          </div>
+          <button onClick={alinhar} disabled={alinhando}
+            style={{ backgroundColor: "#b8891a", color: "#fff", fontWeight: 800, fontSize: "0.82rem", padding: "0.6rem 1.2rem", borderRadius: "0.7rem", border: "none", cursor: alinhando ? "wait" : "pointer", whiteSpace: "nowrap" }}>
+            {alinhando ? "corrigindo…" : "Corrigir os meses"}
+          </button>
+        </div>
+      )}
 
       {/* Abas */}
       <div style={{ display: "flex", gap: "0.25rem", marginBottom: "1.5rem", borderBottom: "2px solid rgba(140,100,20,0.1)" }}>
