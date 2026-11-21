@@ -2,9 +2,34 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { parseEstoque, quantidadeDe, coresDoEstoque, tamanhosDaCor, temCorNoEstoque, SEM_COR } from "@/lib/variacoes";
+import { getSaleInfo } from "@/lib/saleHelper";
 
 type Customer = { id: string; name: string; email: string; phone?: string };
-type Product = { id: string; name: string; price: number; stock: number; active?: boolean; sizes: string; sizeStock?: string; colors: string; images: string; isConjunto?: boolean; sellComponentsSeparately?: boolean; conjuntoItems?: Array<{ id: string; name: string; price: number }> };
+type Product = { id: string; name: string; price: number; stock: number; active?: boolean; sizes: string; sizeStock?: string; colors: string; images: string; isConjunto?: boolean; sellComponentsSeparately?: boolean; conjuntoItems?: Array<{ id: string; name: string; price: number }>;
+  onSale?: boolean; saleDiscount?: number | null; saleBlocked?: boolean; createdAt?: string; restockedAt?: string | null };
+
+/**
+ * O preço que a peça está custando HOJE na loja.
+ *
+ * A venda feita aqui dentro usava sempre o preço de tabela, e o SALE não era
+ * consultado: quem monta o pedido tinha que lembrar do desconto e digitá-lo à
+ * mão. Numa Black November a 40%, esquecer uma vez custa o desconto inteiro —
+ * e a nota sai cobrando da cliente um preço que a vitrine não pratica.
+ *
+ * A mesma função da loja (`getSaleInfo`), de propósito: duas contas de
+ * desconto em dois lugares divergem no dia em que uma das duas mudar.
+ */
+function precoDeHoje(p: { price: number } & Record<string, any>): { preco: number; desconto: number } {
+  const info = getSaleInfo({
+    price: p.price,
+    onSale: p.onSale,
+    saleDiscount: p.saleDiscount ?? null,
+    saleBlocked: p.saleBlocked,
+    createdAt: p.createdAt ?? new Date().toISOString(),
+    restockedAt: p.restockedAt ?? null,
+  });
+  return info ? { preco: info.salePrice, desconto: info.discount } : { preco: p.price, desconto: 0 };
+}
 type Item = { productId?: string; description: string; price: number; quantity: number; size?: string; color?: string; componentName?: string; product?: Product };
 
 const inp = {
@@ -190,7 +215,7 @@ export default function NovoPedidoPage() {
     // de uma, obriga o admin a escolher pra dar baixa na variação certa
     setItems(p => p.map((it, idx) => idx === i ? {
       ...it, productId: product.id, description: product.name,
-      price: product.price,
+      price: precoDeHoje(product).preco,
       size: sizes.length === 1 ? sizes[0] : undefined,
       color: cores.length === 1 ? cores[0] : undefined,
       componentName: undefined, product,
@@ -428,9 +453,25 @@ export default function NovoPedidoPage() {
                                 </div>
                               </div>
                               {/* Preço */}
-                              <div style={{ fontWeight: 700, color: "#b8891a", fontSize: "0.875rem", flexShrink: 0 }}>
-                                {p.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                              </div>
+                              {/* Mostra o preço que vai ser usado, com o de
+                                  tabela riscado ao lado: sem isso o desconto
+                                  entraria calado e pareceria erro de digitação. */}
+                              {(() => {
+                                const { preco, desconto } = precoDeHoje(p);
+                                const moeda = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+                                return (
+                                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                                    <div style={{ fontWeight: 700, color: desconto > 0 ? "#c04040" : "#b8891a", fontSize: "0.875rem" }}>
+                                      {moeda(preco)}
+                                    </div>
+                                    {desconto > 0 && (
+                                      <div style={{ fontSize: "0.68rem", color: "#9a8060" }}>
+                                        <s>{moeda(p.price)}</s> · -{desconto}%
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           );
                         })}
@@ -446,13 +487,19 @@ export default function NovoPedidoPage() {
 
                         if (escolha && product) {
                           if (escolha === "completo") {
-                            updateItem(i, "price", product.price);
+                            updateItem(i, "price", precoDeHoje(product).preco);
                             updateItem(i, "componentName", undefined);
                             updateItem(i, "description", product.name);
                           } else {
                             const component = product.conjuntoItems?.find(c => c.name === escolha);
                             if (component) {
-                              updateItem(i, "price", component.price);
+                              // O componente herda o desconto da peça: o SALE é
+                              // da peça, e vender a parte a preço cheio enquanto
+                              // o conjunto está com 40% é contradição na mesma nota.
+                              const { desconto } = precoDeHoje(product);
+                              updateItem(i, "price", desconto > 0
+                                ? Math.round(component.price * (100 - desconto)) / 100
+                                : component.price);
                               updateItem(i, "componentName", component.name);
                               updateItem(i, "description", `${product.name} - ${component.name}`);
                             }

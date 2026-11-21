@@ -63,7 +63,7 @@ export default function NotaPublicaClient({ order }: { order: any }) {
       <div className="nota-container" style={{ maxWidth: 640, margin: "1rem auto 5rem", backgroundColor: "var(--bg-card)", borderRadius: "1.25rem", boxShadow: "0 4px 24px rgba(0,0,0,0.08)", padding: "2rem 2.5rem", border: "1px solid #e8dfc8" }}>
 
         {/* Cabeçalho */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.75rem", paddingBottom: "1.25rem", borderBottom: "2px solid #f0e8d0" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.75rem", paddingBottom: "1.25rem", borderBottom: "2px solid var(--border)" }}>
           <div>
             <h1 style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--gold)", margin: 0 }}>Access Fit</h1>
             <p style={{ color: "var(--text-muted)", fontSize: "0.78rem", marginTop: "0.2rem" }}>Moda fitness com propósito</p>
@@ -89,18 +89,18 @@ export default function NotaPublicaClient({ order }: { order: any }) {
         {/* Itens */}
         <div style={{ marginBottom: "1.5rem" }}>
           <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>ITENS</p>
-          <div style={{ border: "1px solid #f0e8d0", borderRadius: "0.75rem", overflow: "hidden" }}>
+          <div style={{ border: "1px solid var(--border)", borderRadius: "0.75rem", overflow: "hidden" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ backgroundColor: "var(--bg)" }}>
                   {["Produto", "Qtd", "Valor"].map(h => (
-                    <th key={h} style={{ padding: "0.6rem 0.875rem", textAlign: h === "Produto" ? "left" : "right", fontSize: "0.68rem", fontWeight: 700, color: "var(--text-muted)", borderBottom: "1px solid #f0e8d0" }}>{h}</th>
+                    <th key={h} style={{ padding: "0.6rem 0.875rem", textAlign: h === "Produto" ? "left" : "right", fontSize: "0.68rem", fontWeight: 700, color: "var(--text-muted)", borderBottom: "1px solid var(--border)" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {order.items.map((item: any, i: number) => (
-                  <tr key={item.id} style={{ borderBottom: i < order.items.length - 1 ? "1px solid #f8f2e8" : "none", backgroundColor: i % 2 === 0 ? "var(--bg-card)" : "#fdfaf5" }}>
+                  <tr key={item.id} style={{ borderBottom: i < order.items.length - 1 ? "1px solid var(--border)" : "none", backgroundColor: i % 2 === 0 ? "var(--bg-card)" : "var(--bg)" }}>
                     <td style={{ padding: "0.7rem 0.875rem", fontSize: "0.85rem", color: "var(--text-main)", fontWeight: 500 }}>{itemDisplayName(item)}</td>
                     <td style={{ padding: "0.7rem 0.875rem", fontSize: "0.85rem", color: "var(--text-sub)", textAlign: "right" }}>{item.quantity}</td>
                     <td style={{ padding: "0.7rem 0.875rem", fontSize: "0.85rem", color: "var(--text-main)", fontWeight: 700, textAlign: "right" }}>{fmt(item.price * item.quantity)}</td>
@@ -203,7 +203,7 @@ export default function NotaPublicaClient({ order }: { order: any }) {
 
         {/* Observações */}
         {order.notes && (
-          <div style={{ marginTop: "1.5rem", paddingTop: "1.25rem", borderTop: "1px solid #f0e8d0" }}>
+          <div style={{ marginTop: "1.5rem", paddingTop: "1.25rem", borderTop: "1px solid var(--border)" }}>
             <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>OBSERVAÇÕES</p>
             <p style={{ fontSize: "0.85rem", color: "var(--text-sub)", fontStyle: "italic", margin: 0 }}>{order.notes}</p>
           </div>
