@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useAdmin } from "@/store/admin";
 import { useMobileView } from "@/hooks/useMediaQuery";
@@ -7,30 +8,49 @@ import { getNavLinks } from "@/lib/permissions";
 // Analytics (/admin/analytics), Metricas (/admin/metricas) e o painel financeiro
 // completo (/admin/financeiro/completo) continuam funcionando pela URL, mas ficam
 // fora do menu para manter o dia a dia enxuto.
+/**
+ * O menu, agrupado.
+ *
+ * Eram dezoito itens numa fila só — o Bruno chamou de varal, e estava certo:
+ * no celular a barra rolava de lado e os últimos ficavam fora da tela.
+ *
+ * Agora a barra mostra só o que ele abre todo dia, e o resto vive atrás de
+ * "Mais", separado por assunto. O critério do que fica na frente é um só:
+ * ele abre isso quase todo dia? Se não, vai para o painel.
+ *
+ * Nada sumiu — todo endereço continua funcionando, e quem tinha um link
+ * salvo continua chegando.
+ */
 const ALL_LINKS = [
-  { href: "/admin",             label: "Início",      emoji: "🏠" },
-  { href: "/admin/pedidos",     label: "Pedidos",     emoji: "📦" },
-  { href: "/admin/produtos",    label: "Produtos",    emoji: "👗" },
-  // A tela existia desde sempre, mas só se chegava nela digitando o endereço.
-  // Fica ao lado de Produtos porque é onde se renomeia a categoria de uma peça.
-  { href: "/admin/categorias",  label: "Categorias",  emoji: "🗂️" },
-  { href: "/admin/colecoes",    label: "Coleções",    emoji: "✨" },
-  // Ao lado de Coleções porque é a mesma decisão de curadoria, vista pelo
-  // outro lado: o que empurrar para frente e o que precisa sair.
-  { href: "/admin/liquida",     label: "Liquidação",  emoji: "💸" },
-  { href: "/admin/caderno",     label: "Caderno",     emoji: "📒" },
-  { href: "/admin/fila",        label: "Fila de hoje", emoji: "🎯" },
-  { href: "/admin/clientes",    label: "Clientes",    emoji: "👥" },
-  { href: "/admin/parceiras",   label: "Parceiras",   emoji: "🤝" },
-  { href: "/admin/stories",     label: "Stories",     emoji: "📱" },
-  { href: "/admin/segmentos",   label: "Etiquetas",   emoji: "🏷️" },
-  { href: "/admin/followup",    label: "Follow-up",   emoji: "📩" },
-  { href: "/admin/financeiro",  label: "Financeiro",  emoji: "💳" },
-  { href: "/admin/devolucoes",  label: "Devoluções",  emoji: "🔄" },
-  { href: "/admin/marketing",   label: "Marketing",   emoji: "📣" },
-  { href: "/admin/link-look",   label: "Link do Look", emoji: "🔗" },
-  { href: "/admin/gestao",      label: "Gestão",      emoji: "⚙️" },
+  // ── Na barra: o dia a dia ──
+  { href: "/admin",             label: "Início",       emoji: "🏠", principal: true },
+  { href: "/admin/pedidos",     label: "Pedidos",      emoji: "📦", principal: true },
+  { href: "/admin/produtos",    label: "Produtos",     emoji: "👗", principal: true },
+  { href: "/admin/financeiro",  label: "Financeiro",   emoji: "💳", principal: true },
+  { href: "/admin/stories",     label: "Stories",      emoji: "📱", principal: true },
+
+  // ── Atrás de "Mais", por assunto ──
+  { href: "/admin/categorias",  label: "Categorias",   emoji: "🗂️",  grupo: "Catálogo" },
+  { href: "/admin/colecoes",    label: "Coleções",     emoji: "✨",  grupo: "Catálogo" },
+  { href: "/admin/liquida",     label: "Liquidação",   emoji: "💸", grupo: "Catálogo" },
+  { href: "/admin/link-look",   label: "Link do Look", emoji: "🔗", grupo: "Catálogo" },
+
+  { href: "/admin/clientes",    label: "Clientes",     emoji: "👥", grupo: "Clientes" },
+  { href: "/admin/caderno",     label: "Caderno",      emoji: "📒", grupo: "Clientes" },
+  { href: "/admin/fila",        label: "Fila de hoje", emoji: "🎯", grupo: "Clientes" },
+  { href: "/admin/devolucoes",  label: "Devoluções",   emoji: "🔄", grupo: "Clientes" },
+  { href: "/admin/segmentos",   label: "Etiquetas",    emoji: "🏷️",  grupo: "Clientes" },
+  { href: "/admin/followup",    label: "Follow-up",    emoji: "📩", grupo: "Clientes" },
+
+  { href: "/admin/parceiras",   label: "Parceiras",    emoji: "🤝", grupo: "Crescer" },
+  { href: "/admin/marketing",   label: "Marketing",    emoji: "📣", grupo: "Crescer" },
+
+  { href: "/admin/gestao",      label: "Gestão",       emoji: "⚙️",  grupo: "Sistema" },
+  { href: "/admin/financeiro/completo", label: "Painel completo", emoji: "📊", grupo: "Sistema" },
 ];
+
+const GRUPOS = ["Catálogo", "Clientes", "Crescer", "Sistema"];
+
 
 const Stars = () => (
   <svg width="260" height="80" viewBox="0 0 260 80" fill="none" style={{ position: "absolute", right: 0, top: 0, opacity: 0.15, pointerEvents: "none" }}>
@@ -59,6 +79,13 @@ export default function AdminNav({ adminRole }: { adminRole?: string | null }) {
   const links = allowedNav.includes("*")
     ? ALL_LINKS
     : ALL_LINKS.filter(l => allowedNav.includes(l.href));
+
+  const [verMais, setVerMais] = useState(false);
+  const principais = links.filter(l => (l as { principal?: boolean }).principal);
+  const extras = links.filter(l => !(l as { principal?: boolean }).principal);
+  // Quando a tela aberta está dentro de "Mais", o botão fica aceso — senão
+  // a barra não mostra onde ele está.
+  const estaEmExtra = extras.some(l => isActive(l.href));
 
   return (
     <>
@@ -90,7 +117,7 @@ export default function AdminNav({ adminRole }: { adminRole?: string | null }) {
 
           {/* Links de navegação */}
           <nav style={{ display: "flex", gap: isMobile ? "0.1rem" : "0.25rem", paddingBottom: "0.25rem", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-            {links.map(l => (
+            {principais.map(l => (
               <a key={l.href} href={l.href} title={l.label} style={{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem",
                 padding: isMobile ? "0.5rem" : "0.55rem 1.1rem",
@@ -110,9 +137,72 @@ export default function AdminNav({ adminRole }: { adminRole?: string | null }) {
                 {!isMobile && l.label}
               </a>
             ))}
+            {extras.length > 0 && (
+              <button onClick={() => setVerMais(v => !v)} title="Mais telas"
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem",
+                  padding: isMobile ? "0.5rem" : "0.55rem 1.1rem",
+                  borderRadius: "0.625rem 0.625rem 0 0", border: "none", cursor: "pointer",
+                  fontSize: isMobile ? "0.7rem" : "0.875rem", fontWeight: 700,
+                  color: (verMais || estaEmExtra) ? "#b8891a" : "#7a6040",
+                  backgroundColor: (verMais || estaEmExtra) ? "rgba(184,137,26,0.08)" : "transparent",
+                  borderBottom: (verMais || estaEmExtra) ? "3px solid #b8891a" : "3px solid transparent",
+                  whiteSpace: "nowrap", flexShrink: 0, minWidth: isMobile ? "44px" : "auto",
+                }}>
+                <span style={{ fontSize: "1rem" }}>⋯</span>
+                {!isMobile && "Mais"}
+              </button>
+            )}
           </nav>
+
         </div>
       </header>
+
+      {/*
+        O painel do "Mais".
+        FICA FORA DO CABEÇALHO de propósito: o cabeçalho tem
+        `display: none` abaixo de 640px, então um painel dentro dele
+        simplesmente não existia no celular — tocar em "Mais" não fazia nada.
+        Aqui ele aparece nos dois: no computador abaixo da barra, no celular
+        flutuando acima do menu de baixo.
+      */}
+      {verMais && extras.length > 0 && (
+        <>
+          <div onClick={() => setVerMais(false)}
+            style={{ position: "fixed", inset: 0, zIndex: 98, backgroundColor: "rgba(26,21,16,0.25)" }} />
+          <div style={{
+            position: "fixed", zIndex: 99, left: 0, right: 0,
+            bottom: isMobile ? "calc(64px + env(safe-area-inset-bottom))" : "auto",
+            top: isMobile ? "auto" : 150,
+            backgroundColor: "#FFFDF7",
+            borderTop: "1px solid rgba(184,137,26,0.2)",
+            borderBottom: isMobile ? "none" : "1px solid rgba(184,137,26,0.2)",
+            boxShadow: "0 -4px 24px rgba(26,21,16,0.12)",
+            maxHeight: "60vh", overflowY: "auto",
+          }}>
+            <div style={{ maxWidth: 1200, margin: "0 auto", padding: "1rem 1.1rem 1.25rem",
+                          display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "1rem" }}>
+              {GRUPOS.map(g => {
+                const doGrupo = extras.filter(l => (l as { grupo?: string }).grupo === g);
+                if (doGrupo.length === 0) return null;
+                return (
+                  <div key={g}>
+                    <div style={{ color: "#9a8060", fontSize: "0.65rem", fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.4rem" }}>{g}</div>
+                    {doGrupo.map(l => (
+                      <a key={l.href} href={l.href} onClick={() => setVerMais(false)}
+                        style={{ display: "flex", alignItems: "center", gap: "0.45rem", padding: "0.45rem 0.25rem", textDecoration: "none",
+                                 fontSize: "0.84rem", fontWeight: isActive(l.href) ? 800 : 600,
+                                 color: isActive(l.href) ? "#b8891a" : "#5a4a2a" }}>
+                        <span>{l.emoji}</span>{l.label}
+                      </a>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── MOBILE: bottom bar ── */}
       <nav className="admin-bottomnav" style={{
@@ -131,7 +221,7 @@ export default function AdminNav({ adminRole }: { adminRole?: string | null }) {
         overflowX: "auto",
         WebkitOverflowScrolling: "touch",
       }}>
-        {links.map(l => (
+        {principais.map(l => (
           <a key={l.href} href={l.href} style={{
             flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
             justifyContent: "center", padding: "0.6rem 0.25rem 0.5rem",
@@ -144,6 +234,19 @@ export default function AdminNav({ adminRole }: { adminRole?: string | null }) {
             <span style={{ fontSize: "0.6rem", fontWeight: 700, whiteSpace: "nowrap" }}>{l.label}</span>
           </a>
         ))}
+        {extras.length > 0 && (
+          <button onClick={() => { setVerMais(v => !v); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            style={{
+              flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
+              justifyContent: "center", padding: "0.6rem 0.25rem 0.5rem", gap: "0.2rem",
+              border: "none", background: "none", cursor: "pointer",
+              color: (verMais || estaEmExtra) ? "#b8891a" : "#9a8060",
+              borderTop: (verMais || estaEmExtra) ? "2.5px solid #b8891a" : "2.5px solid transparent",
+            }}>
+            <span style={{ fontSize: "1.35rem", lineHeight: 1 }}>⋯</span>
+            <span style={{ fontSize: "0.6rem", fontWeight: 700, whiteSpace: "nowrap" }}>Mais</span>
+          </button>
+        )}
       </nav>
 
     </>

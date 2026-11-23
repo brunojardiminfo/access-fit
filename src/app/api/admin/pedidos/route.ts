@@ -100,6 +100,20 @@ export async function POST(req: Request) {
     if (cupom.maxUses && cupom.usedCount >= cupom.maxUses)
       return NextResponse.json({ error: `O cupom ${cupom.code} já atingiu o limite de usos.` }, { status: 400 });
 
+    /**
+     * O mínimo é conferido AQUI, com os itens na mão.
+     *
+     * A tela da loja também confere, mas tela é sugestão: quem monta o pedido
+     * no admin não passa por ela, e quem chama esta rota direto também não.
+     * Mínimo conferido só no navegador não é mínimo.
+     */
+    if (cupom.minValue && subtotal < cupom.minValue) {
+      const moeda = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      return NextResponse.json({
+        error: `O cupom ${cupom.code} vale a partir de ${moeda(cupom.minValue)}. Esta sacola está em ${moeda(subtotal)}.`,
+      }, { status: 400 });
+    }
+
     cupomDoPedido = cupom.code;
     descontoDoCupom = cupom.type === "fixed" || cupom.type === "valor"
       ? Math.min(cupom.discount, subtotal)

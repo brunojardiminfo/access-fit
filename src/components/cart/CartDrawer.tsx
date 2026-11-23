@@ -29,7 +29,10 @@ export default function CartDrawer() {
     if (!couponInput.trim()) return;
     setCheckingCoupon(true);
     setCouponError("");
-    const res = await fetch(`/api/cupom?code=${encodeURIComponent(couponInput.trim())}`);
+    // A sacola vai junto: é o que deixa o servidor dizer quanto falta para o
+    // mínimo, em vez de só recusar.
+    const res = await fetch(
+      `/api/cupom?code=${encodeURIComponent(couponInput.trim())}&base=${sacola.subtotal.toFixed(2)}`);
     setCheckingCoupon(false);
     if (res.ok) {
       const data = await res.json();

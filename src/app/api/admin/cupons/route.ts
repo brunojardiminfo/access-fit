@@ -41,6 +41,9 @@ export async function POST(req: Request) {
       discount: parseFloat(body.discount),
       type: body.type || "percent",
       maxUses: body.maxUses ? parseInt(body.maxUses) : null,
+      // Vazio é "sem mínimo", não zero: um mínimo de R$ 0 passaria a aparecer
+      // como regra na tela sem ser regra nenhuma.
+      minValue: body.minValue ? parseFloat(body.minValue) : null,
       expiresAt: body.expiresAt ? new Date(body.expiresAt) : null,
       active: true,
     },
