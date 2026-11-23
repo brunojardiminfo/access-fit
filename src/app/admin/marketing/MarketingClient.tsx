@@ -106,7 +106,7 @@ export default function MarketingClient({ gastosMarketing, totalMarketing, campa
 
   // Cupom form
   const [showCupForm, setShowCupForm] = useState(false);
-  const [cupForm, setCupForm] = useState({ code: "", discount: "", type: "percent", maxUses: "", expiresAt: "" });
+  const [cupForm, setCupForm] = useState({ code: "", discount: "", type: "percent", maxUses: "", minValue: "", expiresAt: "" });
 
   const saveCampanha = async () => {
     if (!campForm.name || !campForm.startDate) return;
@@ -120,7 +120,7 @@ export default function MarketingClient({ gastosMarketing, totalMarketing, campa
     if (!cupForm.code || !cupForm.discount) return;
     setSaving(true);
     const res = await fetch("/api/admin/cupons", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cupForm) });
-    if (res.ok) { const d = await res.json(); setCupons(p => [d, ...p]); setShowCupForm(false); setCupForm({ code: "", discount: "", type: "percent", maxUses: "", expiresAt: "" }); }
+    if (res.ok) { const d = await res.json(); setCupons(p => [d, ...p]); setShowCupForm(false); setCupForm({ code: "", discount: "", type: "percent", maxUses: "", minValue: "", expiresAt: "" }); }
     setSaving(false);
   };
 
@@ -422,6 +422,7 @@ export default function MarketingClient({ gastosMarketing, totalMarketing, campa
                 </div>
                 <div><label style={label}>Desconto {cupForm.type === "percent" ? "(%)" : "(R$)"} *</label><input type="number" style={inp} placeholder={cupForm.type === "percent" ? "10" : "30"} value={cupForm.discount} onChange={e => setCupForm(f => ({ ...f, discount: e.target.value }))} /></div>
                 <div><label style={label}>Limite de usos</label><input type="number" style={inp} placeholder="Sem limite" value={cupForm.maxUses} onChange={e => setCupForm(f => ({ ...f, maxUses: e.target.value }))} /></div>
+                <div><label style={label}>Valor mínimo da compra</label><input type="number" step="0.01" style={inp} placeholder="Sem mínimo" value={cupForm.minValue} onChange={e => setCupForm(f => ({ ...f, minValue: e.target.value }))} /></div>
                 <div><label style={label}>Validade</label><input type="date" style={inp} value={cupForm.expiresAt} onChange={e => setCupForm(f => ({ ...f, expiresAt: e.target.value }))} /></div>
               </div>
               <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.875rem" }}>
@@ -443,6 +444,7 @@ export default function MarketingClient({ gastosMarketing, totalMarketing, campa
                     <p style={{ fontSize: "0.72rem", color: "#9a8060", marginTop: "0.25rem" }}>
                       {c.expiresAt ? `Expira ${new Date(c.expiresAt).toLocaleDateString("pt-BR")}` : "Sem validade"}
                       {c.maxUses ? ` · Limite: ${c.maxUses} usos` : ""}
+                      {c.minValue ? ` · Mínimo: ${Number(c.minValue).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}` : ""}
                     </p>
                   </div>
                   <div style={{ display: "flex", gap: "0.4rem" }}>

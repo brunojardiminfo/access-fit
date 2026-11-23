@@ -260,6 +260,13 @@ model Coupon {
   code      String    @unique
   discount  Float
   type      String    @default("percent")
+  /// Valor mínimo da sacola para o cupom valer. `null` = sem mínimo.
+  ///
+  /// Medido sobre o subtotal COM o SALE já aplicado — o número que a cliente
+  /// está olhando no carrinho. Medir pelo preço de tabela faria a sacola
+  /// "passar de 200" numa tela e não passar na outra, que é a mesma regra já
+  /// usada pelo piso da campanha.
+  minValue  Float?
   maxUses   Int?
   usedCount Int       @default(0)
   active    Boolean   @default(true)
