@@ -27,13 +27,33 @@ await pg.waitForTimeout(1500);
 
 const txt = await pg.evaluate(() => document.body.innerText);
 checa('a tela abre', txt.includes('Stories'));
-checa('tem pauta', /O que postar hoje/.test(txt));
+checa('a pauta é do dia', /Stories de hoje/.test(txt));
 
+// três momentos, um por horário — e não uma lista para garimpar
+for (const m of ['Manhã', 'Tarde', 'Noite']) {
+  checa(`tem o bloco da ${m}`, txt.includes(m));
+}
 const ideias = await pg.locator('button:has-text("Copiar texto")').count();
-checa('a pauta traz ideias', ideias >= 3, `${ideias}`);
+checa('uma sugestão por momento, não dez', ideias === 3, `${ideias} visíveis`);
 
-const cartoes = await pg.locator('button:has-text("toca para gerar")').count();
-checa('lista as peças com foto', cartoes > 5, `${cartoes}`);
+// a grade das peças começa fechada: é a exceção, não o caminho
+const gradeFechada = await pg.locator('button:has-text("Postar outra peça")').count();
+checa('a grade de peças fica guardada', gradeFechada === 1);
+await pg.locator('button:has-text("Postar outra peça")').click();
+await pg.waitForTimeout(600);
+const cartoes = await pg.locator('img').count();
+checa('a grade abre com as peças', cartoes > 10, `${cartoes} imagens`);
+
+// "trocar" oferece outra ideia sem recarregar
+const antes = await pg.locator('button:has-text("Copiar texto")').first().evaluate(
+  b => b.closest('div')?.parentElement?.innerText || '');
+const trocar = pg.locator('button:has-text("trocar")').first();
+if (await trocar.count()) {
+  await trocar.click(); await pg.waitForTimeout(400);
+  const depois = await pg.locator('button:has-text("Copiar texto")').first().evaluate(
+    b => b.closest('div')?.parentElement?.innerText || '');
+  checa('o "trocar" muda a sugestão', antes !== depois);
+}
 
 // ── o story é gerado DE VERDADE: 1080x1920 e com bytes dentro ──
 const resultado = await pg.evaluate(async () => {
@@ -78,6 +98,18 @@ checa('"últimas unidades" só com estoque de 1 ou 2', honestidade.length === 0,
 checa('sem quebra de JavaScript', quebras.length === 0, quebras[0] || '');
 const estoura = await pg.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
 checa('sem rolagem lateral no celular', !estoura);
+
+// o menu fixo do admin não pode cobrir o último botão da página
+const alcanca = await pg.evaluate(() => {
+  // o rótulo muda depois de aberto; vale qualquer um dos dois
+  const b = [...document.querySelectorAll('button')].find(x => /Postar outra peça|fechar/.test(x.innerText || ''));
+  if (!b) return null;
+  b.scrollIntoView({ block: 'center' });
+  const r = b.getBoundingClientRect();
+  const emCima = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+  return b.contains(emCima) || b === emCima;
+});
+checa('o menu não cobre o último botão', alcanca === true, String(alcanca));
 
 await pg.screenshot({ path: '/tmp/claude-0/stories.png', fullPage: false });
 console.log('PASSOU:'); ok.forEach(o => console.log('  ✓', o));

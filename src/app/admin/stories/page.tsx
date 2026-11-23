@@ -49,9 +49,16 @@ export default async function StoriesPage() {
     };
   });
 
-  const pauta = montarPauta(comFoto, agora).slice(0, 10).map(i => ({
-    tipo: i.tipo, etiqueta: i.etiqueta, porque: i.porque, texto: i.texto,
-    pecaId: i.peca?.id ?? null,
+  /**
+   * A pauta inteira vai para a tela, não só as primeiras.
+   *
+   * A tela mostra UMA por momento do dia e guarda as outras atrás do "trocar":
+   * cortar aqui deixaria o botão sem alternativa justamente nos dias em que
+   * ele não gostou da primeira sugestão.
+   */
+  const pauta = montarPauta(comFoto, agora).map(i => ({
+    tipo: i.tipo, momento: i.momento, etiqueta: i.etiqueta,
+    porque: i.porque, texto: i.texto, pecaId: i.peca?.id ?? null,
   }));
 
   return <StoriesClient pecas={paraTela} pauta={pauta} />;
