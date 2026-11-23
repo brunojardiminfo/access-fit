@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { decrementProductStock, consomeEstoque } from "@/lib/stock";
 import { montarItemDoPedido } from "@/lib/itensDoPedido";
+import { quandoEntra } from "@/lib/financeiro";
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -158,8 +159,22 @@ export async function POST(req: Request) {
     }
 
     if (paid > 0) {
+      /**
+       * O dinheiro entra quando entra, não no dia da venda.
+       *
+       * Gravar `receivedAt: order.createdAt` para tudo fazia a venda no link
+       * — que só cai 31 dias depois — aparecer como dinheiro recebido no mês
+       * da venda. Novembro mostrava o que só chega em dezembro, e o mês
+       * seguinte aparecia vazio.
+       *
+       * Pix e dinheiro continuam caindo no mesmo dia: para eles o prazo é
+       * zero e nada muda.
+       */
       await prisma.payment.create({
-        data: { orderId: order.id, amount: paid, paymentMethod: order.paymentMethod, receivedAt: order.createdAt },
+        data: {
+          orderId: order.id, amount: paid, paymentMethod: order.paymentMethod,
+          receivedAt: quandoEntra(order.paymentMethod, order.createdAt),
+        },
       });
     }
 
