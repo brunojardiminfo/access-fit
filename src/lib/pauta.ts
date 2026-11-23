@@ -23,8 +23,19 @@ export type PecaDaPauta = {
   category?: { name: string } | null;
 };
 
+/**
+ * A hora do dia em que a ideia serve.
+ *
+ * Os três stories do dia têm trabalhos diferentes: de manhã a peça (vender),
+ * de tarde a conversa (é o que faz o Instagram continuar entregando os teus
+ * stories), de noite o movimento (provar que a loja está viva). Uma lista
+ * solta de dez ideias boas faz procurar; três decisões, não.
+ */
+export type Momento = "manha" | "tarde" | "noite";
+
 export type Ideia = {
-  tipo: "promo" | "ultimas" | "nova" | "parada" | "prazo" | "bastidor";
+  tipo: "promo" | "ultimas" | "nova" | "parada" | "prazo" | "bastidor" | "interacao" | "movimento";
+  momento: Momento;
   etiqueta: string;
   /** O fato que sustenta a ideia, com número. É o que torna a ideia honesta. */
   porque: string;
@@ -56,14 +67,37 @@ function precoDe(p: PecaDaPauta) {
  * se ele abrir a tela duas vezes — pauta que muda a cada F5 não dá para
  * planejar.
  */
-const BASTIDORES: { etiqueta: string; texto: string }[] = [
-  { etiqueta: "Prova em casa", texto: "Sabia que dá pra provar em casa antes de decidir? Você escolhe as peças, experimenta com calma e fica só com o que amar. Chama aqui que eu explico 💛" },
+/**
+ * Conversa da tarde: o que faz a seguidora TOCAR no story.
+ *
+ * Enquete e caixinha não vendem direto, e é por isso que entram: o Instagram
+ * entrega mais story de quem responde, então o post da manhã seguinte alcança
+ * mais gente. Sem isso, a loja fala sozinha.
+ */
+const INTERACOES: { etiqueta: string; texto: string }[] = [
+  { etiqueta: "Enquete", texto: "Qual dessas duas você levaria? 👇 (a mais votada eu posto amanhã com um mimo)" },
+  { etiqueta: "Caixinha", texto: "Me diz teu objetivo que eu monto teu look 💛 Caixinha aberta — respondo uma por uma." },
   { etiqueta: "Dúvida de tamanho", texto: "Ficou na dúvida do tamanho? Me manda sua altura e peso que eu te digo exatamente qual serve melhor em você. Acerto em cheio, sem troca." },
-  { etiqueta: "Enquete", texto: "Qual dessas duas você levaria? Responde aí 👇 (a mais votada eu posto com um mimo amanhã)" },
-  { etiqueta: "Entrega", texto: "Pedido feito hoje até as 18h eu já separo. Porto Alegre recebe rapidinho 🚚" },
-  { etiqueta: "Bastidor", texto: "Separando os pedidos de hoje por aqui ✨ Cada peça conferida uma a uma antes de sair." },
-  { etiqueta: "Depoimento", texto: "Print do feedback de quem já está usando. Nada vende melhor que cliente feliz 💛" },
+  { etiqueta: "Esse ou esse", texto: "ESSE ou ESSE? Responde na enquete 👆 Quem acertar o mais votado ganha um desconto extra hoje." },
+  { etiqueta: "Prova em casa", texto: "Sabia que dá pra provar em casa antes de decidir? Você escolhe as peças, experimenta com calma e fica só com o que amar. Chama aqui que eu explico 💛" },
+  { etiqueta: "Pergunta aberta", texto: "O que você MAIS quer encontrar aqui e ainda não achou? Responde que eu levo pro próximo pedido 👀" },
 ];
+
+/**
+ * Movimento da noite: a prova de que a loja é real.
+ *
+ * É o conteúdo mais fácil de fazer — foto do que já está acontecendo — e o que
+ * mais constrói confiança em quem ainda não comprou.
+ */
+const MOVIMENTOS: { etiqueta: string; texto: string }[] = [
+  { etiqueta: "Pedidos do dia", texto: "Separando os pedidos de hoje por aqui ✨ Cada peça conferida uma a uma antes de sair." },
+  { etiqueta: "Print de cliente", texto: "Print do feedback de quem já está usando 💛 Nada que eu falar vende mais que isso." },
+  { etiqueta: "Esgotou", texto: "ESGOTOU 🏃‍♀️ Quem avisou, avisou. Me chama pra saber se volta." },
+  { etiqueta: "Entrega", texto: "Pedido feito hoje até as 18h eu já separo. Porto Alegre recebe rapidinho 🚚" },
+  { etiqueta: "Bastidor", texto: "Fim de dia por aqui. Obrigada a cada uma que confiou hoje 💛" },
+  { etiqueta: "Contagem", texto: "Última chamada do dia! Quem tá na dúvida, me chama que eu seguro pra você até amanhã 💛" },
+];
+
 
 export function montarPauta(pecas: PecaDaPauta[], agora: Date = new Date()): Ideia[] {
   const ideias: Ideia[] = [];
@@ -80,7 +114,7 @@ export function montarPauta(pecas: PecaDaPauta[], agora: Date = new Date()): Ide
         texto: faltam <= 1
           ? "ÚLTIMO DIA de Black November 🖤 Depois de hoje os preços voltam ao normal. Corre que ainda dá tempo!"
           : `Faltam ${faltam} dias de Black November 🖤 Depois disso os preços voltam. Não deixa pra última hora!`,
-        peso: 100,
+        momento: "manha", peso: 100,
       });
     }
   }
@@ -95,7 +129,7 @@ export function montarPauta(pecas: PecaDaPauta[], agora: Date = new Date()): Ide
       texto: p.stock === 1
         ? `ÚLTIMA peça da ${p.name.trim()} 🏃‍♀️ É a última mesmo — quando sair, acabou. ${moeda(preco)}${desconto ? ` (de ${moeda(p.price)})` : ""}`
         : `Restam só 2 da ${p.name.trim()}! ${moeda(preco)}${desconto ? ` (de ${moeda(p.price)})` : ""} — me chama antes que acabe 💛`,
-      peca: p, peso: 80 + (p.stock === 1 ? 5 : 0),
+      peca: p, momento: "manha" as const, peso: 80 + (p.stock === 1 ? 5 : 0),
     });
   }
 
@@ -108,7 +142,7 @@ export function montarPauta(pecas: PecaDaPauta[], agora: Date = new Date()): Ide
         etiqueta: `${desconto}% OFF`,
         porque: `De ${moeda(p.price)} por ${moeda(preco)} — ${desconto}% de desconto.`,
         texto: `${p.name.trim()} com ${desconto}% OFF 🖤 De ${moeda(p.price)} por ${moeda(preco)}. Black November até dia 30!`,
-        peca: p, peso: 60 + Math.min(desconto, 50) / 5,
+        peca: p, momento: "manha" as const, peso: 60 + Math.min(desconto, 50) / 5,
       });
     }
   }
@@ -124,7 +158,7 @@ export function montarPauta(pecas: PecaDaPauta[], agora: Date = new Date()): Ide
         etiqueta: "Novidade",
         porque: `Entrou no catálogo há ${dias === 0 ? "menos de um dia" : `${dias} dia${dias === 1 ? "" : "s"}`}.`,
         texto: `CHEGOU 🤍 ${p.name.trim()} — ${moeda(preco)}. ${p.category?.name ? `Nova na linha de ${p.category.name.toLowerCase()}.` : ""} Quer ver em você? Me chama.`,
-        peca: p, peso: 70,
+        peca: p, momento: "manha" as const, peso: 70,
       });
     }
   }
@@ -144,14 +178,27 @@ export function montarPauta(pecas: PecaDaPauta[], agora: Date = new Date()): Ide
         etiqueta: "Merece uma chance",
         porque: `Parada há ${parada} dias e hoje está com ${desconto}% off.`,
         texto: `Essa aqui é injustiçada 👀 ${p.name.trim()} com ${desconto}% OFF — ${moeda(preco)}. Quem leva não larga mais.`,
-        peca: p, peso: 40,
+        peca: p, momento: "manha" as const, peso: 40,
       });
     }
   }
 
-  // ── bastidor: um por dia, girando ──
-  const b = BASTIDORES[new Date(agora).getUTCDate() % BASTIDORES.length];
-  ideias.push({ tipo: "bastidor", etiqueta: b.etiqueta, porque: "Conteúdo que não depende de peça — segura o feed nos dias fracos.", texto: b.texto, peso: 30 });
+  /**
+   * A conversa e o movimento do dia, girando pela data.
+   *
+   * Pela data e não por sorteio: a pauta de hoje tem que ser a mesma se ele
+   * abrir a tela duas vezes. Pauta que muda a cada F5 não dá para planejar.
+   */
+  const dia = new Date(agora).getUTCDate();
+  const inter = INTERACOES[dia % INTERACOES.length];
+  ideias.push({ tipo: "interacao", momento: "tarde", etiqueta: inter.etiqueta,
+    porque: "O Instagram entrega mais story de quem responde — é isto que faz o post de amanhã alcançar mais gente.",
+    texto: inter.texto, peso: 50 });
+
+  const mov = MOVIMENTOS[dia % MOVIMENTOS.length];
+  ideias.push({ tipo: "movimento", momento: "noite", etiqueta: mov.etiqueta,
+    porque: "Prova de que a loja está viva. É o conteúdo mais fácil de fazer e o que mais constrói confiança.",
+    texto: mov.texto, peso: 45 });
 
   /**
    * Uma peça não aparece duas vezes na pauta.
