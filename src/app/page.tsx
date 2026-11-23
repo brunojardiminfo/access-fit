@@ -5,6 +5,7 @@ import { saleWhere } from "@/lib/saleHelper";
 import { PECA_NA_VITRINE } from "@/lib/vitrine";
 import { consultaDaVitrine } from "@/lib/cacheDaVitrine";
 import { PECA_PUBLICA } from "@/lib/pecaPublica";
+import { blackNovemberAtiva, chamadaDePrazo } from "@/lib/blackNovember";
 
 export const dynamic = "force-dynamic";
 
@@ -38,8 +39,11 @@ const vitrineDaHome = consultaDaVitrine(["home"], async () => {
     prisma.product.findMany({
       where: { ...PECA_NA_VITRINE, ...saleWhere() },
       select: PECA_PUBLICA,
+      // Na Black November esta seção é a vitrine da promoção, não uma amostra:
+      // 12 peças enchem a grade em qualquer largura e dão o que escolher sem
+      // ter que clicar para ver mais.
       orderBy: { createdAt: "asc" },
-      take: 8,
+      take: 12,
     }),
     prisma.category.findMany({ orderBy: { name: "asc" } }),
   ]);
@@ -55,7 +59,20 @@ export default async function HomePage() {
     ? heroProducts
     : [...heroProducts, ...newArrivals.filter(n => !heroProducts.some(h => h.id === n.id))].slice(0, 6);
   const displayFeaturedProducts = featuredProducts.length >= 4 ? featuredProducts : newArrivals.slice(4, 8);
-  const displaySaleProducts = saleProducts.slice(0, 8);
+  const displaySaleProducts = saleProducts.slice(0, 12);
+
+  /**
+   * Durante a promoção, a seção do SALE veste a Black November.
+   *
+   * É a mesma vitrine — as peças em desconto são as mesmas —, então criar uma
+   * seção à parte deixaria duas listas iguais na mesma página, uma embaixo da
+   * outra. O que muda é o nome e a cara: quem chega pelo anúncio procura
+   * "Black November" e precisa achar isso, não "🔥 SALE".
+   *
+   * A data manda: passado o dia 30, a seção volta a ser o SALE de sempre sem
+   * ninguém mexer em nada.
+   */
+  const naBlack = blackNovemberAtiva();
 
   const categoryIcons: Record<string, string> = {
     "Conjuntos": "👗", "Leggings": "🩱", "Tops": "👙",
@@ -70,6 +87,7 @@ export default async function HomePage() {
       heroProducts={displayHeroProducts}
       featuredProducts={displayFeaturedProducts}
       saleProducts={displaySaleProducts}
+      black={naBlack ? { prazo: chamadaDePrazo() } : null}
       categories={categories}
       categoryIcons={categoryIcons}
     />

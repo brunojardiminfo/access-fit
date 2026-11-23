@@ -13,6 +13,8 @@ interface HomeClientProps {
   mostrarAviso?: boolean;
   featuredProducts: any[];
   saleProducts: any[];
+  /** Quando a Black November está no ar, com o prazo já escrito. */
+  black?: { prazo: string } | null;
   categories: any[];
   categoryIcons: Record<string, string>;
 }
@@ -23,6 +25,7 @@ export default function HomeClient({
   mostrarAviso = false,
   featuredProducts,
   saleProducts,
+  black = null,
   categories,
   categoryIcons,
 }: HomeClientProps) {
@@ -71,20 +74,36 @@ export default function HomeClient({
         </div>
       </section>
 
-      {/* SALE */}
-      <section style={{ padding: isMobile ? "2rem 1rem" : "4.5rem 1.5rem", background: "linear-gradient(180deg, var(--sale-veu) 0%, var(--bg) 100%)", borderTop: "3px solid var(--sale)" }}>
+      {/* SALE — e, na janela da promoção, a Black November */}
+      <section style={black
+        ? { padding: isMobile ? "2.25rem 1rem" : "4.5rem 1.5rem", background: "linear-gradient(180deg, #07060a 0%, #140f06 55%, var(--bg) 100%)", borderTop: "3px solid #e8c766" }
+        : { padding: isMobile ? "2rem 1rem" : "4.5rem 1.5rem", background: "linear-gradient(180deg, var(--sale-veu) 0%, var(--bg) 100%)", borderTop: "3px solid var(--sale)" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "0.75rem" }}>
-            <span style={{ display: "inline-block", backgroundColor: "var(--sale)", color: "var(--bg)", fontSize: isMobile ? "0.6rem" : "0.7rem", fontWeight: 900, letterSpacing: "0.18em", padding: "0.35rem 1rem", borderRadius: "999px", marginBottom: "0.75rem" }}>
-              PREÇOS REDUZIDOS
+            <span style={{ display: "inline-block", backgroundColor: black ? "#e8c766" : "var(--sale)", color: black ? "#07060a" : "var(--bg)", fontSize: isMobile ? "0.6rem" : "0.7rem", fontWeight: 900, letterSpacing: "0.18em", padding: "0.35rem 1rem", borderRadius: "999px", marginBottom: "0.75rem" }}>
+              {black ? black.prazo.toUpperCase() : "PREÇOS REDUZIDOS"}
             </span>
-            <h2 style={{ fontSize: isMobile ? "1.75rem" : "3rem", fontWeight: 900, color: "var(--sale-text)", margin: 0, lineHeight: 1 }}>
-              🔥 SALE
-            </h2>
+            {black ? (
+              /* O mesmo dourado varrendo as letras do vídeo e da faixa do topo:
+                 quem chega pelo anúncio tem que reconhecer a promoção aqui. */
+              <h2 style={{
+                fontSize: isMobile ? "2rem" : "3.25rem", fontWeight: 900, margin: 0, lineHeight: 1.05,
+                background: "linear-gradient(100deg,#8d6f14,#e8c766 36%,#fff6d8 50%,#e8c766 64%,#8d6f14)",
+                WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent",
+              }}>
+                BLACK NOVEMBER
+              </h2>
+            ) : (
+              <h2 style={{ fontSize: isMobile ? "1.75rem" : "3rem", fontWeight: 900, color: "var(--sale-text)", margin: 0, lineHeight: 1 }}>
+                🔥 SALE
+              </h2>
+            )}
           </div>
-          <p style={{ textAlign: "center", color: "var(--text-muted)", marginBottom: isMobile ? "1.5rem" : "2.5rem", fontSize: isMobile ? "0.8rem" : "1rem" }}>
+          <p style={{ textAlign: "center", color: black ? "rgba(246,241,230,0.72)" : "var(--text-muted)", marginBottom: isMobile ? "1.5rem" : "2.5rem", fontSize: isMobile ? "0.8rem" : "1rem" }}>
             {saleProducts.length > 0
-              ? `${saleProducts.length} peça${saleProducts.length === 1 ? "" : "s"} com desconto agora — enquanto durar o estoque`
+              ? black
+                ? `${saleProducts.length} peças com o preço já abaixado — enquanto durar o estoque`
+                : `${saleProducts.length} peça${saleProducts.length === 1 ? "" : "s"} com desconto agora — enquanto durar o estoque`
               : "Fique atento para nossas promoções exclusivas"}
           </p>
           {saleProducts.length > 0 ? (
@@ -96,8 +115,8 @@ export default function HomeClient({
           ) : null}
           {saleProducts.length > 0 ? (
             <div style={{ textAlign: "center", marginTop: isMobile ? "1.25rem" : "2rem" }}>
-              <Link href="/produtos?sale=1" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", backgroundColor: "var(--sale)", color: "var(--bg)", fontWeight: 900, padding: isMobile ? "0.75rem 1.5rem" : "0.9rem 2rem", borderRadius: "0.875rem", textDecoration: "none", fontSize: isMobile ? "0.85rem" : "0.95rem", boxShadow: "0 4px 18px rgba(231,76,60,0.35)" }}>
-                Ver tudo em SALE <ArrowRight size={16} />
+              <Link href="/produtos?sale=1" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", backgroundColor: black ? "#e8c766" : "var(--sale)", color: black ? "#07060a" : "var(--bg)", fontWeight: 900, padding: isMobile ? "0.75rem 1.5rem" : "0.9rem 2rem", borderRadius: "0.875rem", textDecoration: "none", fontSize: isMobile ? "0.85rem" : "0.95rem", boxShadow: black ? "0 4px 22px rgba(232,199,102,0.35)" : "0 4px 18px rgba(231,76,60,0.35)" }}>
+                {black ? "Ver todas as peças" : "Ver tudo em SALE"} <ArrowRight size={16} />
               </Link>
             </div>
           ) : (
