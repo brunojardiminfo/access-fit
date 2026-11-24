@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { receberNasParcelas } from "@/lib/parcelas";
+import { entradaAgora } from "@/lib/financeiro";
 
 /**
  * Recebe um valor da cliente e distribui entre os pedidos dela no caderno, do
@@ -61,7 +62,8 @@ export async function POST(req: Request) {
         },
       });
       await prisma.payment.create({
-        data: { orderId: p.id, amount: pagar, paymentMethod, notes: "Quitação de caderno" },
+        // acerto de caderno em Pix cai hoje; no cartão, daqui a 31 dias
+        data: { orderId: p.id, amount: pagar, paymentMethod, receivedAt: entradaAgora(paymentMethod), notes: "Quitação de caderno" },
       });
     }
 

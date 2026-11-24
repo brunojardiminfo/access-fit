@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { estornarParcela, recalcularPeloParcelamento } from "@/lib/parcelas";
+import { entradaAgora } from "@/lib/financeiro";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -23,8 +24,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (body.status !== undefined && body.status !== before?.status) {
     if (body.status === "paid") {
       const order = await prisma.order.findUnique({ where: { id: installment.orderId }, select: { paymentMethod: true } });
+      const forma = order?.paymentMethod || "pix";
       await prisma.payment.create({
-        data: { orderId: installment.orderId, installmentId: installment.id, amount: installment.amount, paymentMethod: order?.paymentMethod || "pix" },
+        // quitar a parcela hoje no cartão não põe o dinheiro na conta hoje
+        data: { orderId: installment.orderId, installmentId: installment.id, amount: installment.amount, paymentMethod: forma, receivedAt: entradaAgora(forma) },
       });
     } else if (before?.status === "paid") {
       // Estorno, nao exclusao: o recebimento aconteceu e some do caixa do dia

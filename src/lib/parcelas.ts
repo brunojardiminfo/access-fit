@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { entradaAgora } from "@/lib/financeiro";
 
 /**
  * Parcelas de um pedido, e a conta que mantém as telas concordando.
@@ -128,7 +129,7 @@ export async function receberNasParcelas(orderId: string, valor: number, metodo 
         data: { status: "paid", paidAt: new Date() },
       });
       await prisma.payment.create({
-        data: { orderId, installmentId: p.id, amount: p.amount, paymentMethod: metodo },
+        data: { orderId, installmentId: p.id, amount: p.amount, paymentMethod: metodo, receivedAt: entradaAgora(metodo) },
       });
       quitadas.push(p.id);
       restante = centavos(restante - p.amount);
@@ -142,7 +143,7 @@ export async function receberNasParcelas(orderId: string, valor: number, metodo 
       data: { amount: restante, status: "paid", paidAt: new Date() },
     });
     await prisma.payment.create({
-      data: { orderId, installmentId: p.id, amount: restante, paymentMethod: metodo },
+      data: { orderId, installmentId: p.id, amount: restante, paymentMethod: metodo, receivedAt: entradaAgora(metodo) },
     });
     await prisma.installment.create({
       data: { orderId, number: p.number, amount: sobra, dueDate: p.dueDate, status: "pending" },
@@ -192,9 +193,16 @@ export async function estornarParcela(installmentId: string, motivo?: string) {
   });
   if (!parcela) return null;
 
-  const [lancado, order] = await Promise.all([
+  const [lancado, order, original] = await Promise.all([
     prisma.payment.aggregate({ where: { installmentId }, _sum: { amount: true } }),
     prisma.order.findUnique({ where: { id: parcela.orderId }, select: { paymentMethod: true } }),
+    // o recebimento mais à frente desta parcela: se ele ainda não caiu, o
+    // estorno tem que anulá-lo NO MÊS DELE. Lançar o contrário hoje deixaria
+    // novembro com -R$ 300 e dezembro com +R$ 300 de um dinheiro que nunca
+    // existiu nos dois meses.
+    prisma.payment.findFirst({
+      where: { installmentId }, orderBy: { receivedAt: "desc" }, select: { receivedAt: true },
+    }),
   ]);
 
   const liquido = centavos(lancado._sum.amount || 0);
@@ -206,6 +214,7 @@ export async function estornarParcela(installmentId: string, motivo?: string) {
       installmentId,
       amount: -liquido,
       paymentMethod: order?.paymentMethod || "pix",
+      receivedAt: original && original.receivedAt > new Date() ? original.receivedAt : new Date(),
       notes: motivo?.trim() || `Estorno da ${parcela.number}ª parcela`,
     },
   });

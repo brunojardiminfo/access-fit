@@ -6,6 +6,7 @@ import { sendPushToUser } from "@/lib/firebase-admin";
 import { restoreProductStock, ajustarEstoquePorStatus, consomeEstoque, decrementProductStock } from "@/lib/stock";
 import { montarItemDoPedido, ehVendaAvulsa } from "@/lib/itensDoPedido";
 import { recalcOrderTotals } from "@/lib/orderTotals";
+import { entradaAgora } from "@/lib/financeiro";
 
 const STATUS_NOTIFICATION: Record<string, { title: string; body: string }> = {
   confirmed: { title: "Pedido confirmado ✅", body: "Já estamos preparando tudo para você." },
@@ -54,8 +55,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (body.amountPaid !== undefined && before) {
     const delta = body.amountPaid - before.amountPaid;
     if (delta > 0.001) {
+      const forma = body.paymentMethod ?? before.paymentMethod;
       await prisma.payment.create({
-        data: { orderId: id, amount: delta, paymentMethod: body.paymentMethod ?? before.paymentMethod },
+        // o prazo da forma conta a partir de AGORA: marcar o link como pago
+        // hoje quer dizer que o dinheiro cai daqui a 31 dias, não hoje
+        data: { orderId: id, amount: delta, paymentMethod: forma, receivedAt: entradaAgora(forma) },
       });
     }
   }
