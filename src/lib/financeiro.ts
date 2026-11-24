@@ -77,27 +77,46 @@ export function nomeDoMes(ano: number, mes: number): string {
 export type Entrada = { amount: number; paymentMethod: string };
 
 /**
+ * Formas que NÃO são dinheiro novo na conta.
+ *
+ * Crédito da cliente é o único caso: a venda aconteceu e está no
+ * faturamento, mas o dinheiro dela entrou meses atrás, na compra que gerou o
+ * crédito. O cashback de indicação da Ingrid é exatamente isto — a loja deu o
+ * crédito, ninguém depositou nada.
+ */
+const NAO_E_DINHEIRO = new Set(["credito"]);
+
+/**
  * O que entrou no mês, somado e separado por forma.
  *
- * Crédito da cliente fica de fora do total: a venda aconteceu e está no
- * faturamento, mas o dinheiro dela entrou meses atrás, na compra que gerou o
- * crédito. Contar de novo aqui somaria o mesmo dinheiro duas vezes — e ainda
- * assim ele aparece na lista por forma, porque sumir faria o total não bater
- * com as linhas.
+ * A LISTA SÓ MOSTRA O QUE ENTROU DE VERDADE. Antes o crédito ficava fora do
+ * total mas aparecia entre as barras de "como entrou" — e aí a soma das linhas
+ * não fechava com o total, o que faz quem lê desconfiar do número certo. Agora
+ * o crédito sai da lista e vira uma nota à parte, dizendo o que é.
  */
 export function somarEntradas(entradas: Entrada[]) {
   const porForma = new Map<string, number>();
+  const fora = new Map<string, number>();
   let total = 0;
   for (const e of entradas) {
-    porForma.set(e.paymentMethod, arredonda((porForma.get(e.paymentMethod) || 0) + e.amount));
-    if (e.paymentMethod !== "credito") total += e.amount;
+    const onde = NAO_E_DINHEIRO.has(e.paymentMethod) ? fora : porForma;
+    onde.set(e.paymentMethod, arredonda((onde.get(e.paymentMethod) || 0) + e.amount));
+    if (!NAO_E_DINHEIRO.has(e.paymentMethod)) total += e.amount;
   }
+  const lista = (m: Map<string, number>) => [...m.entries()]
+    .map(([forma, valor]) => ({ forma, rotulo: ROTULO_FORMA[forma] || forma, valor }))
+    .sort((a, b) => b.valor - a.valor);
+
   return {
     total: arredonda(total),
-    porForma: [...porForma.entries()]
-      .map(([forma, valor]) => ({ forma, rotulo: ROTULO_FORMA[forma] || forma, valor }))
-      .sort((a, b) => b.valor - a.valor),
+    porForma: lista(porForma),
+    naoEntrou: lista(fora),
   };
+}
+
+/** Esta forma de pagamento põe dinheiro na conta? */
+export function eDinheiroNaConta(metodo: string): boolean {
+  return !NAO_E_DINHEIRO.has(metodo);
 }
 
 function arredonda(v: number) {

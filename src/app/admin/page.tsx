@@ -67,7 +67,7 @@ export default async function AdminPage() {
     mes: {
       vendido: esteMes.vendido, pedidos: esteMes.pedidos, ticket: esteMes.ticket,
       entrou: esteMes.entrou, saiu: esteMes.saiu, aReceber: esteMes.aReceber,
-      porForma: esteMes.porForma,
+      porForma: esteMes.porForma, naoEntrou: esteMes.naoEntrou,
     },
     mesPassado: { vendido: passado.vendido },
     grafico: grafico.map(m => ({ rotulo: m.rotulo, vendido: m.vendido, entrou: m.entrou, saiu: m.saiu })),

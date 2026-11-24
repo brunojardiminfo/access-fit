@@ -31,7 +31,7 @@ async function desalinhados() {
     where: { paymentMethod: { in: FORMAS_COM_PRAZO } },
     select: {
       id: true, amount: true, paymentMethod: true, receivedAt: true,
-      order: { select: { createdAt: true, status: true } },
+      order: { select: { createdAt: true, status: true, user: { select: { name: true, email: true } } } },
     },
   });
 
@@ -52,7 +52,15 @@ export async function GET() {
   return NextResponse.json({
     quantos: lista.length,
     total: Math.round(lista.reduce((s, p) => s + p.amount, 0) * 100) / 100,
-    exemplos: lista.slice(0, 5).map(p => ({
+    /**
+     * Com nome e valor, não só a contagem.
+     *
+     * "3 recebimentos estão no mês errado" pede fé; "Isadora Lazzari, R$ 236,
+     * de 23/11 para 24/12" deixa ele conferir antes de clicar — e é ele que
+     * sabe se aquela venda foi no link ou não.
+     */
+    exemplos: lista.slice(0, 8).map(p => ({
+      cliente: p.order!.user?.name || p.order!.user?.email || "sem nome",
       valor: p.amount, forma: p.paymentMethod,
       de: p.receivedAt, para: quandoEntra(p.paymentMethod, p.order!.createdAt),
     })),

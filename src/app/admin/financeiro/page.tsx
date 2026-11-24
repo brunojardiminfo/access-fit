@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { resumoDoMes } from "@/lib/resumoDoMes";
-import { lerMes, nomeDoMes, ROTULO_FORMA } from "@/lib/financeiro";
+import { lerMes, nomeDoMes, ROTULO_FORMA, eDinheiroNaConta } from "@/lib/financeiro";
 import FinanceiroClient from "./FinanceiroClient";
 
 export const dynamic = "force-dynamic";
@@ -97,6 +97,9 @@ export default async function FinanceiroPage({
         valor: p.amount,
         data: p.receivedAt.toISOString(),
         forma: ROTULO_FORMA[p.paymentMethod] || p.paymentMethod,
+        // crédito da cliente não é dinheiro novo: a tela marca a linha em vez
+        // de somá-la com o resto, senão "o que caiu" vira um número inflado
+        dinheiro: eDinheiroNaConta(p.paymentMethod),
       }))}
       despesas={despesas.map(e => ({
         id: e.id, descricao: e.description, valor: e.amount,

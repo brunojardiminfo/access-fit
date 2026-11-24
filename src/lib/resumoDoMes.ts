@@ -15,6 +15,7 @@ export type ResumoDoMes = {
   ticket: number;
   entrou: number;           // o que virou dinheiro na conta no mês
   porForma: { forma: string; rotulo: string; valor: number }[];
+  naoEntrou: { forma: string; rotulo: string; valor: number }[]; // crédito usado: não é dinheiro novo
   saiu: number;             // despesas do mês
   aReceber: number;         // já vendido, ainda não caiu
   emAberto: number;         // pedidos sem pagamento integral
@@ -46,7 +47,7 @@ export async function resumoDoMes(ano: number, mes: number): Promise<ResumoDoMes
   ]);
 
   const vendido = arredonda(vendas.reduce((s, o) => s + o.total, 0));
-  const { total: entrou, porForma } = somarEntradas(entradas);
+  const { total: entrou, porForma, naoEntrou } = somarEntradas(entradas);
 
   /**
    * O que já foi vendido e ainda não caiu: pagamentos marcados para o futuro.
@@ -66,6 +67,7 @@ export async function resumoDoMes(ano: number, mes: number): Promise<ResumoDoMes
     ticket: vendas.length ? arredonda(vendido / vendas.length) : 0,
     entrou,
     porForma,
+    naoEntrou,
     saiu: arredonda(despesas._sum.amount || 0),
     aReceber: arredonda(futuros._sum.amount || 0),
     emAberto: arredonda(saldoAberto.reduce((s, v) => s + v, 0)),

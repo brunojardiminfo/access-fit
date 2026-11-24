@@ -13,6 +13,7 @@ export type DadosDoPainel = {
     vendido: number; pedidos: number; ticket: number;
     entrou: number; saiu: number; aReceber: number;
     porForma: { forma: string; rotulo: string; valor: number }[];
+    naoEntrou: { forma: string; rotulo: string; valor: number }[];
   };
   mesPassado: { vendido: number };
   grafico: Mes[];
@@ -147,6 +148,17 @@ export default function PainelInicial({ d }: { d: DadosDoPainel }) {
               );
             })}
           </div>
+          {/*
+            Crédito usado fica fora das barras e aparece aqui, nomeado.
+            É o cashback de indicação e devolução: a loja abateu da compra, mas
+            ninguém depositou nada neste mês — somar junto infla o "entrou".
+          */}
+          {d.mes.naoEntrou.map(f => (
+            <div key={f.forma} style={{ color: "#9a8060", fontSize: "0.75rem", marginTop: "0.7rem", lineHeight: 1.5 }}>
+              Fora disso, <strong>{formatCurrency(f.valor)}</strong> em {f.rotulo.toLowerCase()} — abatido na
+              compra, não é dinheiro que caiu na conta.
+            </div>
+          ))}
         </div>
       )}
 
