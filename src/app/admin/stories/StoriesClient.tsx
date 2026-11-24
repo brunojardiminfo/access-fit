@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { desenharStory, desenharEnquete, enviarStory } from "@/lib/storyCanvas";
+import { whatsDaPeca, whatsDaEnquete } from "@/lib/loja";
 
 type Peca = {
   id: string; nome: string; categoria: string | null; foto: string;
@@ -38,6 +39,14 @@ export default function StoriesClient({ pecas, pauta }: { pecas: Peca[]; pauta: 
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [aviso, setAviso] = useState("");
   const [copiado, setCopiado] = useState<string | null>(null);
+  /**
+   * O link da última imagem gerada.
+   *
+   * Fica junto do aviso porque é ali que ele está olhando quando acabou de
+   * gerar — e é nesse momento, com o story na mão, que ele precisa do link
+   * para colar no sticker. Oferecer em outro lugar seria oferecer tarde.
+   */
+  const [linkPronto, setLinkPronto] = useState<{ rotulo: string; url: string } | null>(null);
 
   const porId = useMemo(() => new Map(pecas.map(p => [p.id, p])), [pecas]);
   const porMomento = useMemo(() => ({
@@ -54,6 +63,7 @@ export default function StoriesClient({ pecas, pauta }: { pecas: Peca[]; pauta: 
 
   const gerar = async (p: Peca) => {
     setAviso(""); setOcupado(p.id);
+    setLinkPronto({ rotulo: p.nome, url: whatsDaPeca(p.nome) });
     try {
       const blob = await desenharStory(p);
       const onde = await enviarStory(blob, `story-${p.nome.toLowerCase().replace(/\s+/g, "-")}`);
@@ -75,6 +85,7 @@ export default function StoriesClient({ pecas, pauta }: { pecas: Peca[]; pauta: 
    */
   const gerarEnquete = async (a: Peca, b: Peca) => {
     setAviso(""); setOcupado(`enquete-${a.id}`);
+    setLinkPronto({ rotulo: "a enquete", url: whatsDaEnquete(a.nome, b.nome) });
     try {
       const blob = await desenharEnquete(a, b);
       const onde = await enviarStory(blob, "enquete-access-fit");
@@ -106,6 +117,17 @@ export default function StoriesClient({ pecas, pauta }: { pecas: Peca[]; pauta: 
       {aviso && (
         <div style={{ ...CARTAO, padding: "0.8rem 1rem", marginBottom: "1.1rem", backgroundColor: "#fff8e1", borderColor: "rgba(184,137,26,0.4)", color: "#5a4a2a", fontSize: "0.83rem" }}>
           {aviso}
+          {linkPronto && (
+            <div style={{ marginTop: "0.6rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+              <button onClick={() => copiar(linkPronto.url, "zap-aviso")}
+                style={{ fontSize: "0.75rem", fontWeight: 800, padding: "0.45rem 0.8rem", borderRadius: "0.6rem", border: "1px solid rgba(37,211,102,0.5)", backgroundColor: "#eafaf0", color: "#0b6b35", cursor: "pointer" }}>
+                {copiado === "zap-aviso" ? "✓ link copiado" : "Copiar link do WhatsApp"}
+              </button>
+              <span style={{ color: "#9a8060", fontSize: "0.74rem" }}>
+                cola no sticker de link do story — ela chega dizendo que viu {linkPronto.rotulo}
+              </span>
+            </div>
+          )}
         </div>
       )}
 
@@ -163,10 +185,25 @@ export default function StoriesClient({ pecas, pauta }: { pecas: Peca[]; pauta: 
                   </div>
 
                   <div style={{ display: "flex", gap: "0.45rem", marginTop: "0.65rem", flexWrap: "wrap" }}>
-                    <button onClick={() => copiar(i.texto, id)}
-                      style={{ fontSize: "0.75rem", fontWeight: 700, padding: "0.5rem 0.85rem", borderRadius: "0.6rem", border: "1px solid rgba(140,100,20,0.25)", backgroundColor: "#FAF6EE", color: "#5a4a2a", cursor: "pointer" }}>
-                      {copiado === id ? "✓ copiado" : "Copiar texto"}
-                    </button>
+                    {/*
+                      Nos stories de PEÇA o texto já está desenhado na imagem —
+                      copiá-lo de novo não serve para nada. Ali o que falta é o
+                      link do sticker, que faz a conversa chegar com o nome da
+                      peça dentro. Onde não há imagem (conversa, bastidor), o
+                      texto é tudo o que ele tem, e o botão continua.
+                    */}
+                    {(p || temDuo) ? (
+                      <button onClick={() => copiar(
+                        p ? whatsDaPeca(p.nome) : whatsDaEnquete(duo[0].nome, duo[1].nome), `zap-${id}`)}
+                        style={{ fontSize: "0.75rem", fontWeight: 700, padding: "0.5rem 0.85rem", borderRadius: "0.6rem", border: "1px solid rgba(37,211,102,0.5)", backgroundColor: "#eafaf0", color: "#0b6b35", cursor: "pointer" }}>
+                        {copiado === `zap-${id}` ? "✓ link copiado" : "Copiar link do WhatsApp"}
+                      </button>
+                    ) : (
+                      <button onClick={() => copiar(i.texto, id)}
+                        style={{ fontSize: "0.75rem", fontWeight: 700, padding: "0.5rem 0.85rem", borderRadius: "0.6rem", border: "1px solid rgba(140,100,20,0.25)", backgroundColor: "#FAF6EE", color: "#5a4a2a", cursor: "pointer" }}>
+                        {copiado === id ? "✓ copiado" : "Copiar texto"}
+                      </button>
+                    )}
                     {p && (
                       <button onClick={() => gerar(p)} disabled={ocupado === p.id}
                         style={{ fontSize: "0.75rem", fontWeight: 800, padding: "0.5rem 0.9rem", borderRadius: "0.6rem", border: "none", backgroundColor: "#b8891a", color: "#fff", cursor: ocupado === p.id ? "wait" : "pointer" }}>
