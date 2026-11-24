@@ -87,9 +87,12 @@ export default async function StoriesPage() {
     p => new Date(p.postedAt.getTime() - 3 * 3600000).toISOString().slice(0, 10) === hoje,
   ).length;
 
+  const miniaturas = roteiro.filter(p => p.peca).map(p => p.peca!.id);
+
   return (
     <StoriesClient
       pecas={paraTela}
+      miniaturas={miniaturas}
       dia={{ nome: dia.nome, tema: dia.tema, categorias: dia.categorias }}
       semana={AGENDA.map(d => ({
         nome: d.nome.slice(0, 3), tema: d.categorias.join(" + ") || d.tema,
@@ -102,6 +105,7 @@ export default async function StoriesPage() {
         texto: p.texto, pecaId: p.peca?.id ?? null,
         dueloIds: p.duelo ? [p.duelo.a.id, p.duelo.b.id] as [string, string] : null,
         avisoDeRepeticao: p.avisoDeRepeticao ?? null,
+        capa: p.capa ?? null,
       }))}
     />
   );

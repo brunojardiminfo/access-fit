@@ -74,6 +74,12 @@ if (doDia.length) {
         `${cats} categoria(s) de ${categorias.split(' | ').length}`);
 }
 
+// ── abertura e fechamento saem como imagem, com o logo ──
+for (const tipo of ['abertura', 'fechamento']) {
+  const b = pg.locator(`button[data-passo="${tipo}"]`);
+  checa(`o passo ${tipo} tem imagem própria`, await b.count() === 1, `${await b.count()} botão(ões)`);
+}
+
 // ── a memória gira: o que foi postado sai da frente ──
 const primeira = doDia[0];
 checa('o roteiro trouxe uma peça', !!primeira, primeira || 'nenhuma');

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { desenharStory, desenharEnquete, enviarStory } from "@/lib/storyCanvas";
+import { desenharStory, desenharEnquete, desenharCapa, enviarStory } from "@/lib/storyCanvas";
 import { whatsDaPeca, whatsDaEnquete } from "@/lib/loja";
 
 type Peca = {
@@ -12,6 +12,7 @@ type Peca = {
 type Passo = {
   slot: number; tipo: string; etiqueta: string; instrucao: string; texto: string;
   pecaId: string | null; dueloIds: [string, string] | null; avisoDeRepeticao: string | null;
+  capa: { sobretitulo: string; titulo: string; subtitulo: string; chamada: string } | null;
 };
 
 const CARTAO = { backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.12)", borderRadius: "1rem" } as const;
@@ -32,9 +33,9 @@ const BOTAO = {
  * sempre o primeiro que ele vê.
  */
 export default function StoriesClient({
-  pecas, roteiro, dia, semana, postadosHoje, descanso,
+  pecas, roteiro, dia, semana, postadosHoje, descanso, miniaturas,
 }: {
-  pecas: Peca[]; roteiro: Passo[];
+  pecas: Peca[]; roteiro: Passo[]; miniaturas: string[];
   dia: { nome: string; tema: string; categorias: string[] };
   semana: { nome: string; tema: string; hoje: boolean }[];
   postadosHoje: number; descanso: number;
@@ -99,6 +100,34 @@ export default function StoriesClient({
         ? "Enquete gerada — põe a enquete do Instagram por cima, opções 1 e 2."
         : "Enquete baixada. Posta e põe a enquete do Instagram por cima, opções 1 e 2.");
       await registrar(passo.slot, "enquete", null);
+    } catch (e) {
+      setAviso(`Não deu para gerar: ${(e as Error).message}`);
+    }
+    setOcupado(null);
+  };
+
+  /**
+   * A capa do dia: logo da loja, o tema e as miniaturas do que vem a seguir.
+   *
+   * As miniaturas são as PEÇAS DO PRÓPRIO ROTEIRO, não uma amostra qualquer:
+   * é uma promessa do que vem, e promessa cumprida é o que segura a seguidora
+   * até o último story.
+   */
+  const gerarCapa = async (passo: Passo) => {
+    if (!passo.capa) return;
+    setAviso(""); setOcupado(`capa-${passo.slot}`);
+    try {
+      const fotos = miniaturas.map(id => porId.get(id)?.foto).filter(Boolean) as string[];
+      const blob = await desenharCapa({
+        ...passo.capa,
+        // o fechamento não repete as peças: ali a atenção tem que ir para o direct
+        miniaturas: passo.tipo === "abertura" ? fotos : [],
+      });
+      const onde = await enviarStory(blob, `${passo.tipo}-access-fit`);
+      setAviso(onde === "compartilhado"
+        ? "Imagem gerada — escolhe o Instagram no menu que abriu."
+        : "Imagem baixada. No computador o compartilhamento direto não existe.");
+      await registrar(passo.slot, passo.tipo, null);
     } catch (e) {
       setAviso(`Não deu para gerar: ${(e as Error).message}`);
     }
@@ -232,6 +261,13 @@ export default function StoriesClient({
                           <button onClick={() => gerar(p, passo)} disabled={ocupado === p.id} data-passo="peca"
                             style={{ ...BOTAO, backgroundColor: "#b8891a", color: "#fff", cursor: ocupado === p.id ? "wait" : "pointer" }}>
                             {ocupado === p.id ? "montando…" : "Gerar imagem"}
+                          </button>
+                        )}
+                        {passo.capa && (
+                          <button onClick={() => gerarCapa(passo)} disabled={ocupado === `capa-${passo.slot}`}
+                            data-passo={passo.tipo}
+                            style={{ ...BOTAO, backgroundColor: "#b8891a", color: "#fff" }}>
+                            {ocupado === `capa-${passo.slot}` ? "montando…" : "Gerar imagem"}
                           </button>
                         )}
                         {temDuo && (
