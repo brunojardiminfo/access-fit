@@ -165,6 +165,7 @@ model Product {
   conjuntoItems      ConjuntoItem[]
   waitlist           Waitlist[]
   returnReplacements Return[]            @relation("ReturnReplacement")
+  storyPosts               StoryPost[]
 }
 
 model ConjuntoItem {
@@ -644,4 +645,25 @@ model CustomerCredit {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+// O que já foi para o story, para a mesma peça não voltar na semana.
+//
+// Sem memória, a agenda ofereceria a mesma legging quatro vezes em dez dias —
+// e repetição é o que faz a seguidora ler a loja como parada. A linha nasce
+// quando a imagem é gerada (que é quando ele decide postar) e também quando
+// ele marca o passo como feito.
+model StoryPost {
+  id        String   @id @default(cuid())
+  // A peça, quando o story é de peça. Abertura e fechamento não têm.
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  // A posição no roteiro do dia (1 a 7).
+  slot      Int
+  // "peca" | "abertura" | "enquete" | "fechamento" | "conversa"
+  kind      String
+  postedAt  DateTime @default(now())
+
+  @@index([postedAt])
+  @@index([productId, postedAt])
 }
