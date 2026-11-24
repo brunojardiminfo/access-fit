@@ -1,14 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { desenharStory, enviarStory } from "@/lib/storyCanvas";
+import { desenharStory, desenharEnquete, enviarStory } from "@/lib/storyCanvas";
 
 type Peca = {
   id: string; nome: string; categoria: string | null; foto: string;
   preco: number; precoCheio: number; desconto: number; estoque: number;
 };
 type Momento = "manha" | "tarde" | "noite";
-type Ideia = { tipo: string; momento: Momento; etiqueta: string; porque: string; texto: string; pecaId: string | null };
+type Ideia = { tipo: string; momento: Momento; etiqueta: string; porque: string; texto: string; pecaId: string | null; dueloIds?: [string, string] | null };
 
 const CARTAO = { backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.12)", borderRadius: "1rem" } as const;
 const moeda = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -66,6 +66,27 @@ export default function StoriesClient({ pecas, pauta }: { pecas: Peca[]; pauta: 
     setOcupado(null);
   };
 
+  /**
+   * A imagem da enquete, com as duas peças já montadas.
+   *
+   * Era o buraco da ideia boa: "qual dessas duas você levaria" dependia dele
+   * caçar duas fotos na galeria e montar à mão — exatamente o trabalho que
+   * esta tela existe para tirar do caminho.
+   */
+  const gerarEnquete = async (a: Peca, b: Peca) => {
+    setAviso(""); setOcupado(`enquete-${a.id}`);
+    try {
+      const blob = await desenharEnquete(a, b);
+      const onde = await enviarStory(blob, "enquete-access-fit");
+      setAviso(onde === "compartilhado"
+        ? "Enquete gerada — escolhe o Instagram e põe a enquete do Instagram por cima, com as opções 1 e 2."
+        : "Enquete baixada. Posta no story e põe a enquete do Instagram por cima, com as opções 1 e 2.");
+    } catch (e) {
+      setAviso(`Não deu para gerar: ${(e as Error).message}`);
+    }
+    setOcupado(null);
+  };
+
   const copiar = async (texto: string, id: string) => {
     try { await navigator.clipboard.writeText(texto); setCopiado(id); setTimeout(() => setCopiado(null), 2000); }
     catch { prompt("Copie o texto:", texto); }
@@ -94,6 +115,10 @@ export default function StoriesClient({ pecas, pauta }: { pecas: Peca[]; pauta: 
           if (opcoes.length === 0) return null;
           const i = opcoes[indice[m.chave] % opcoes.length];
           const p = i.pecaId ? porId.get(i.pecaId) : undefined;
+          const duo = i.dueloIds
+            ? [porId.get(i.dueloIds[0]), porId.get(i.dueloIds[1])].filter(Boolean) as Peca[]
+            : [];
+          const temDuo = duo.length === 2;
           const id = `${m.chave}-${indice[m.chave]}`;
           return (
             <div key={m.chave} style={{ ...CARTAO, overflow: "hidden" }}>
@@ -106,12 +131,30 @@ export default function StoriesClient({ pecas, pauta }: { pecas: Peca[]; pauta: 
                 {p && (
                   <img src={p.foto} alt="" style={{ width: 76, height: 101, objectFit: "cover", borderRadius: "0.6rem", flexShrink: 0 }} />
                 )}
+                {temDuo && (
+                  // as duas, com o número do lado que elas vão ocupar na imagem
+                  <div style={{ display: "flex", gap: 3, flexShrink: 0 }}>
+                    {duo.map((d, n) => (
+                      <div key={d.id} style={{ position: "relative" }}>
+                        <img src={d.foto} alt="" style={{ width: 54, height: 101, objectFit: "cover", borderRadius: n === 0 ? "0.6rem 0 0 0.6rem" : "0 0.6rem 0.6rem 0" }} />
+                        <span style={{ position: "absolute", top: 3, left: "50%", transform: "translateX(-50%)", backgroundColor: "#e8c766", color: "#07060a", fontSize: "0.58rem", fontWeight: 900, width: 16, height: 16, borderRadius: 999, display: "grid", placeItems: "center" }}>
+                          {n + 1}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", flexWrap: "wrap", marginBottom: "0.3rem" }}>
                     <span style={{ backgroundColor: COR_TIPO[i.tipo] || "#9a8060", color: "#fff", fontSize: "0.6rem", fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase", padding: "0.18rem 0.55rem", borderRadius: 999 }}>
                       {i.etiqueta}
                     </span>
                     {p && <strong style={{ color: "#1a1510", fontSize: "0.88rem" }}>{p.nome}</strong>}
+                    {temDuo && (
+                      <strong style={{ color: "#1a1510", fontSize: "0.82rem" }}>
+                        {duo[0].nome} <span style={{ color: "#9a8060", fontWeight: 600 }}>ou</span> {duo[1].nome}
+                      </strong>
+                    )}
                   </div>
                   {/* O fato com número. Sem ele, a sugestão é chute. */}
                   <div style={{ color: "#9a8060", fontSize: "0.73rem", lineHeight: 1.45, marginBottom: "0.5rem" }}>{i.porque}</div>
@@ -128,6 +171,12 @@ export default function StoriesClient({ pecas, pauta }: { pecas: Peca[]; pauta: 
                       <button onClick={() => gerar(p)} disabled={ocupado === p.id}
                         style={{ fontSize: "0.75rem", fontWeight: 800, padding: "0.5rem 0.9rem", borderRadius: "0.6rem", border: "none", backgroundColor: "#b8891a", color: "#fff", cursor: ocupado === p.id ? "wait" : "pointer" }}>
                         {ocupado === p.id ? "montando…" : "Gerar story"}
+                      </button>
+                    )}
+                    {temDuo && (
+                      <button onClick={() => gerarEnquete(duo[0], duo[1])} disabled={ocupado === `enquete-${duo[0].id}`}
+                        style={{ fontSize: "0.75rem", fontWeight: 800, padding: "0.5rem 0.9rem", borderRadius: "0.6rem", border: "none", backgroundColor: "#b8891a", color: "#fff", cursor: ocupado === `enquete-${duo[0].id}` ? "wait" : "pointer" }}>
+                        {ocupado === `enquete-${duo[0].id}` ? "montando…" : "Gerar imagem da enquete"}
                       </button>
                     )}
                     {opcoes.length > 1 && (
