@@ -8,10 +8,11 @@ import DespesasClient from "./DespesasClient";
 type Resumo = {
   vendido: number; pedidos: number; ticket: number;
   entrou: number; porForma: { forma: string; rotulo: string; valor: number }[];
+  naoEntrou: { forma: string; rotulo: string; valor: number }[];
   saiu: number; aReceber: number; emAberto: number; atrasados: number;
 };
 type Venda = { id: string; cliente: string; valor: number; data: string; forma: string; pago: boolean; emAberto: number };
-type Recebimento = { id: string; cliente: string; valor: number; data: string; forma: string };
+type Recebimento = { id: string; cliente: string; valor: number; data: string; forma: string; dinheiro: boolean };
 type Despesa = { id: string; descricao: string; valor: number; data: string; categoria: string; forma: string; vencimento: string | null; parcela: string | null };
 
 const CARTAO = { backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.12)", borderRadius: "1rem" } as const;
@@ -33,7 +34,8 @@ export default function FinanceiroClient({
    * O aviso só aparece quando há o que corrigir e some sozinho depois —
    * botão de manutenção parado para sempre numa tela vira ruído.
    */
-  const [desalinhados, setDesalinhados] = useState<{ quantos: number; total: number } | null>(null);
+  type Desalinhado = { cliente: string; valor: number; forma: string; de: string; para: string };
+  const [desalinhados, setDesalinhados] = useState<{ quantos: number; total: number; exemplos: Desalinhado[] } | null>(null);
   const [alinhando, setAlinhando] = useState(false);
 
   useEffect(() => {
@@ -76,7 +78,19 @@ export default function FinanceiroClient({
           <div style={{ color: "#5a4a2a", fontSize: "0.84rem", lineHeight: 1.55, maxWidth: 660 }}>
             <strong>{desalinhados.quantos} recebimento(s)</strong> de link/cartão estão somados no mês da
             venda, e não no mês em que o dinheiro cai — {formatCurrency(desalinhados.total)} no total.
-            <br />
+            {/* As linhas, nomeadas: ele confere antes de clicar. */}
+            <div style={{ marginTop: "0.5rem", display: "grid", gap: "0.15rem" }}>
+              {(desalinhados.exemplos || []).map((e, i) => (
+                <div key={i} style={{ color: "#9a8060", fontSize: "0.77rem" }}>
+                  {e.cliente} · {formatCurrency(e.valor)} · {e.forma} · {dia(e.de)} → <strong style={{ color: "#5a4a2a" }}>{dia(e.para)}</strong>
+                </div>
+              ))}
+              {desalinhados.quantos > (desalinhados.exemplos || []).length && (
+                <div style={{ color: "#9a8060", fontSize: "0.77rem" }}>
+                  e mais {desalinhados.quantos - (desalinhados.exemplos || []).length}.
+                </div>
+              )}
+            </div>
             <span style={{ color: "#9a8060", fontSize: "0.77rem" }}>Só a data muda. Nenhum valor é alterado.</span>
           </div>
           <button onClick={alinhar} disabled={alinhando}
@@ -133,6 +147,17 @@ export default function FinanceiroClient({
                   </div>
                 );
               })}
+              {/*
+                Crédito usado sai das barras e vira nota. Ele estava entre as
+                linhas sem entrar no total, e aí a soma das barras não fechava
+                com o "Entrou" — o que faz desconfiar do número certo.
+              */}
+              {resumo.naoEntrou.map(f => (
+                <div key={f.forma} style={{ color: "#9a8060", fontSize: "0.75rem", marginTop: "0.6rem", lineHeight: 1.5 }}>
+                  Fora disso, <strong>{formatCurrency(f.valor)}</strong> em {f.rotulo.toLowerCase()} — abatido
+                  na compra (cashback, devolução), não é dinheiro que caiu na conta.
+                </div>
+              ))}
             </div>
           )}
 
@@ -144,12 +169,13 @@ export default function FinanceiroClient({
             ))}
           </Lista>
 
-          <Lista titulo={`Dinheiro que caiu no mês (${recebimentos.length})`}
+          <Lista titulo={`Dinheiro que caiu no mês (${recebimentos.filter(r => r.dinheiro).length})`}
             vazio="Nenhum recebimento neste mês."
-            nota="Inclui venda de meses anteriores cujo dinheiro caiu agora.">
+            nota="Inclui venda de meses anteriores cujo dinheiro caiu agora. Venda no link cai 31 dias depois, então aparece no mês seguinte.">
             {recebimentos.map(r => (
               <Linha key={r.id} esquerda={r.cliente} meio={`${dia(r.data)} · ${r.forma}`}
-                direita={formatCurrency(r.valor)} verde />
+                direita={formatCurrency(r.valor)} verde={r.dinheiro}
+                aviso={r.dinheiro ? undefined : "não é dinheiro novo"} avisoNeutro />
             ))}
           </Lista>
         </div>
@@ -187,14 +213,17 @@ function Lista({ titulo, vazio, nota, children }: { titulo: string; vazio: strin
   );
 }
 
-function Linha({ esquerda, meio, direita, aviso, verde }: {
+function Linha({ esquerda, meio, direita, aviso, verde, avisoNeutro }: {
   esquerda: string; meio: string; direita: string; aviso?: string; verde?: boolean;
+  // aviso em vermelho quer dizer problema (atraso, pendência). "Não é dinheiro
+  // novo" é só um esclarecimento, e vermelho ali assustaria sem motivo.
+  avisoNeutro?: boolean;
 }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", padding: "0.6rem 1.1rem", borderTop: "1px solid rgba(140,100,20,0.08)", flexWrap: "wrap" }}>
       <span style={{ color: "#1a1510", fontSize: "0.85rem", fontWeight: 600, flex: 1, minWidth: 110 }}>{esquerda}</span>
       <span style={{ color: "#9a8060", fontSize: "0.74rem", whiteSpace: "nowrap" }}>{meio}</span>
-      {aviso && <span style={{ color: "#c04040", fontSize: "0.72rem", fontWeight: 700, whiteSpace: "nowrap" }}>{aviso}</span>}
+      {aviso && <span style={{ color: avisoNeutro ? "#9a8060" : "#c04040", fontSize: "0.72rem", fontWeight: 700, whiteSpace: "nowrap" }}>{aviso}</span>}
       <strong style={{ color: verde ? "#1a8a2a" : "#1a1510", fontSize: "0.86rem", whiteSpace: "nowrap", minWidth: 82, textAlign: "right" }}>{direita}</strong>
     </div>
   );
