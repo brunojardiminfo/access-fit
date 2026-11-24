@@ -33,7 +33,14 @@ checa('a pauta é do dia', /Stories de hoje/.test(txt));
 for (const m of ['Manhã', 'Tarde', 'Noite']) {
   checa(`tem o bloco da ${m}`, txt.includes(m));
 }
-const ideias = await pg.locator('button:has-text("Copiar texto")').count();
+/*
+ * Conta os CARTÕES de momento, não os botões "copiar texto".
+ *
+ * Contava os botões, e eles deixaram de ser um por cartão quando o story de
+ * peça trocou o "copiar texto" pelo link do WhatsApp — o teste passou a medir
+ * outra coisa sem avisar. Cartão é o que a asserção sempre quis dizer.
+ */
+const ideias = await pg.locator('strong').filter({ hasText: /☀️|💬|🌙/ }).count();
 checa('uma sugestão por momento, não dez', ideias === 3, `${ideias} visíveis`);
 
 // a grade das peças começa fechada: é a exceção, não o caminho
@@ -45,14 +52,15 @@ const cartoes = await pg.locator('img').count();
 checa('a grade abre com as peças', cartoes > 10, `${cartoes} imagens`);
 
 // "trocar" oferece outra ideia sem recarregar
-const antes = await pg.locator('button:has-text("Copiar texto")').first().evaluate(
-  b => b.closest('div')?.parentElement?.innerText || '');
 const trocar = pg.locator('button:has-text("trocar")').first();
 if (await trocar.count()) {
-  await trocar.click(); await pg.waitForTimeout(400);
-  const depois = await pg.locator('button:has-text("Copiar texto")').first().evaluate(
-    b => b.closest('div')?.parentElement?.innerText || '');
-  checa('o "trocar" muda a sugestão', antes !== depois);
+  // o cartão inteiro do momento, que é o que tem de mudar
+  const cartao = () => trocar.evaluate(b => b.closest('div[style*="border"]')?.innerText
+    || b.closest('div')?.parentElement?.parentElement?.innerText || '');
+  const antes = await cartao();
+  await trocar.click(); await pg.waitForTimeout(500);
+  const depois = await cartao();
+  checa('o "trocar" muda a sugestão', antes !== depois, `${antes.slice(0, 30)} → ${depois.slice(0, 30)}`);
 }
 
 // ── o story é gerado DE VERDADE: 1080x1920 e com bytes dentro ──
