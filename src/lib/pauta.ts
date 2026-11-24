@@ -42,6 +42,8 @@ export type Ideia = {
   /** Pronto para copiar e colar no story. */
   texto: string;
   peca?: PecaDaPauta;
+  /** As duas peças da enquete, quando a ideia é "esse ou esse". */
+  duelo?: { a: PecaDaPauta; b: PecaDaPauta };
   /** Quanto isto merece ir primeiro. */
   peso: number;
 };
@@ -74,11 +76,11 @@ function precoDe(p: PecaDaPauta) {
  * entrega mais story de quem responde, então o post da manhã seguinte alcança
  * mais gente. Sem isso, a loja fala sozinha.
  */
-const INTERACOES: { etiqueta: string; texto: string }[] = [
-  { etiqueta: "Enquete", texto: "Qual dessas duas você levaria? 👇 (a mais votada eu posto amanhã com um mimo)" },
+const INTERACOES: { etiqueta: string; texto: string; duelo?: boolean }[] = [
+  { etiqueta: "Enquete", texto: "Qual dessas duas você levaria? 👇 (a mais votada eu posto amanhã com um mimo)", duelo: true },
   { etiqueta: "Caixinha", texto: "Me diz teu objetivo que eu monto teu look 💛 Caixinha aberta — respondo uma por uma." },
   { etiqueta: "Dúvida de tamanho", texto: "Ficou na dúvida do tamanho? Me manda sua altura e peso que eu te digo exatamente qual serve melhor em você. Acerto em cheio, sem troca." },
-  { etiqueta: "Esse ou esse", texto: "ESSE ou ESSE? Responde na enquete 👆 Quem acertar o mais votado ganha um desconto extra hoje." },
+  { etiqueta: "Esse ou esse", texto: "ESSE ou ESSE? Responde na enquete 👆 Quem acertar o mais votado ganha um desconto extra hoje.", duelo: true },
   { etiqueta: "Prova em casa", texto: "Sabia que dá pra provar em casa antes de decidir? Você escolhe as peças, experimenta com calma e fica só com o que amar. Chama aqui que eu explico 💛" },
   { etiqueta: "Pergunta aberta", texto: "O que você MAIS quer encontrar aqui e ainda não achou? Responde que eu levo pro próximo pedido 👀" },
 ];
@@ -98,6 +100,42 @@ const MOVIMENTOS: { etiqueta: string; texto: string }[] = [
   { etiqueta: "Contagem", texto: "Última chamada do dia! Quem tá na dúvida, me chama que eu seguro pra você até amanhã 💛" },
 ];
 
+
+/**
+ * As duas peças da enquete: mesma categoria, peças diferentes.
+ *
+ * MESMA CATEGORIA É O QUE FAZ A PERGUNTA TER RESPOSTA. "Legging preta ou
+ * legging verde" é escolha; "legging ou top" não é — as duas servem para
+ * coisas diferentes, e a seguidora trava em vez de votar.
+ *
+ * Escolhe a categoria com mais peças, que é onde a dúvida realmente existe, e
+ * gira o par pelo dia do mês: a enquete de hoje é a mesma se ele abrir a tela
+ * duas vezes, e a de amanhã é outra sem ele precisar pedir.
+ *
+ * Devolve nada quando nenhuma categoria tem duas peças com foto — e aí a
+ * pauta cai para outra conversa, em vez de oferecer um botão que dá erro.
+ */
+function duploDaEnquete(pecas: PecaDaPauta[], agora: Date): { a: PecaDaPauta; b: PecaDaPauta } | null {
+  const porCategoria = new Map<string, PecaDaPauta[]>();
+  for (const p of pecas) {
+    const c = p.category?.name?.trim();
+    if (!c) continue;
+    porCategoria.set(c, [...(porCategoria.get(c) || []), p]);
+  }
+
+  const candidatas = [...porCategoria.values()]
+    .filter(l => l.length >= 2)
+    .sort((x, y) => y.length - x.length);
+  if (!candidatas.length) return null;
+
+  const dia = new Date(agora).getUTCDate();
+  const grupo = candidatas[dia % candidatas.length];
+  // ordem estável (pelo id) para o par não dançar entre dois F5
+  const ordenado = [...grupo].sort((x, y) => x.id.localeCompare(y.id));
+  const i = dia % ordenado.length;
+  const j = (i + 1 + Math.floor(dia / ordenado.length)) % ordenado.length;
+  return { a: ordenado[i], b: ordenado[j === i ? (i + 1) % ordenado.length : j] };
+}
 
 export function montarPauta(pecas: PecaDaPauta[], agora: Date = new Date()): Ideia[] {
   const ideias: Ideia[] = [];
@@ -190,10 +228,20 @@ export function montarPauta(pecas: PecaDaPauta[], agora: Date = new Date()): Ide
    * abrir a tela duas vezes. Pauta que muda a cada F5 não dá para planejar.
    */
   const dia = new Date(agora).getUTCDate();
-  const inter = INTERACOES[dia % INTERACOES.length];
+  const duelo = duploDaEnquete(visiveis, agora);
+
+  /**
+   * As conversas giram pela data, mas as de enquete só entram se houver par.
+   * Oferecer "qual dessas duas" sem as duas peças daria um botão que falha.
+   */
+  const conversas = INTERACOES.filter(i => !i.duelo || duelo);
+  const inter = conversas[dia % conversas.length];
   ideias.push({ tipo: "interacao", momento: "tarde", etiqueta: inter.etiqueta,
-    porque: "O Instagram entrega mais story de quem responde — é isto que faz o post de amanhã alcançar mais gente.",
-    texto: inter.texto, peso: 50 });
+    porque: inter.duelo && duelo
+      ? `${duelo.a.category?.name ?? "A mesma categoria"}: duas peças parecidas o bastante para a escolha ser real. A imagem da enquete já sai montada.`
+      : "O Instagram entrega mais story de quem responde — é isto que faz o post de amanhã alcançar mais gente.",
+    texto: inter.texto, peso: 50,
+    duelo: inter.duelo ? duelo ?? undefined : undefined });
 
   const mov = MOVIMENTOS[dia % MOVIMENTOS.length];
   ideias.push({ tipo: "movimento", momento: "noite", etiqueta: mov.etiqueta,

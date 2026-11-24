@@ -59,6 +59,8 @@ export default async function StoriesPage() {
   const pauta = montarPauta(comFoto, agora).map(i => ({
     tipo: i.tipo, momento: i.momento, etiqueta: i.etiqueta,
     porque: i.porque, texto: i.texto, pecaId: i.peca?.id ?? null,
+    // a enquete leva duas peças; a tela monta a imagem com as duas
+    dueloIds: i.duelo ? [i.duelo.a.id, i.duelo.b.id] as [string, string] : null,
   }));
 
   return <StoriesClient pecas={paraTela} pauta={pauta} />;
