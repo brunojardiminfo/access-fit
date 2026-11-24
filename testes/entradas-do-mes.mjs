@@ -118,16 +118,57 @@ if (order?.id) {
         /link cai 31 dias depois/i.test(comLink.texto));
 }
 
+// ── 2b. O CASO DA ISADORA: link marcado como pago editando o pedido ───────
+// Era por aqui que a venda no link voltava a cair no mês errado: só a criação
+// do pedido aplicava o prazo. Quem marcasse pago depois gravava a data de hoje.
+const aberto = await pg.request.post(`${B}/api/admin/pedidos`, {
+  data: {
+    userId: CLIENTE,
+    items: [{ productId: PRODUTO, quantity: 1, size: 'M', color: 'Preto', price: 379.14 }],
+    paymentMethod: 'link', paymentStatus: 'pending', amountPaid: 0,
+  },
+  headers: { 'Content-Type': 'application/json' },
+});
+const emAberto = await aberto.json().catch(() => ({}));
+checa('cria a venda no link ainda sem pagamento', !!emAberto?.id, `HTTP ${aberto.status()}`);
+
+if (emAberto?.id) {
+  const marcou = await pg.request.put(`${B}/api/admin/pedidos/${emAberto.id}`, {
+    data: { amountPaid: 379.14, paymentStatus: 'paid' },
+    headers: { 'Content-Type': 'application/json' },
+  });
+  checa('marca o link como pago editando o pedido', marcou.ok(), `HTTP ${marcou.status()}`);
+
+  const d = Number(sql(`select round(extract(epoch from (p."receivedAt" - now()))/86400)
+    from "Payment" p where p."orderId" = '${emAberto.id}'`));
+  checa('o recebimento vai 31 dias à frente, não para hoje', d === 31, `${d} dias`);
+
+  const depois = await entrou();
+  checa('e por isso não entra no mês da venda',
+        depois.valor === comCredito.valor, `antes ${comCredito.valor} · depois ${depois.valor}`);
+
+  sql(`delete from "Payment" where "orderId" = '${emAberto.id}';
+       delete from "OrderItem" where "orderId" = '${emAberto.id}';
+       delete from "OrderStatusHistory" where "orderId" = '${emAberto.id}';
+       delete from "Order" where id = '${emAberto.id}'`);
+}
+
 // ── 3. O aviso de correção diz QUAIS, com nome e as duas datas ────────────
+const antesDoTorto = await (await pg.request.get(`${B}/api/admin/financeiro/alinhar-recebimentos`)).json();
 const idTorto = `teste-torto-${Date.now()}`;
 const alvo = sql(`select id from "Order" where status <> 'cancelled' order by "createdAt" desc limit 1`);
 sql(`insert into "Payment" (id,"orderId",amount,"paymentMethod","receivedAt",notes)
-     select '${idTorto}', o.id, 236, 'link', o."createdAt", 'teste desalinhado'
+     select '${idTorto}', o.id, 236, 'link', o."createdAt" + interval '7 minutes', 'teste desalinhado'
        from "Order" o where o.id = '${alvo}'`);
 
 const aviso = await pg.request.get(`${B}/api/admin/financeiro/alinhar-recebimentos`);
 const dados = await aviso.json();
-checa('o aviso encontra o recebimento no mês errado', dados.quantos >= 1, `${dados.quantos}`);
+// sete minutos depois da venda, não ao milissegundo: é assim que fica quando
+// ele marca o link como pago editando o pedido, e a regra antiga não pegava.
+// A conta é antes/depois porque a lista de exemplos mostra só os primeiros.
+checa('o aviso pega o pagamento gravado minutos depois da venda',
+      dados.quantos === antesDoTorto.quantos + 1,
+      `${antesDoTorto.quantos} → ${dados.quantos}`);
 checa('e diz de quem é', (dados.exemplos || []).some(e => e.cliente && e.cliente !== 'sem nome'),
       JSON.stringify((dados.exemplos || [])[0] || {}));
 checa('e as duas datas, a de hoje e a certa',
@@ -136,6 +177,24 @@ checa('e as duas datas, a de hoje e a certa',
 const telaAviso = await entrou();
 checa('o aviso na tela lista as linhas, não só a contagem',
       /recebimento\(s\)/i.test(telaAviso.texto) && /→/.test(telaAviso.texto));
+
+// ── 3b. O seletor alcança o mês em que o dinheiro do link cai ─────────────
+await pg.goto(`${B}/admin/financeiro`, { waitUntil: 'networkidle' });
+await pg.waitForTimeout(900);
+const opcoes = await pg.locator('select option').allInnerTexts();
+const emUmMes = new Date(); emUmMes.setMonth(emUmMes.getMonth() + 1);
+const nomeDoProximo = emUmMes.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+checa('o seletor oferece o mês seguinte, onde o link cai',
+      opcoes.some(o => o.toLowerCase().includes(nomeDoProximo.toLowerCase())),
+      opcoes.slice(0, 4).join(' | '));
+checa('e continua oferecendo o passado', opcoes.length >= 13, `${opcoes.length} meses`);
+
+const proximo = `${emUmMes.getFullYear()}-${String(emUmMes.getMonth() + 1).padStart(2, '0')}`;
+await pg.goto(`${B}/admin/financeiro?mes=${proximo}`, { waitUntil: 'networkidle' });
+await pg.waitForTimeout(900);
+const futuro = await pg.evaluate(() => document.body.innerText);
+checa('o mês à frente avisa que é agendado, não confirmado',
+      /agendad/i.test(futuro), futuro.slice(0, 60).replace(/\n/g, ' '));
 
 // ── 4. A tela inicial conta a mesma história ───────────────────────────────
 await pg.goto(`${B}/admin`, { waitUntil: 'networkidle' });

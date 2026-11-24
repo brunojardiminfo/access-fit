@@ -19,9 +19,9 @@ const CARTAO = { backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.1
 const dia = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 
 export default function FinanceiroClient({
-  mesAtual, nomeMes, meses, resumo, vendas, recebimentos, despesas,
+  mesAtual, nomeMes, mesFuturo, meses, resumo, vendas, recebimentos, despesas,
 }: {
-  mesAtual: string; nomeMes: string;
+  mesAtual: string; nomeMes: string; mesFuturo?: boolean;
   meses: { valor: string; rotulo: string }[];
   resumo: Resumo; vendas: Venda[]; recebimentos: Recebimento[]; despesas: Despesa[];
 }) {
@@ -169,9 +169,11 @@ export default function FinanceiroClient({
             ))}
           </Lista>
 
-          <Lista titulo={`Dinheiro que caiu no mês (${recebimentos.filter(r => r.dinheiro).length})`}
+          <Lista titulo={`${mesFuturo ? "Dinheiro agendado para o mês" : "Dinheiro que caiu no mês"} (${recebimentos.filter(r => r.dinheiro).length})`}
             vazio="Nenhum recebimento neste mês."
-            nota="Inclui venda de meses anteriores cujo dinheiro caiu agora. Venda no link cai 31 dias depois, então aparece no mês seguinte.">
+            nota={mesFuturo
+              ? "Mês que ainda não chegou: são recebimentos agendados, de venda no link e cartão, não dinheiro confirmado."
+              : "Inclui venda de meses anteriores cujo dinheiro caiu agora. Venda no link cai 31 dias depois, então aparece no mês seguinte."}>
             {recebimentos.map(r => (
               <Linha key={r.id} esquerda={r.cliente} meio={`${dia(r.data)} · ${r.forma}`}
                 direita={formatCurrency(r.valor)} verde={r.dinheiro}

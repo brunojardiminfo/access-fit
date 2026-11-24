@@ -42,6 +42,18 @@ export function quandoEntra(metodo: string, dataDaVenda: Date): Date {
   return d;
 }
 
+/**
+ * O dia em que cai o dinheiro de um pagamento registrado AGORA.
+ *
+ * Todo lugar que registra um recebimento usa isto. Era a falha: só a criação
+ * do pedido aplicava o prazo. Quem marcasse o link como pago editando o pedido,
+ * quitando uma parcela ou acertando o caderno gravava a data de hoje — e a
+ * venda no link voltava a aparecer no mês errado por outra porta.
+ */
+export function entradaAgora(metodo: string): Date {
+  return quandoEntra(metodo, new Date());
+}
+
 /** Formas cujo dinheiro não cai no mesmo dia da venda. */
 export function temPrazo(metodo: string): boolean {
   return (PRAZO_DE_RECEBIMENTO[metodo] ?? 0) > 0;

@@ -13,13 +13,20 @@ const FORMAS_COM_PRAZO = Object.entries(PRAZO_DE_RECEBIMENTO)
  * O cadastro novo já grava a data certa, mas o que está no banco foi gravado
  * com a data da venda — e é esse histórico que ele está olhando hoje.
  *
- * SÓ MEXE NO QUE NINGUÉM ENCOSTOU. A condição é estreita de propósito: forma
- * com prazo (link, cartão) E `receivedAt` exatamente igual ao `createdAt` do
- * pedido, que é a assinatura de um registro automático nunca ajustado. Um
- * recebimento que ele já corrigiu à mão tem outra data e não é tocado.
+ * COMO ELE RECONHECE O ERRADO. Forma com prazo (link, cartão) e `receivedAt`
+ * no mesmo dia da venda. Com o prazo aplicado a data estaria 31 dias à frente,
+ * então um recebimento de link datado no dia da venda só pode ser um registro
+ * que não passou pelo prazo — não existe link que caia no mesmo dia.
  *
- * Por isso rodar duas vezes não faz nada na segunda: depois do primeiro
- * ajuste a data deixa de bater com a da venda.
+ * A PRIMEIRA VERSÃO EXIGIA IGUALDADE AO MILISSEGUNDO com o `createdAt` do
+ * pedido, e com isso só pegava os pagamentos gravados junto com a venda. A
+ * venda da Isadora foi marcada como paga editando o pedido, minutos depois —
+ * `receivedAt` virou a hora da edição, não bateu ao milissegundo, e ela ficou
+ * de fora da correção enquanto continuava somada em novembro.
+ *
+ * Um recebimento que ele já ajustou à mão tem data longe do dia da venda e
+ * segue intocado. Rodar duas vezes não faz nada na segunda: depois do ajuste
+ * a data está 31 dias adiante.
  *
  * O VALOR NUNCA MUDA — só o mês em que ele aparece.
  */
@@ -35,12 +42,16 @@ async function desalinhados() {
     },
   });
 
-  return pagamentos.filter(p =>
-    p.order &&
-    p.order.status !== "cancelled" &&
-    temPrazo(p.paymentMethod) &&
-    Math.abs(p.receivedAt.getTime() - p.order.createdAt.getTime()) < 1000,
-  );
+  const DIA = 86400000;
+  return pagamentos.filter(p => {
+    if (!p.order || p.order.status === "cancelled" || !temPrazo(p.paymentMethod)) return false;
+    const certo = quandoEntra(p.paymentMethod, p.order.createdAt);
+    // já está no lugar certo (ou perto dele): não encosta
+    if (Math.abs(p.receivedAt.getTime() - certo.getTime()) < DIA) return false;
+    // errado é estar colado na data da venda, de qualquer lado dela
+    return p.receivedAt.getTime() - p.order.createdAt.getTime() < DIA
+        && p.receivedAt.getTime() - p.order.createdAt.getTime() > -DIA;
+  });
 }
 
 export async function GET() {

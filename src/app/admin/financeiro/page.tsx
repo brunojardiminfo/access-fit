@@ -35,6 +35,8 @@ export default async function FinanceiroPage({
     : { ano: agora.getUTCFullYear(), mes: agora.getUTCMonth() };
 
   const resumo = await resumoDoMes(ano, mes);
+  // mês ainda por vir: o que aparece ali é agendado, não confirmado
+  const mesFuturo = new Date(Date.UTC(ano, mes, 1)) > new Date(Date.UTC(agora.getUTCFullYear(), agora.getUTCMonth(), 1));
 
   const de = new Date(Date.UTC(ano, mes, 1, 3, 0, 0));
   const ate = new Date(Date.UTC(mes === 11 ? ano + 1 : ano, mes === 11 ? 0 : mes + 1, 1, 3, 0, 0));
@@ -66,10 +68,16 @@ export default async function FinanceiroPage({
     }),
   ]);
 
-  // Os meses que o seletor oferece: os doze últimos, que é o alcance de
-  // qualquer pergunta que ele faz sobre o passado.
-  const mesesDisponiveis = Array.from({ length: 12 }, (_, i) => {
-    const d = new Date(Date.UTC(agora.getUTCFullYear(), agora.getUTCMonth() - i, 15));
+  /**
+   * Os meses do seletor: três à frente e doze para trás.
+   *
+   * Só o passado não bastava. A venda no link cai 31 dias depois, então o
+   * dinheiro de novembro mora em dezembro — e dezembro não existia na lista.
+   * Ele via "a cair: R$ 379,14" e não tinha para onde clicar para conferir
+   * onde esse dinheiro foi parar.
+   */
+  const mesesDisponiveis = Array.from({ length: 15 }, (_, i) => {
+    const d = new Date(Date.UTC(agora.getUTCFullYear(), agora.getUTCMonth() + 2 - i, 15));
     return {
       valor: `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`,
       rotulo: nomeDoMes(d.getUTCFullYear(), d.getUTCMonth()),
@@ -80,6 +88,7 @@ export default async function FinanceiroPage({
     <FinanceiroClient
       mesAtual={`${ano}-${String(mes + 1).padStart(2, "0")}`}
       nomeMes={nomeDoMes(ano, mes)}
+      mesFuturo={mesFuturo}
       meses={mesesDisponiveis}
       resumo={resumo}
       vendas={vendas.map(o => ({
