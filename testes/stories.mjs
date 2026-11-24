@@ -27,21 +27,16 @@ await pg.waitForTimeout(1500);
 
 const txt = await pg.evaluate(() => document.body.innerText);
 checa('a tela abre', txt.includes('Stories'));
-checa('a pauta é do dia', /Stories de hoje/.test(txt));
+checa('a pauta é do dia', /nesta ordem/.test(txt));
 
-// três momentos, um por horário — e não uma lista para garimpar
-for (const m of ['Manhã', 'Tarde', 'Noite']) {
-  checa(`tem o bloco da ${m}`, txt.includes(m));
-}
 /*
- * Conta os CARTÕES de momento, não os botões "copiar texto".
- *
- * Contava os botões, e eles deixaram de ser um por cartão quando o story de
- * peça trocou o "copiar texto" pelo link do WhatsApp — o teste passou a medir
- * outra coisa sem avisar. Cartão é o que a asserção sempre quis dizer.
+ * A tela deixou de ser três sugestões por momento do dia e virou a agenda:
+ * sete passos numerados. Estas asserções falavam da tela antiga — quem cobre
+ * a nova é testes/agenda-stories.mjs. Ficou aqui o que continua valendo para
+ * as duas: a grade guardada, o story gerado de verdade e o menu que não pode
+ * cobrir o último botão.
  */
-const ideias = await pg.locator('strong').filter({ hasText: /☀️|💬|🌙/ }).count();
-checa('uma sugestão por momento, não dez', ideias === 3, `${ideias} visíveis`);
+checa('o roteiro vem numerado', /1\b/.test(txt) && /stories, nesta ordem/.test(txt));
 
 // a grade das peças começa fechada: é a exceção, não o caminho
 const gradeFechada = await pg.locator('button:has-text("Postar outra peça")').count();

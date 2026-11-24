@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { desenharStory, desenharEnquete, enviarStory } from "@/lib/storyCanvas";
 import { whatsDaPeca, whatsDaEnquete } from "@/lib/loja";
 
@@ -8,52 +9,45 @@ type Peca = {
   id: string; nome: string; categoria: string | null; foto: string;
   preco: number; precoCheio: number; desconto: number; estoque: number;
 };
-type Momento = "manha" | "tarde" | "noite";
-type Ideia = { tipo: string; momento: Momento; etiqueta: string; porque: string; texto: string; pecaId: string | null; dueloIds?: [string, string] | null };
+type Passo = {
+  slot: number; tipo: string; etiqueta: string; instrucao: string; texto: string;
+  pecaId: string | null; dueloIds: [string, string] | null; avisoDeRepeticao: string | null;
+};
 
 const CARTAO = { backgroundColor: "#fff", border: "1px solid rgba(140,100,20,0.12)", borderRadius: "1rem" } as const;
 const moeda = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const BOTAO = {
+  fontSize: "0.75rem", fontWeight: 800, padding: "0.5rem 0.9rem",
+  borderRadius: "0.6rem", border: "none", cursor: "pointer",
+} as const;
 
 /**
- * Os três stories do dia, cada um com um trabalho.
+ * O dia em sete passos numerados.
  *
- * A tela antiga listava dez ideias boas de uma vez, e escolher entre dez é
- * trabalho — era preciso procurar. Aqui são três decisões, uma por momento,
- * com as outras guardadas atrás do "trocar".
+ * A VERSÃO ANTERIOR DAVA ESCOLHA, E A ESCOLHA ERA O TRABALHO. Três sugestões
+ * com botão de "trocar" ainda deixavam a decisão de pé todo dia, e decisão
+ * todo dia é o que faz parar de postar. Aqui ele abre e executa de 1 a 7.
+ *
+ * O PASSO FEITO SOME DO CAMINHO (fica cinza e encolhe) para o próximo ser
+ * sempre o primeiro que ele vê.
  */
-const MOMENTOS: { chave: Momento; emoji: string; titulo: string; papel: string }[] = [
-  { chave: "manha", emoji: "☀️", titulo: "Manhã", papel: "a peça — é o story que vende" },
-  { chave: "tarde", emoji: "💬", titulo: "Tarde", papel: "a conversa — faz o Instagram entregar mais" },
-  { chave: "noite", emoji: "🌙", titulo: "Noite", papel: "o movimento — prova que a loja está viva" },
-];
-
-const COR_TIPO: Record<string, string> = {
-  prazo: "#c04040", ultimas: "#c04040", promo: "#b8891a",
-  nova: "#1a8a2a", parada: "#7a5a9a", interacao: "#5a7a9a", movimento: "#5a7a9a",
-};
-
-export default function StoriesClient({ pecas, pauta }: { pecas: Peca[]; pauta: Ideia[] }) {
-  const [indice, setIndice] = useState<Record<Momento, number>>({ manha: 0, tarde: 0, noite: 0 });
+export default function StoriesClient({
+  pecas, roteiro, dia, semana, postadosHoje, descanso,
+}: {
+  pecas: Peca[]; roteiro: Passo[];
+  dia: { nome: string; tema: string; categorias: string[] };
+  semana: { nome: string; tema: string; hoje: boolean }[];
+  postadosHoje: number; descanso: number;
+}) {
+  const router = useRouter();
+  const [feitos, setFeitos] = useState<Set<number>>(new Set());
   const [verTodas, setVerTodas] = useState(false);
   const [busca, setBusca] = useState("");
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [aviso, setAviso] = useState("");
   const [copiado, setCopiado] = useState<string | null>(null);
-  /**
-   * O link da última imagem gerada.
-   *
-   * Fica junto do aviso porque é ali que ele está olhando quando acabou de
-   * gerar — e é nesse momento, com o story na mão, que ele precisa do link
-   * para colar no sticker. Oferecer em outro lugar seria oferecer tarde.
-   */
-  const [linkPronto, setLinkPronto] = useState<{ rotulo: string; url: string } | null>(null);
 
   const porId = useMemo(() => new Map(pecas.map(p => [p.id, p])), [pecas]);
-  const porMomento = useMemo(() => ({
-    manha: pauta.filter(i => i.momento === "manha"),
-    tarde: pauta.filter(i => i.momento === "tarde"),
-    noite: pauta.filter(i => i.momento === "noite"),
-  }), [pauta]);
 
   const lista = useMemo(() => {
     const q = busca.trim().toLowerCase();
@@ -61,37 +55,50 @@ export default function StoriesClient({ pecas, pauta }: { pecas: Peca[]; pauta: 
     return pecas.filter(p => p.nome.toLowerCase().includes(q) || (p.categoria || "").toLowerCase().includes(q));
   }, [pecas, busca]);
 
-  const gerar = async (p: Peca) => {
-    setAviso(""); setOcupado(p.id);
-    setLinkPronto({ rotulo: p.nome, url: whatsDaPeca(p.nome) });
+  /**
+   * Registra a passagem pelo ar.
+   *
+   * Chamado ao gerar a imagem E ao marcar o passo — depender só do botão seria
+   * depender de ele lembrar, e no dia que esquecesse a agenda congelava e
+   * ofereceria as mesmas peças para sempre.
+   */
+  const registrar = async (slot: number, tipo: string, productId?: string | null) => {
+    await fetch("/api/admin/stories", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slot, kind: tipo, productId: productId || null }),
+    }).catch(() => {});
+  };
+
+  const marcar = async (p: Passo) => {
+    setFeitos(s => new Set(s).add(p.slot));
+    await registrar(p.slot, p.tipo, p.pecaId);
+    router.refresh();
+  };
+
+  const gerar = async (peca: Peca, passo?: Passo) => {
+    setAviso(""); setOcupado(peca.id);
     try {
-      const blob = await desenharStory(p);
-      const onde = await enviarStory(blob, `story-${p.nome.toLowerCase().replace(/\s+/g, "-")}`);
+      const blob = await desenharStory(peca);
+      const onde = await enviarStory(blob, `story-${peca.nome.toLowerCase().replace(/\s+/g, "-")}`);
       setAviso(onde === "compartilhado"
         ? "Story gerado — escolhe o Instagram no menu que abriu."
         : "Story baixado. No computador o compartilhamento direto não existe: o arquivo foi para os downloads.");
+      await registrar(passo?.slot ?? 0, "peca", peca.id);
     } catch (e) {
       setAviso(`Não deu para gerar: ${(e as Error).message}`);
     }
     setOcupado(null);
   };
 
-  /**
-   * A imagem da enquete, com as duas peças já montadas.
-   *
-   * Era o buraco da ideia boa: "qual dessas duas você levaria" dependia dele
-   * caçar duas fotos na galeria e montar à mão — exatamente o trabalho que
-   * esta tela existe para tirar do caminho.
-   */
-  const gerarEnquete = async (a: Peca, b: Peca) => {
+  const gerarEnquete = async (a: Peca, b: Peca, passo: Passo) => {
     setAviso(""); setOcupado(`enquete-${a.id}`);
-    setLinkPronto({ rotulo: "a enquete", url: whatsDaEnquete(a.nome, b.nome) });
     try {
       const blob = await desenharEnquete(a, b);
       const onde = await enviarStory(blob, "enquete-access-fit");
       setAviso(onde === "compartilhado"
-        ? "Enquete gerada — escolhe o Instagram e põe a enquete do Instagram por cima, com as opções 1 e 2."
-        : "Enquete baixada. Posta no story e põe a enquete do Instagram por cima, com as opções 1 e 2.");
+        ? "Enquete gerada — põe a enquete do Instagram por cima, opções 1 e 2."
+        : "Enquete baixada. Posta e põe a enquete do Instagram por cima, opções 1 e 2.");
+      await registrar(passo.slot, "enquete", null);
     } catch (e) {
       setAviso(`Não deu para gerar: ${(e as Error).message}`);
     }
@@ -103,127 +110,161 @@ export default function StoriesClient({ pecas, pauta }: { pecas: Peca[]; pauta: 
     catch { prompt("Copie o texto:", texto); }
   };
 
+  const total = roteiro.length;
+  const prontos = Math.max(feitos.size, Math.min(postadosHoje, total));
+
   return (
-    <div style={{ maxWidth: 820, margin: "0 auto", /* A folga embaixo é o dobro da altura do menu fixo do admin: sem ela o
-         menu cobre o último botão da página, e no celular ele fica
-         inalcançável — o mesmo defeito que a tela de liquidação já teve. */
+    <div style={{ maxWidth: 820, margin: "0 auto",
+      /* A folga embaixo é o dobro da altura do menu fixo do admin: sem ela o
+         menu cobre o último botão e no celular ele fica inalcançável. */
       padding: "1.75rem 1.1rem 7rem", backgroundColor: "#FAF6EE", minHeight: "100vh" }}>
       <a href="/admin" style={{ color: "#b8891a", fontSize: "0.85rem", textDecoration: "none" }}>← Admin</a>
-      <h1 style={{ color: "#1a1510", fontSize: "1.6rem", fontWeight: 900, margin: "0.2rem 0 0.3rem" }}>📱 Stories de hoje</h1>
-      <p style={{ color: "#9a8060", fontSize: "0.85rem", lineHeight: 1.55, marginBottom: "1.4rem" }}>
-        Três stories, um por momento do dia. Toca em gerar, copia o texto, posta.
+
+      <h1 style={{ color: "#1a1510", fontSize: "1.6rem", fontWeight: 900, margin: "0.2rem 0 0.2rem" }}>
+        📱 {dia.nome}: {dia.tema}
+      </h1>
+      <p style={{ color: "#9a8060", fontSize: "0.85rem", lineHeight: 1.5, marginBottom: "0.9rem" }}>
+        {total} stories, nesta ordem. {prontos > 0 ? `${prontos} de ${total} já foram.` : "Começa pelo 1."}
       </p>
+
+      {/* ── a semana inteira, para ele saber o que vem ── */}
+      <div style={{ display: "flex", gap: "0.3rem", overflowX: "auto", paddingBottom: "0.3rem", marginBottom: "1.1rem" }}>
+        {semana.map(d => (
+          <div key={d.nome} style={{
+            flex: "1 0 auto", minWidth: 84, textAlign: "center", padding: "0.45rem 0.4rem",
+            borderRadius: "0.6rem", backgroundColor: d.hoje ? "#1a1510" : "#fff",
+            border: `1px solid ${d.hoje ? "#1a1510" : "rgba(140,100,20,0.14)"}`,
+          }}>
+            <div style={{ color: d.hoje ? "#e8c766" : "#9a8060", fontSize: "0.62rem", fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              {d.nome}
+            </div>
+            <div style={{ color: d.hoje ? "#f6f1e6" : "#5a4a2a", fontSize: "0.68rem", lineHeight: 1.25, marginTop: "0.15rem" }}>
+              {d.tema}
+            </div>
+          </div>
+        ))}
+      </div>
 
       {aviso && (
         <div style={{ ...CARTAO, padding: "0.8rem 1rem", marginBottom: "1.1rem", backgroundColor: "#fff8e1", borderColor: "rgba(184,137,26,0.4)", color: "#5a4a2a", fontSize: "0.83rem" }}>
           {aviso}
-          {linkPronto && (
-            <div style={{ marginTop: "0.6rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-              <button onClick={() => copiar(linkPronto.url, "zap-aviso")}
-                style={{ fontSize: "0.75rem", fontWeight: 800, padding: "0.45rem 0.8rem", borderRadius: "0.6rem", border: "1px solid rgba(37,211,102,0.5)", backgroundColor: "#eafaf0", color: "#0b6b35", cursor: "pointer" }}>
-                {copiado === "zap-aviso" ? "✓ link copiado" : "Copiar link do WhatsApp"}
-              </button>
-              <span style={{ color: "#9a8060", fontSize: "0.74rem" }}>
-                cola no sticker de link do story — ela chega dizendo que viu {linkPronto.rotulo}
-              </span>
-            </div>
-          )}
         </div>
       )}
 
-      <div style={{ display: "grid", gap: "0.9rem" }}>
-        {MOMENTOS.map(m => {
-          const opcoes = porMomento[m.chave];
-          if (opcoes.length === 0) return null;
-          const i = opcoes[indice[m.chave] % opcoes.length];
-          const p = i.pecaId ? porId.get(i.pecaId) : undefined;
-          const duo = i.dueloIds
-            ? [porId.get(i.dueloIds[0]), porId.get(i.dueloIds[1])].filter(Boolean) as Peca[]
+      <div style={{ display: "grid", gap: "0.7rem" }}>
+        {roteiro.map((passo, idx) => {
+          const p = passo.pecaId ? porId.get(passo.pecaId) : undefined;
+          const duo = passo.dueloIds
+            ? [porId.get(passo.dueloIds[0]), porId.get(passo.dueloIds[1])].filter(Boolean) as Peca[]
             : [];
           const temDuo = duo.length === 2;
-          const id = `${m.chave}-${indice[m.chave]}`;
-          return (
-            <div key={m.chave} style={{ ...CARTAO, overflow: "hidden" }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: "0.5rem", padding: "0.8rem 1rem 0", flexWrap: "wrap" }}>
-                <strong style={{ color: "#1a1510", fontSize: "0.95rem" }}>{m.emoji} {m.titulo}</strong>
-                <span style={{ color: "#9a8060", fontSize: "0.75rem" }}>{m.papel}</span>
-              </div>
+          const feito = feitos.has(passo.slot);
+          /*
+            A instrução das quatro peças é a mesma frase. Repetida quatro
+            vezes ela deixa de ser instrução e vira parede de texto — que é
+            exatamente o que fazia ele não achar nada na tela antiga. Aparece
+            na primeira e some nas iguais seguintes.
+          */
+          const instrucaoNova = idx === 0 || roteiro[idx - 1].instrucao !== passo.instrucao;
 
-              <div style={{ display: "flex", gap: "0.85rem", padding: "0.75rem 1rem 1rem", alignItems: "flex-start" }}>
-                {p && (
-                  <img src={p.foto} alt="" style={{ width: 76, height: 101, objectFit: "cover", borderRadius: "0.6rem", flexShrink: 0 }} />
+          return (
+            <div key={passo.slot} style={{
+              ...CARTAO, overflow: "hidden", opacity: feito ? 0.5 : 1,
+              borderColor: feito ? "rgba(26,138,42,0.4)" : CARTAO.border,
+            }}>
+              <div style={{ display: "flex", gap: "0.8rem", padding: "0.85rem 1rem", alignItems: "flex-start" }}>
+                <div style={{
+                  flexShrink: 0, width: 30, height: 30, borderRadius: 999, display: "grid", placeItems: "center",
+                  backgroundColor: feito ? "#1a8a2a" : "#1a1510", color: feito ? "#fff" : "#e8c766",
+                  fontWeight: 900, fontSize: "0.82rem",
+                }}>
+                  {feito ? "✓" : passo.slot}
+                </div>
+
+                {p && !feito && (
+                  <img src={p.foto} alt="" style={{ width: 66, height: 88, objectFit: "cover", borderRadius: "0.6rem", flexShrink: 0 }} />
                 )}
-                {temDuo && (
-                  // as duas, com o número do lado que elas vão ocupar na imagem
-                  <div style={{ display: "flex", gap: 3, flexShrink: 0 }}>
+                {temDuo && !feito && (
+                  <div style={{ display: "flex", gap: 2, flexShrink: 0 }}>
                     {duo.map((d, n) => (
                       <div key={d.id} style={{ position: "relative" }}>
-                        <img src={d.foto} alt="" style={{ width: 54, height: 101, objectFit: "cover", borderRadius: n === 0 ? "0.6rem 0 0 0.6rem" : "0 0.6rem 0.6rem 0" }} />
-                        <span style={{ position: "absolute", top: 3, left: "50%", transform: "translateX(-50%)", backgroundColor: "#e8c766", color: "#07060a", fontSize: "0.58rem", fontWeight: 900, width: 16, height: 16, borderRadius: 999, display: "grid", placeItems: "center" }}>
+                        <img src={d.foto} alt="" style={{ width: 46, height: 88, objectFit: "cover", borderRadius: n === 0 ? "0.6rem 0 0 0.6rem" : "0 0.6rem 0.6rem 0" }} />
+                        <span style={{ position: "absolute", top: 3, left: "50%", transform: "translateX(-50%)", backgroundColor: "#e8c766", color: "#07060a", fontSize: "0.55rem", fontWeight: 900, width: 15, height: 15, borderRadius: 999, display: "grid", placeItems: "center" }}>
                           {n + 1}
                         </span>
                       </div>
                     ))}
                   </div>
                 )}
+
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", flexWrap: "wrap", marginBottom: "0.3rem" }}>
-                    <span style={{ backgroundColor: COR_TIPO[i.tipo] || "#9a8060", color: "#fff", fontSize: "0.6rem", fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase", padding: "0.18rem 0.55rem", borderRadius: 999 }}>
-                      {i.etiqueta}
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+                    <span style={{ color: "#9a8060", fontSize: "0.62rem", fontWeight: 900, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                      {passo.etiqueta}
                     </span>
-                    {p && <strong style={{ color: "#1a1510", fontSize: "0.88rem" }}>{p.nome}</strong>}
+                    {p && <strong style={{ color: "#1a1510", fontSize: "0.86rem" }}>{p.nome}</strong>}
                     {temDuo && (
-                      <strong style={{ color: "#1a1510", fontSize: "0.82rem" }}>
+                      <strong style={{ color: "#1a1510", fontSize: "0.8rem" }}>
                         {duo[0].nome} <span style={{ color: "#9a8060", fontWeight: 600 }}>ou</span> {duo[1].nome}
                       </strong>
                     )}
                   </div>
-                  {/* O fato com número. Sem ele, a sugestão é chute. */}
-                  <div style={{ color: "#9a8060", fontSize: "0.73rem", lineHeight: 1.45, marginBottom: "0.5rem" }}>{i.porque}</div>
-                  <div style={{ color: "#3a2a10", fontSize: "0.84rem", lineHeight: 1.5, backgroundColor: "#FAF6EE", padding: "0.6rem 0.75rem", borderRadius: "0.6rem" }}>
-                    {i.texto}
-                  </div>
 
-                  <div style={{ display: "flex", gap: "0.45rem", marginTop: "0.65rem", flexWrap: "wrap" }}>
-                    {/*
-                      Nos stories de PEÇA o texto já está desenhado na imagem —
-                      copiá-lo de novo não serve para nada. Ali o que falta é o
-                      link do sticker, que faz a conversa chegar com o nome da
-                      peça dentro. Onde não há imagem (conversa, bastidor), o
-                      texto é tudo o que ele tem, e o botão continua.
-                    */}
-                    {(p || temDuo) ? (
-                      <button onClick={() => copiar(
-                        p ? whatsDaPeca(p.nome) : whatsDaEnquete(duo[0].nome, duo[1].nome), `zap-${id}`)}
-                        style={{ fontSize: "0.75rem", fontWeight: 700, padding: "0.5rem 0.85rem", borderRadius: "0.6rem", border: "1px solid rgba(37,211,102,0.5)", backgroundColor: "#eafaf0", color: "#0b6b35", cursor: "pointer" }}>
-                        {copiado === `zap-${id}` ? "✓ link copiado" : "Copiar link do WhatsApp"}
-                      </button>
-                    ) : (
-                      <button onClick={() => copiar(i.texto, id)}
-                        style={{ fontSize: "0.75rem", fontWeight: 700, padding: "0.5rem 0.85rem", borderRadius: "0.6rem", border: "1px solid rgba(140,100,20,0.25)", backgroundColor: "#FAF6EE", color: "#5a4a2a", cursor: "pointer" }}>
-                        {copiado === id ? "✓ copiado" : "Copiar texto"}
-                      </button>
-                    )}
-                    {p && (
-                      <button onClick={() => gerar(p)} disabled={ocupado === p.id}
-                        style={{ fontSize: "0.75rem", fontWeight: 800, padding: "0.5rem 0.9rem", borderRadius: "0.6rem", border: "none", backgroundColor: "#b8891a", color: "#fff", cursor: ocupado === p.id ? "wait" : "pointer" }}>
-                        {ocupado === p.id ? "montando…" : "Gerar story"}
-                      </button>
-                    )}
-                    {temDuo && (
-                      <button onClick={() => gerarEnquete(duo[0], duo[1])} disabled={ocupado === `enquete-${duo[0].id}`}
-                        style={{ fontSize: "0.75rem", fontWeight: 800, padding: "0.5rem 0.9rem", borderRadius: "0.6rem", border: "none", backgroundColor: "#b8891a", color: "#fff", cursor: ocupado === `enquete-${duo[0].id}` ? "wait" : "pointer" }}>
-                        {ocupado === `enquete-${duo[0].id}` ? "montando…" : "Gerar imagem da enquete"}
-                      </button>
-                    )}
-                    {opcoes.length > 1 && (
-                      <button onClick={() => setIndice(s => ({ ...s, [m.chave]: s[m.chave] + 1 }))}
-                        title={`${opcoes.length} opções para este horário`}
-                        style={{ fontSize: "0.75rem", fontWeight: 700, padding: "0.5rem 0.85rem", borderRadius: "0.6rem", border: "none", background: "none", color: "#9a8060", cursor: "pointer", textDecoration: "underline" }}>
-                        trocar ({(indice[m.chave] % opcoes.length) + 1}/{opcoes.length})
-                      </button>
-                    )}
-                  </div>
+                  {!feito && (
+                    <>
+                      {/* O aviso de repetição existe para ele não achar que é novidade. */}
+                      {passo.avisoDeRepeticao && (
+                        <div style={{ color: "#c08030", fontSize: "0.7rem", fontWeight: 700, marginTop: "0.25rem" }}>
+                          ⚠ {passo.avisoDeRepeticao} — categoria pequena para {descanso} dias de descanso
+                        </div>
+                      )}
+                      {instrucaoNova && (
+                        <div style={{ color: "#9a8060", fontSize: "0.72rem", lineHeight: 1.45, margin: "0.3rem 0 0.45rem" }}>
+                          {passo.instrucao}
+                        </div>
+                      )}
+                      <div style={{ color: "#3a2a10", fontSize: "0.83rem", lineHeight: 1.5, backgroundColor: "#FAF6EE", padding: "0.55rem 0.7rem", borderRadius: "0.6rem" }}>
+                        {passo.texto}
+                      </div>
+
+                      <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.6rem", flexWrap: "wrap" }}>
+                        {p && (
+                          <button onClick={() => gerar(p, passo)} disabled={ocupado === p.id} data-passo="peca"
+                            style={{ ...BOTAO, backgroundColor: "#b8891a", color: "#fff", cursor: ocupado === p.id ? "wait" : "pointer" }}>
+                            {ocupado === p.id ? "montando…" : "Gerar imagem"}
+                          </button>
+                        )}
+                        {temDuo && (
+                          <button onClick={() => gerarEnquete(duo[0], duo[1], passo)} disabled={ocupado === `enquete-${duo[0].id}`} data-passo="enquete"
+                            style={{ ...BOTAO, backgroundColor: "#b8891a", color: "#fff" }}>
+                            {ocupado === `enquete-${duo[0].id}` ? "montando…" : "Gerar imagem"}
+                          </button>
+                        )}
+                        {/*
+                          No story de peça o texto já está na imagem: ali o que
+                          falta é o link do sticker, que faz a conversa chegar
+                          com o nome da peça dentro. Onde não há imagem, o
+                          texto é tudo o que ele tem.
+                        */}
+                        {(p || temDuo) ? (
+                          <button onClick={() => copiar(
+                            p ? whatsDaPeca(p.nome) : whatsDaEnquete(duo[0].nome, duo[1].nome), `zap-${passo.slot}`)}
+                            style={{ ...BOTAO, fontWeight: 700, border: "1px solid rgba(37,211,102,0.5)", backgroundColor: "#eafaf0", color: "#0b6b35" }}>
+                            {copiado === `zap-${passo.slot}` ? "✓ link copiado" : "Copiar link do WhatsApp"}
+                          </button>
+                        ) : (
+                          <button onClick={() => copiar(passo.texto, `txt-${passo.slot}`)}
+                            style={{ ...BOTAO, fontWeight: 700, border: "1px solid rgba(140,100,20,0.25)", backgroundColor: "#FAF6EE", color: "#5a4a2a" }}>
+                            {copiado === `txt-${passo.slot}` ? "✓ copiado" : "Copiar texto"}
+                          </button>
+                        )}
+                        <button onClick={() => marcar(passo)}
+                          style={{ ...BOTAO, fontWeight: 700, background: "none", color: "#9a8060", textDecoration: "underline" }}>
+                          postei
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -231,7 +272,7 @@ export default function StoriesClient({ pecas, pauta }: { pecas: Peca[]; pauta: 
         })}
       </div>
 
-      {/* ── A grade das 73 peças fica guardada: ela é a exceção, não o caminho ── */}
+      {/* ── A grade das peças fica guardada: ela é a exceção, não o caminho ── */}
       <button onClick={() => setVerTodas(!verTodas)}
         style={{ width: "100%", marginTop: "1.25rem", padding: "0.8rem", borderRadius: "0.8rem", border: "1px dashed rgba(140,100,20,0.35)", backgroundColor: "transparent", color: "#9a8060", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer" }}>
         {verTodas ? "▲ fechar" : `▼ Postar outra peça (${pecas.length} com foto)`}

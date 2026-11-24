@@ -36,7 +36,9 @@ await pg.click('button[type=submit]'); await pg.waitForTimeout(3500);
 await pg.goto(`${B}/admin/stories`, { waitUntil: 'networkidle' });
 await pg.waitForTimeout(1500);
 
-const botao = pg.locator('button:has-text("Gerar imagem da enquete")');
+// o botão do passo da enquete, marcado no HTML: contar "o quinto Gerar
+// imagem" quebraria no dia em que o dia tivesse três peças em vez de quatro
+const botao = pg.locator('button[data-passo="enquete"]');
 checa('a tela oferece a imagem da enquete', await botao.count() > 0);
 
 const texto = await pg.evaluate(() => document.body.innerText);
