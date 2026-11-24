@@ -357,3 +357,97 @@ export async function desenharEnquete(
   return await new Promise<Blob>((ok, erro) =>
     canvas.toBlob(b2 => (b2 ? ok(b2) : erro(new Error("não deu para gerar a imagem"))), "image/jpeg", 0.92));
 }
+
+/**
+ * A capa do dia: logo, o tema e as peças que vêm a seguir.
+ *
+ * POR QUE A ABERTURA PRECISA DE IMAGEM PRÓPRIA. Sem ela a sequência começa
+ * numa foto de roupa, e quem abre não sabe que está entrando numa sequência —
+ * acha que é mais um story solto e passa. A capa diz "tem mais aqui", e é o
+ * que faz a pessoa ficar até o 7.
+ *
+ * AS MINIATURAS NÃO SÃO ENFEITE: são a promessa. Quatro quadradinhos do que
+ * vem a seguir fazem a seguidora esperar pela que ela já gostou, em vez de
+ * sair no segundo story.
+ */
+export async function desenharCapa(
+  { sobretitulo, titulo, subtitulo, chamada, miniaturas = [] }: {
+    sobretitulo: string; titulo: string; subtitulo: string; chamada: string; miniaturas?: string[];
+  },
+): Promise<Blob> {
+  const canvas = document.createElement("canvas");
+  canvas.width = L; canvas.height = A;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("canvas indisponível");
+
+  ctx.fillStyle = PRETO;
+  ctx.fillRect(0, 0, L, A);
+
+  const [logo, ...fotos] = await Promise.all([
+    carregar("/logo-story.png").catch(() => null as unknown as HTMLImageElement),
+    ...miniaturas.slice(0, 4).map(u => carregar(u).catch(() => null as unknown as HTMLImageElement)),
+  ]);
+
+  // brilho dourado atrás do logo, para o preto não ficar chapado
+  const brilho = ctx.createRadialGradient(L / 2, 560, 40, L / 2, 560, 620);
+  brilho.addColorStop(0, "rgba(232,199,102,0.22)");
+  brilho.addColorStop(1, "rgba(232,199,102,0)");
+  ctx.fillStyle = brilho;
+  ctx.fillRect(0, 0, L, 1200);
+
+  if (logo) {
+    const d = 400;
+    ctx.save();
+    ctx.beginPath(); ctx.arc(L / 2, 560, d / 2, 0, Math.PI * 2); ctx.clip();
+    ctx.drawImage(logo, (L - d) / 2, 560 - d / 2, d, d);
+    ctx.restore();
+    ctx.strokeStyle = "rgba(232,199,102,0.45)";
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(L / 2, 560, d / 2 + 16, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+
+  ctx.fillStyle = OURO;
+  ctx.font = "700 32px Inter, system-ui, sans-serif";
+  ctx.letterSpacing = "10px";
+  ctx.fillText(sobretitulo.toUpperCase(), L / 2, 940);
+  ctx.letterSpacing = "0px";
+
+  ctx.fillStyle = "#f6f1e6";
+  escreverCabendo(ctx, titulo.toUpperCase(), L / 2, 1052, L - 110, 96);
+
+  ctx.fillStyle = "rgba(246,241,230,0.72)";
+  ctx.font = "600 40px Inter, system-ui, sans-serif";
+  ctx.fillText(subtitulo, L / 2, 1130);
+
+  // ── as peças que vêm a seguir ──
+  const validas = fotos.filter(Boolean);
+  if (validas.length) {
+    const lado = 196, vao = 20;
+    const larguraTotal = validas.length * lado + (validas.length - 1) * vao;
+    let x = (L - larguraTotal) / 2;
+    const y = 1270;
+    for (const f of validas) {
+      ctx.save();
+      ctx.beginPath(); ctx.roundRect(x, y, lado, lado * 1.25, 18); ctx.clip();
+      pecaPreenchendo(ctx, f, { x, y, w: lado, h: lado * 1.25 });
+      ctx.restore();
+      ctx.strokeStyle = "rgba(232,199,102,0.35)";
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(x, y, lado, lado * 1.25, 18); ctx.stroke();
+      x += lado + vao;
+    }
+  }
+
+  ctx.fillStyle = OURO;
+  ctx.font = "900 44px Inter, system-ui, sans-serif";
+  ctx.fillText(chamada, L / 2, validas.length ? 1660 : 1420);
+
+  ctx.textAlign = "left";
+  assinatura(ctx, logo);
+
+  return await new Promise<Blob>((ok, erro) =>
+    canvas.toBlob(b => (b ? ok(b) : erro(new Error("não deu para gerar a imagem"))), "image/jpeg", 0.92));
+}

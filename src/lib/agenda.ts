@@ -54,6 +54,8 @@ export type PassoDoRoteiro = {
   texto: string;
   peca?: PecaDaPauta;
   duelo?: { a: PecaDaPauta; b: PecaDaPauta };
+  /** Abertura e fechamento têm imagem própria, com o logo da loja. */
+  capa?: { sobretitulo: string; titulo: string; subtitulo: string; chamada: string };
   /** Quando a peça já foi postada há pouco e mesmo assim precisou voltar. */
   avisoDeRepeticao?: string;
 };
@@ -156,6 +158,19 @@ export function montarRoteiro(
     texto: dia.categorias.length
       ? `Hoje é dia de ${dia.categorias.join(" e ").toUpperCase()} 🖤 ${candidatas.length} peças pra você escolher. Vem ver 👇`
       : `As campeãs da semana 🏆 O que mais saiu por aqui. Vem ver 👇`,
+    capa: dia.categorias.length
+      ? {
+          sobretitulo: "hoje é dia de",
+          titulo: dia.categorias.join(" e "),
+          subtitulo: `${candidatas.length} peças pra você escolher`,
+          chamada: "VEM VER 👇",
+        }
+      : {
+          sobretitulo: "as campeãs da semana",
+          titulo: "o que mais saiu",
+          subtitulo: "as que voaram por aqui",
+          chamada: "VEM VER 👇",
+        },
   });
 
   const escolhidas = pecasDoDia(candidatas, ultimoPost, dia.pecas, agora);
@@ -185,8 +200,18 @@ export function montarRoteiro(
 
   passos.push({
     slot: passos.length + 1, tipo: "fechamento", etiqueta: "Fechamento",
-    instrucao: "Fecha dizendo o que fazer. Ela gostou de uma peça; sem isto, não sabe o que fazer com isso.",
+    instrucao: "Imagem com o logo. Fecha dizendo o que fazer — ela gostou de uma peça e sem isto não sabe o que fazer com isso.",
     texto: "Gostou de alguma? Me chama no direct que eu te digo o tamanho certo e já separo 💛",
+    capa: {
+      sobretitulo: "gostou de alguma?",
+      titulo: "me chama no direct",
+      subtitulo: "eu digo o tamanho certo e já separo",
+      // "responde esse story" e não o endereço do site: responder o story ABRE
+      // o direct, que é exatamente para onde esta imagem quer levar. O site já
+      // está na assinatura embaixo — repetir ali seria dizer duas vezes a
+      // mesma coisa e nenhuma vez o que fazer.
+      chamada: "RESPONDE ESSE STORY 💛",
+    },
   });
 
   return passos;
